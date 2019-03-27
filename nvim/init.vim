@@ -9,7 +9,6 @@ call plug#begin('~/.nvim/plugged')
 
 " {{{ UI & appearance
 Plug 'https://github.com/itchyny/lightline.vim'
-" Plug 'https://github.com/jubnzv/gruvbox'           " Color scheme
 Plug 'https://github.com/arcticicestudio/nord-vim'
 Plug 'https://github.com/chrisbra/Colorizer'       " Colorize color names and codes
 Plug 'https://github.com/junegunn/vim-peekaboo'    " Shows vim registers content into vertical split
@@ -29,7 +28,7 @@ Plug 'https://github.com/airblade/vim-gitgutter'
 
 " {{{ Writing code
 Plug 'https://github.com/majutsushi/tagbar'            " Vim plugin that displays tags in a window
-Plug 'https://github.com/ludovicchabant/vi m-gutentags' " Auto (re)generate tag files
+Plug 'https://github.com/ludovicchabant/vim-gutentags' " Auto (re)generate tag files
 Plug 'https://github.com/terryma/vim-expand-region'    " Visually select increasingly larger regions of text
 Plug 'https://github.com/Shougo/echodoc.vim'           " Displays function signatures from completions in the command line
 Plug 'https://github.com/scrooloose/nerdcommenter'
@@ -37,18 +36,19 @@ Plug 'https://github.com/Shougo/neosnippet.vim'
 Plug 'https://github.com/Shougo/neosnippet-snippets'
 Plug 'https://github.com/Shougo/neoinclude.vim'
 Plug 'https://github.com/Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
-Plug 'autozimu/LanguageClient-neovim', {
-  \ 'branch': 'next',
-  \ 'do': 'bash install.sh',
-  \ }
+Plug 'autozimu/LanguageClient-neovim', { 'tag': 'release-1.2.3-bin-darwin' }
+Plug 'https://github.com/ervandew/supertab'
 Plug 'https://github.com/jubnzv/DoxygenToolkit.vim'
 " Plug 'https://github.com/vivien/vim-linux-coding-style'
 Plug 'https://github.com/nacitar/a.vim'
 Plug 'terryma/vim-multiple-cursors'
+Plug 'https://github.com/justinmk/vim-syntax-extra'
+" Plug 'arakashic/chromatica.nvim'
 " Plug 'https://github.com/w0rp/ale'
 " Plug 'https://github.com/simplyzhao/cscope_maps.vim'
 " Plug 'prabirshrestha/async.vim'
 " Plug 'prabirshrestha/vim-lsp'
+" Plug 'https://github.com/justmao945/vim-clang'
 Plug 'https://github.com/cespare/vim-toml'
 " }}}
 
@@ -84,6 +84,7 @@ set wildignore=*.o,*~,*.pyc,*.aux,*.out,*.toc
 " set wildignore+=*.pyc,*.o,*.obj,*.svn,*.swp,*.class,*.hg,*.DS_Store,*.min.*
 set timeoutlen=500                          " Time to wait for a mapped sequence to complete (ms)
 set notimeout                               " Remove delay between complex keybindings.
+set ttimeoutlen=0
 set noautochdir                             " Set working directory to the current file
 " set noruler
 set autoindent                              " Autoindent when starting new line, or using o or O.
@@ -125,7 +126,6 @@ let &t_EI.="\e[2 q" "EI = NORMAL mode (ELSE)
 set t_ZH=^[[3m
 set t_ZR=^[[23m
 
-" colorscheme onedark
 colorscheme nord
 
 " Highlighting
@@ -181,6 +181,12 @@ let g:lightline = {
   \ }
 " }}}
 
+" {{{Chromatica
+" let g:chromatica#enable_at_startup=1
+" let g:chromatica#libclang_path='/usr/local/opt/llvm/lib'
+" let g:chromatica#responsive_mode=1
+" }}}
+ 
 " {{{ Jump to the last position when reopening a file 
 " (see `/etc/vim/vimrc`)
 au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
@@ -223,7 +229,19 @@ function! CustomFoldText()
 endf
 set foldtext=CustomFoldText()
 " }}}
-"
+
+" {{{ VimFold4C
+" let g:fold_options = {
+   " \ 'fallback_method' : { 'line_threshold' : 2000, 'method' : 'syntax' },
+   " \ 'fold_blank': 0,
+   " \ 'fold_includes': 0,
+   " \ 'max_foldline_length': 'win',
+   " \ 'merge_comments' : 0,
+   " \ 'show_if_and_else': 1,
+   " \ 'strip_namespaces': 1,
+   " \ 'strip_template_arguments': 1
+   " \ }
+" }}}
 " }}}
 
 " {{{ Keybindings <A-...> <D-...>
@@ -251,7 +269,7 @@ imap <F1> <C-o>:echo <CR>
 nmap <A-k> :noh<CR>:echo<CR>
 
 " imap <A-k> <C-o>:noh<CR><C-o>:echo<CR>
-nmap <D-k> :noh<CR>:echo<CR>
+map <D-k> :pclose<CR>:noh<CR>:echo<CR>
 imap <D-k> <C-o>:noh<CR><C-o>:echo<CR>
 
 " Highlight search results incrementally (haya14busa/incsearch.vim)
@@ -282,33 +300,21 @@ vnoremap // y/<C-R>"<CR>
 
 " Delete word in insert
 inoremap <M-BS> <C-o>b<C-o>dw
-"
+
+" Tab Restore
+nnoremap <S-D-t> :call ReopenLastTab()<CR>:echo<CR>
+
 " d => cut
 " leader d => delete
-" nnoremap x "_x
-" nnoremap d "_d
-" nnoremap D "_D
-" vnoremap d "_d
-" 
-" nnoremap <leader>d ""d
-" nnoremap <leader>D ""D
-" vnoremap <leader>d ""d
-nnoremap <leader>d "_d
-vnoremap <leader>d "_d
-nnoremap <leader>D "_D
-nnoremap <leader>x "_x
+" nnoremap p "_dP
+" xnoremap p "_dP
+" nnoremap <leader>d "_d
+" vnoremap <leader>d "_d
+" nnoremap <leader>D "_D
+" nnoremap <leader>x "_x
 " }}}
 
 " {{{ Tabs with cmd +[0..9] 
-" noremap <M-1> 1gt
-" noremap <M-2> 2gt
-" noremap <M-3> 3gt
-" noremap <M-4> 4gt
-" noremap <M-5> 5gt
-" noremap <M-6> 6gt
-" noremap <M-7> 7gt
-" noremap <M-8> 8gt
-" noremap <M-9> 9gt
 noremap <D-1> 1gt
 noremap <D-2> 2gt
 noremap <D-3> 3gt
@@ -442,7 +448,6 @@ nnoremap <leader>z za
 nnoremap zz za
 nnoremap za zM
 nnoremap zA zR
-
 " }}}
 
 " {{{ Encoding menu
@@ -475,7 +480,7 @@ nnoremap <D-i> :BTags<CR>
 nnoremap <leader>fm :Marks<CR>
 nnoremap <leader>b :Buffers<CR>
 nnoremap <leader>w :Windows<CR>
-nnoremap <A-tab> :Windows<CR>
+nnoremap <A-tab> :Buffers<CR>
 nnoremap <leader>xr :FZFMru <CR>
 nnoremap Q :History/<CR>
 
@@ -493,12 +498,12 @@ nnoremap <leader>fr :AgRust<CR>
 " }}} 
 
 " {{{ GUI
-" map <M-s> <ESC>:w<CR>
+map <M-s> <ESC>:w<CR>
 " nnoremap <M-w> :q<CR>
 " inoremap <M-w> <ESC><C-o>:q<CR>
-" nnoremap <D-w> :q<CR>
-" inoremap <D-w> <ESC><C-o>:q<CR>
-" map <D-n> :tabnew<CR>
+nnoremap <D-w> :q<CR>
+inoremap <D-w> <ESC><C-o>:q<CR>
+map <D-n> :tabnew<CR>
 " }}}
 
 " {{{ C/C++
@@ -523,14 +528,14 @@ snoremap <silent> <Esc> <esc>:NeoSnippetClearMarkers<cr>
 " smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 " \ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
 
-" imap <expr><TAB> neosnippet#expandable_or_jumpable() ?
-imap <expr><TAB> neosnippet#jumpable() ?
+" imap <expr><TAB> neosnippet#jumpable() ?
+imap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 \ "\<Plug>(neosnippet_expand_or_jump)"
 \: pumvisible() ? "\<C-w>" : "\<TAB>"
 " \: pumvisible() ? "\<ENTER>" : "\<TAB>"
  
-" smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
-smap <expr><TAB> neosnippet#jumpable() ?
+" smap <expr><TAB> neosnippet#jumpable() ?
+smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 \ "\<Plug>(neosnippet_expand_or_jump)"
 \: "\<TAB>"
 
@@ -601,7 +606,7 @@ endfunction
 
 " "use <tab> for completion
 " imap <silent><expr><tab> TabWrap()
-inoremap <expr><tab> pumvisible()? "\<ENTER>" : "\<tab>"
+" inoremap <expr><tab> pumvisible()? "\<ENTER>" : "\<tab>"
 
 " Enter: complete&close popup if visible (so next Enter works); else: break undo
 inoremap <silent><expr> <Cr> pumvisible() ?
@@ -629,6 +634,28 @@ let g:NERDCommentEmptyLines = 1
 let g:NERDAltDelims_c = 1
 
 " }}}
+
+" {{{ Reopen last buffer
+let g:reopenbuf = expand('%:p')
+function! ReopenLastTabLeave()
+  let g:lastbuf = expand('%:p')
+  let g:lasttabcount = tabpagenr('$')
+endfunction
+function! ReopenLastTabEnter()
+  if tabpagenr('$') < g:lasttabcount
+    let g:reopenbuf = g:lastbuf
+  endif
+endfunction
+function! ReopenLastTab()
+  tabnew
+  execute 'buffer' . g:reopenbuf
+endfunction
+augroup ReopenLastTab
+  autocmd!
+  autocmd TabLeave * call ReopenLastTabLeave()
+  autocmd TabEnter * call ReopenLastTabEnter()
+augroup END
+"}}} 
 
 " {{{ NerdTree
 " autocmd vimenter * NERDTree
@@ -800,8 +827,8 @@ call deoplete#custom#var('around', {
 \})
 let g:deoplete#ignore_sources._ = ['buffer']
 let g:deoplete#ignore_sources.c = ['buffer', 'around']
-" call deoplete#custom#source('_',
- " \ 'matchers', ['matcher_full_fuzzy'])
+call deoplete#custom#source('_',
+ \ 'matchers', ['matcher_full_fuzzy'])
 
 call deoplete#custom#source('LanguageClient',
   \ 'min_pattern_length',
@@ -826,6 +853,7 @@ let g:neosnippet#snippets_directory='~/.config/nvim/snippets'
 " }}}
 
 " {{{ FZF
+set rtp+=/usr/local/opt/fzf
 let g:fzf_history_dir = '~/.local/share/fzf-history'
 " let g:fzf_tags_command = 'ctags -R *.c'
 let g:fzf_tags_command = 'ctags -R --languages=c,c++'
@@ -861,8 +889,16 @@ command! -bang -nargs=? -complete=dir Files
   \ call fzf#vim#files(<q-args>, fzf#vim#with_preview(), <bang>0)
 
 " Search in specific file types
-command! -bang -nargs=* AgC call fzf#vim#ag(<q-args>, '-G \.c$', {'down': '~40%'})
-command! -bang -nargs=* AgH call fzf#vim#ag(<q-args>, '-G \.h$', {'down': '~40%'})
+command! -bang -nargs=* AgC
+\ call fzf#vim#ag(<q-args>, '--path-to-ignore ~/.ignore -G \.c$',
+\                 <bang>0 ? fzf#vim#with_preview('up:60%')
+\                         : fzf#vim#with_preview('right:50%', '?'),
+\                 <bang>0)
+command! -bang -nargs=* AgH
+\ call fzf#vim#ag(<q-args>, '--path-to-ignore ~/.ignore -G \.h$',
+\                 <bang>0 ? fzf#vim#with_preview('up:60%')
+\                         : fzf#vim#with_preview('right:50%', '?'),
+\                 <bang>0)
 command! -bang -nargs=* AgCC call fzf#vim#ag(<q-args>, '--cc', {'down': '~40%'})
 command! -bang -nargs=* AgPython call fzf#vim#ag(<q-args>, '--python', {'down': '~40%'})
 command! -bang -nargs=* AgRust call fzf#vim#ag(<q-args>, '--rust', {'down': '~40%'})
