@@ -19,17 +19,21 @@ Plug 'https://github.com/jubnzv/vim-cursorword'    " Highlight word under cursor
 Plug 'https://github.com/godlygeek/tabular'         " Vim script for text filtering and alignment
 Plug 'https://github.com/tpope/vim-surround'
 Plug 'MattesGroeger/vim-bookmarks'
+if has("gui_running")
 Plug 'https://github.com/jiangmiao/auto-pairs'      " Insert or delete brackets, parens, quotes in pair
+endif
 " }}}
 
 " {{{ Git
-" Plug 'https://github.com/airblade/vim-gitgutter' 
+Plug 'https://github.com/airblade/vim-gitgutter' 
 " }}}
 
 " {{{ Writing code
+if has("gui_running")
 Plug 'Shougo/deoplete.nvim'
 Plug 'roxma/nvim-yarp'
 Plug 'roxma/vim-hug-neovim-rpc'
+endif
 Plug 'https://github.com/terryma/vim-expand-region'    " Visually select increasingly larger regions of text
 Plug 'https://github.com/Shougo/echodoc.vim'           " Displays function signatures from completions in the command line
 Plug 'https://github.com/scrooloose/nerdcommenter'
@@ -69,6 +73,8 @@ set wildignore=*.o,*~,*.pyc,*.aux,*.out,*.toc
 " set wildignore+=*.pyc,*.o,*.obj,*.svn,*.swp,*.class,*.hg,*.DS_Store,*.min.*
 set timeoutlen=500                          " Time to wait for a mapped sequence to complete (ms)
 set notimeout                               " Remove delay between complex keybindings.
+set ttimeoutlen=0
+set noesckeys                               " Finally found it, otherwize long exit insert mode, macvim works fine without it
 set noautochdir                             " Set working directory to the current file
 " set noruler
 set autoindent                              " Autoindent when starting new line, or using o or O.
@@ -185,7 +191,7 @@ imap <F1> <C-o>:echo <CR>
 nmap <A-k> :noh<CR>:echo<CR>
 
 " imap <A-k> <C-o>:noh<CR><C-o>:echo<CR>
-nmap <D-k> :noh<CR>:echo<CR>
+map <D-k> :pclose<CR>:noh<CR>:echo<CR>
 imap <D-k> <C-o>:noh<CR><C-o>:echo<CR>
 
 " Highlight search results incrementally (haya14busa/incsearch.vim)
@@ -215,8 +221,8 @@ inoremap <A-ENTER> <C-o>o
 vnoremap // y/<C-R>"<CR>
 
 " Delete word in insert
-inoremap <C-w> <C-o>b<C-o>de
-"
+inoremap <M-BS> <C-o>b<C-o>dw
+
 " d => delete
 " leader d => cut
 " nnoremap x "_x
@@ -230,15 +236,6 @@ inoremap <C-w> <C-o>b<C-o>de
 " }}}
 
 " {{{ Tabs with cmd +[0..9] 
-" noremap <M-1> 1gt
-" noremap <M-2> 2gt
-" noremap <M-3> 3gt
-" noremap <M-4> 4gt
-" noremap <M-5> 5gt
-" noremap <M-6> 6gt
-" noremap <M-7> 7gt
-" noremap <M-8> 8gt
-" noremap <M-9> 9gt
 noremap <D-1> 1gt
 noremap <D-2> 2gt
 noremap <D-3> 3gt
@@ -354,11 +351,27 @@ imap <C-_> <C-o><leader>c<Space>
 
 " }}}
 
+" {{{ Git workflow
+nmap [v <Plug>GitGutterPrevHunk
+nmap ]v <Plug>GitGutterNextHunk
+nmap <Leader>v <Plug>GitGutterPreviewHunk
+" }}}
+
 " {{{ Folding
 nnoremap <leader>z za
 nnoremap zz za
 nnoremap za zM
 nnoremap zA zR
+" }}}
+
+" {{{ Encoding menu
+menu Encoding.koi8-r :e ++enc=koi8-r ++ff=unix<CR>
+menu Encoding.windows-1251 :e ++enc=cp1251 ++ff=dos<CR>
+menu Encoding.cp866 :e ++enc=cp866 ++ff=dos<CR>
+menu Encoding.utf-8 :e ++enc=utf8<CR>
+menu Encoding.koi8-u :e ++enc=koi8-u ++ff=unix<CR>
+
+map <C-U> :emenu Encoding.
 " }}}
 
 " {{{ CtrlP
@@ -377,11 +390,12 @@ nnoremap <leader>xf :Files<CR>
 nnoremap <D-p> :Files<CR>
 nnoremap <leader>ft :Tags<CR>
 nnoremap <D-i> :BTags<CR>
+
 nnoremap <D-I> :Tags<CR>
 nnoremap <leader>fm :Marks<CR>
 nnoremap <leader>b :Buffers<CR>
 nnoremap <leader>w :Windows<CR>
-nnoremap <A-tab> :Windows<CR>
+nnoremap <A-tab> :Buffers<CR>
 nnoremap <leader>xr :FZFMru <CR>
 nnoremap Q :History/<CR>
 
@@ -423,7 +437,7 @@ endfunction
 
 " "use <tab> for completion
 " imap <silent><expr><tab> TabWrap()
-inoremap <expr><tab> pumvisible()? "\<ENTER>" : "\<tab>"
+" inoremap <expr><tab> pumvisible()? "\<ENTER>" : "\<tab>"
 
 " Enter: complete&close popup if visible (so next Enter works); else: break undo
 inoremap <silent><expr> <Cr> pumvisible() ?
@@ -460,8 +474,6 @@ au FileType c,h,cpp setlocal tw=80
 " Use C filetype for headers by default
 au BufReadPre,BufRead,BufNewFile *.h set filetype=c
 
-" Switch between header and sources
-nmap <A-a> :A<CR>
 
 " clang include fixer
 " let g:clang_include_fixer_path = "clang-include-fixer-7"
@@ -584,6 +596,7 @@ command! -bang -nargs=* AgRust call fzf#vim#ag(<q-args>, '--rust', {'down': '~40
 " }}}
 
 " {{{ deoplete
+if has("gui_running")
 let g:deoplete#enable_at_startup = 1
 call deoplete#custom#option('min_pattern_length', 1)
 call deoplete#custom#var('around', {
@@ -599,5 +612,11 @@ call deoplete#custom#source('_',
 
 set completeopt=menu,noinsert
 " set completeopt+=preview
+endif
 " }}}
 
+" {{{ if Darwin
+" let uname = substitute(system('uname'), '\n', '', '')
+" if uname == 'Darwin'
+" endif
+" }}}
