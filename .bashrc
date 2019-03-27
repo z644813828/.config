@@ -1,30 +1,33 @@
-
-# export PATH="/usr/local/opt/llvm/bin:$PATH"
-# export PATH="/usr/local/opt/bison/bin:$PATH"
-# export PATH="/usr/local/opt/bison/bin:$PATH"
-# export PATH="$PATH:/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk/usr/include"
-# export LIBRARY_PATH="/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk/usr/include"
-# export LD_LIBRARY_PATH="/Library/Developer/CommandLineTools/SDKs/MacOSX10.14.sdk/usr/include"
-
-
+export EDITOR='vim'
+# Don't save history if leading space 
+export HISTCONTROL='ignorespace'
 alias r='ranger'
-set -x EDITOR vim
 alias rm='rm -i'
-alias v='open -a /Applications/MacVim.app'
-alias mvim='open -a /Applications/MacVim.app'
-alias vimr='/usr/local/lib/vimr'
-alias o='open -a /Applications/VimR.app'
-alias ll='ls -l'
 
-export MANPAGER="col -b | mvim -c 'set ft=man ts=8 nomod nolist nonu' -c 'nnoremap i <nop>' -"
+export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nornu noma' -\""
 
-alias cdp='cd ~/Documents/Projects/'
-alias cdb='cd ~/Documents/Beremiz/'
-alias cdl='cd ~/Documents/Libs/'
-alias cdd='cd ~/Documents/Documents/'
-alias cdz='cd ~/Downloads/'
-alias ctr='ctags -R --languages=c,c++'
-alias config='open -a /Applications/MacVim.app ~/.bashrc ~/.config/fish/config.fish ~/.vimrc ~/.config/nvim/init.vim ~/.config/karabiner/karabiner.json'
-# alias ctags="/usr/local/Cellar/ctags/5.8_1/bin/ctags"
-# alias ctags="ctags -R *.c"
-# [ -f ~/.fzf.bash ] && source ~/.fzf.bash
+if [[ $(uname -s) == Linux ]]
+then
+    alias v='vim'
+    alias ls='ls --color -h --group-directories-first'
+    alias ll='ls -lh -G --color -h --group-directories-first'
+    alias cdp='cd /media/psf/Home/Documents/Projects/'
+    alias cdb='cd /media/psf/Home/Documents/Beremiz/'
+    alias cdl='cd /media/psf/Home/Documents/Libs/'
+    alias cdd='cd /media/psf/Home/Documents/Documents/'
+    alias cdz='cd /media/psf/Home/Downloads/'
+else
+    alias s="echo 'Connected to 10.211.55.3';ssh -X -t dmitriy@10.211.55.3 fish"
+    alias m='open -a /Applications/MacVim.app'
+    alias v='/usr/local/lib/vimr'
+    alias ls='gls --color -h --group-directories-first'
+    alias ll='gls -lh -G --color -h --group-directories-first'
+    alias cdp='cd ~/Documents/Projects/'
+    alias cdb='cd ~/Documents/Beremiz/'
+    alias cdl='cd ~/Documents/Libs/'
+    alias cdd='cd ~/Documents/Documents/'
+    alias cdz='cd ~/Downloads/'
+    alias ctr='ctags -R --languages=c,c++'
+    alias config='open -a /Applications/MacVim.app ~/.config/.bashrc ~/.config/fish/config.fish ~/.config/.vimrc ~/.config/nvim/init.vim ~/.config/karabiner/karabiner.json'
+fi
+
