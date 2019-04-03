@@ -166,6 +166,7 @@ let g:lightline = {
   \   'gitbranch': 'fugitive#head'
   \ },
   \ 'component': {
+  \   'lineinfo': "%c:%{line('.') . '/' . line('$')}",
   \   'modified': '%{&filetype=="help"?"":&modified?"":&modifiable?"":"\u2757"}',
   \   'fugitive': '%{exists("*fugitive#head")?fugitive#head():""}',
   \   'tagbar': '%{tagbar#currenttag("[%s]", "", "f")}',
@@ -255,6 +256,7 @@ set foldtext=CustomFoldText()
 inoremap jj <Esc>
 nnoremap <leader>h :noh<CR>
 map <Leader><ESC> :pclose<CR>:noh<CR>:echo<CR>
+nnoremap <ENTER> :pclose<CR>:noh<CR>:echo<CR>
 
 " Insert newline without entering insert mode
 nmap zj o<Esc>k
@@ -267,10 +269,6 @@ nnoremap <leader>R :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 nmap <F1> :echo <CR>
 imap <F1> <C-o>:echo <CR>
 nmap <A-k> :noh<CR>:echo<CR>
-
-" imap <A-k> <C-o>:noh<CR><C-o>:echo<CR>
-map <D-k> :pclose<CR>:noh<CR>:echo<CR>
-imap <D-k> <C-o>:noh<CR><C-o>:echo<CR>
 
 " Highlight search results incrementally (haya14busa/incsearch.vim)
 map /  <Plug>(incsearch-forward)
@@ -290,19 +288,20 @@ nnoremap <A-w> <C-w><C-W>
 " Inserting new line
 inoremap <A-ENTER> <C-o>o
 
-" Go to matching scope
-" oO wtf! <CR> = <C-m> 
-" nnoremap <C-m> %
-" inoremap <C-m> <C-o>%
-
 " Search highlighted text
 vnoremap // y/<C-R>"<CR>
 
 " Delete word in insert
-inoremap <M-BS> <C-o>b<C-o>dw
+inoremap <M-BS> <C-o>b<C-o>de
 
 " Tab Restore
 nnoremap <S-D-t> :call ReopenLastTab()<CR>:echo<CR>
+
+" Save 
+nnoremap <leader>s :w<CR>
+
+" Close
+nnoremap <leader>q :q<CR>
 
 " d => cut
 " leader d => delete
@@ -460,10 +459,6 @@ menu Encoding.koi8-u :e ++enc=koi8-u ++ff=unix<CR>
 map <C-U> :emenu Encoding.
 " }}}
 
-" {{{ CtrlP
-
-" }}}
-
 " {{{ FZF 
 let $FZF_DEFAULT_COMMAND = 'ag -g ""'
 nmap <A-z> <plug>(fzf-maps-n)
@@ -483,12 +478,10 @@ nnoremap <leader>w :Windows<CR>
 nnoremap <A-tab> :Buffers<CR>
 nnoremap <leader>xr :FZFMru <CR>
 nnoremap Q :History/<CR>
-
-nnoremap <S-D-f> :Ag<CR>
+nnoremap <leader>fs :Ag<CR>
+nnoremap <D-f> :Ag<CR>
 nnoremap <Leader>fw :Ag<Space><C-r><C-w><CR>
-" nnoremap <A-F> :Ag<Space><C-r><C-w><CR>
-nnoremap <D-f> :BLines<CR>
-nnoremap <A-D-f> :Ag<Space><C-r><C-w><CR>
+nnoremap <S-D-f> :Ag<Space><C-r><C-w><CR>
 
 nnoremap <leader>fc :AgC<CR>
 nnoremap <leader>fh :AgH<CR>
@@ -509,6 +502,7 @@ map <D-n> :tabnew<CR>
 " {{{ C/C++
 " open tag in new tab
 nnoremap <silent><C-S-]> <C-w><C-]><C-w>T
+nnoremap <M-]> <C-]>
 " Switch between header and sources
 nmap <A-a> :A<CR>
 " }}}

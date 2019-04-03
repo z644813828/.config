@@ -8,7 +8,7 @@ endif
 call plug#begin('~/.vim/plugged')
 
 " {{{ UI & appearance
-"Plug 'https://github.com/itchyny/lightline.vim'
+Plug 'https://github.com/itchyny/lightline.vim'
 Plug 'https://github.com/jubnzv/gruvbox'           " Color scheme
 Plug 'https://github.com/chrisbra/Colorizer'       " Colorize color names and codes
 Plug 'https://github.com/junegunn/vim-peekaboo'    " Shows vim registers content into vertical split
@@ -34,6 +34,7 @@ Plug 'Shougo/deoplete.nvim'
 Plug 'roxma/nvim-yarp'
 Plug 'roxma/vim-hug-neovim-rpc'
 endif
+Plug 'rizzatti/dash.vim'
 Plug 'https://github.com/terryma/vim-expand-region'    " Visually select increasingly larger regions of text
 Plug 'https://github.com/Shougo/echodoc.vim'           " Displays function signatures from completions in the command line
 Plug 'https://github.com/scrooloose/nerdcommenter'
@@ -72,9 +73,8 @@ set wildmode=longest,list
 set wildignore=*.o,*~,*.pyc,*.aux,*.out,*.toc
 " set wildignore+=*.pyc,*.o,*.obj,*.svn,*.swp,*.class,*.hg,*.DS_Store,*.min.*
 set timeoutlen=500                          " Time to wait for a mapped sequence to complete (ms)
-set notimeout                               " Remove delay between complex keybindings.
-set ttimeoutlen=0
-set noesckeys                               " Finally found it, otherwize long exit insert mode, macvim works fine without it
+" set notimeout                               " Remove delay between complex keybindings.
+set ttimeoutlen=0                           " Finally found it, otherwize long exit insert mode, macvim works fine without it
 set noautochdir                             " Set working directory to the current file
 " set noruler
 set autoindent                              " Autoindent when starting new line, or using o or O.
@@ -145,6 +145,24 @@ let g:indentLine_conceallevel = 10
 " set list
 " }}}
 
+" {{{ Lightline
+let g:lightline = {
+  \ 'colorscheme': 'gruvbox',
+  \ 'active': {
+  \   'left':  [ [ 'mode', 'paste' ],
+  \              [ 'filename', 'modified' ] ],
+  \   'right': [ [ 'lineinfo' ],
+  \              [ 'percent' ],
+  \              [ 'lsp_status' ],
+  \              [ 'fileformat', 'fileencoding', 'filetype' ] ],
+  \ },
+  \ 'component': {
+  \   'lineinfo': "%c:%{line('.') . '/' . line('$')}",
+  \   'modified': '%{&filetype=="help"?"":&modified?"":&modifiable?"":"\u2757"}',
+  \ },
+  \ }
+" }}}
+
 " {{{ Jump to the last position when reopening a file 
 " (see `/etc/vim/vimrc`)
 au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
@@ -177,6 +195,7 @@ set fillchars=fold:\
 inoremap jj <Esc>
 nnoremap <leader>h :noh<CR>
 map <Leader><ESC> :pclose<CR>:noh<CR>:echo<CR>
+nnoremap <ENTER> :pclose<CR>:noh<CR>:echo<CR>
 
 " Insert newline without entering insert mode
 nmap zj o<Esc>k
@@ -189,10 +208,6 @@ nnoremap <leader>R :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 nmap <F1> :echo <CR>
 imap <F1> <C-o>:echo <CR>
 nmap <A-k> :noh<CR>:echo<CR>
-
-" imap <A-k> <C-o>:noh<CR><C-o>:echo<CR>
-map <D-k> :pclose<CR>:noh<CR>:echo<CR>
-imap <D-k> <C-o>:noh<CR><C-o>:echo<CR>
 
 " Highlight search results incrementally (haya14busa/incsearch.vim)
 map /  <Plug>(incsearch-forward)
@@ -212,17 +227,20 @@ nnoremap <A-w> <C-w><C-W>
 " Inserting new line
 inoremap <A-ENTER> <C-o>o
 
-" Go to matching scope
-" oO wtf! <CR> = <C-m> 
-" nnoremap <C-m> %
-" inoremap <C-m> <C-o>%
-
 " Search highlighted text
 vnoremap // y/<C-R>"<CR>
 
-" Delete word in insert
-inoremap <M-BS> <C-o>b<C-o>dw
+" Delete word in insert (iTerm doesn't recognize 'alt<-delete', mvim use default
+" emacs binds)
+" inoremap <M-BS> <C-o>b<C-o>dw
 
+" Save 
+nnoremap <leader>s :w<CR>
+
+" Close
+nnoremap <leader>q :q<CR>
+
+" Still didn't fixed buffers overwriting 
 " d => delete
 " leader d => cut
 " nnoremap x "_x
@@ -374,10 +392,6 @@ menu Encoding.koi8-u :e ++enc=koi8-u ++ff=unix<CR>
 map <C-U> :emenu Encoding.
 " }}}
 
-" {{{ CtrlP
-
-" }}}
-
 " {{{ FZF 
 let $FZF_DEFAULT_COMMAND = 'ag -g ""'
 nmap <A-z> <plug>(fzf-maps-n)
@@ -389,21 +403,19 @@ nnoremap <leader><space> :Commands<CR>
 nnoremap <leader>xf :Files<CR>
 nnoremap <D-p> :Files<CR>
 nnoremap <leader>ft :Tags<CR>
-nnoremap <D-i> :BTags<CR>
-
 nnoremap <D-I> :Tags<CR>
+nnoremap <leader>bt :BTags<CR>
+nnoremap <D-i> :BTags<CR>
 nnoremap <leader>fm :Marks<CR>
 nnoremap <leader>b :Buffers<CR>
 nnoremap <leader>w :Windows<CR>
 nnoremap <A-tab> :Buffers<CR>
 nnoremap <leader>xr :FZFMru <CR>
 nnoremap Q :History/<CR>
-
-nnoremap <D-F> :Ag<CR>
+nnoremap <leader>fs :Ag<CR>
+nnoremap <D-f> :Ag<CR>
 nnoremap <Leader>fw :Ag<Space><C-r><C-w><CR>
-" nnoremap <A-F> :Ag<Space><C-r><C-w><CR>
-nnoremap <D-f> :BLines<CR>
-nnoremap <A-D-f> :Ag<Space><C-r><C-w><CR>
+nnoremap <D-F> :Ag<Space><C-r><C-w><CR>
 
 nnoremap <leader>fc :AgC<CR>
 nnoremap <leader>fh :AgH<CR>
@@ -538,6 +550,9 @@ au Filetype css setlocal ts=4
 au Filetype html setlocal ts=4
 au BufReadPre,BufRead,BufNewFile *.fish set filetype=sh
 au BufReadPre,BufRead,BufNewFile *.bashrc set filetype=sh
+au BufReadPre,BufRead,BufNewFile *.conf set filetype=conf
+au BufReadPre,BufRead,BufNewFile *.cnf set filetype=conf
+au BufReadPre,BufRead,BufNewFile monitrc set filetype=conf
 
 " buildbot configuration files
 au BufNewFile,BufRead   master.cfg      set ft=python foldmethod=marker foldenable tw=120
@@ -616,7 +631,11 @@ endif
 " }}}
 
 " {{{ if Darwin
-" let uname = substitute(system('uname'), '\n', '', '')
-" if uname == 'Darwin'
-" endif
+let uname = substitute(system('uname'), '\n', '', '')
+if uname == 'Darwin'
+" {{{ Dash
+nnoremap K :Dash<CR>
+" }}} 
+
+endif
 " }}}
