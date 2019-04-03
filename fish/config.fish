@@ -4,6 +4,7 @@ set -x EDITOR vim
 set -x HISTCONTROL ignorespace
 alias r='ranger'
 alias rm='rm -i'
+alias vim-='vim -R -'
 
 export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nornu noma' -\""
 
@@ -17,8 +18,12 @@ case Linux
     alias cdl='cd /media/psf/Home/Documents/Libs/'
     alias cdd='cd /media/psf/Home/Documents/Documents/'
     alias cdz='cd /media/psf/Home/Downloads/'
+    # alias config='vim -p /etc/monit/{monitrc,conf.d/auth_log.conf,conf.d/daemon_log.conf,conf.d/messages.conf,conf.d/syslog.conf,ip_location.sh,whitelist_ips.regex}'
 case Darwin
-    alias s="echo 'Connected to 10.211.55.3';ssh -X -t dmitriy@10.211.55.3 fish"
+    alias s=' ssh -X -t dmitriy@10.211.55.3 "cd $PWD; echo "Connected to 10.211.55.3"; fish"'
+    alias s2='ssh -X -t dmitriy@10.211.55.4 "cd $PWD; echo "Connected to 10.211.55.4"; fish"'
+    alias s3='ssh -X -t dmitriy@10.211.55.5 "cd $PWD; echo "Connected to 10.211.55.5"; fish"'
+    alias s4='ssh -X -t dmitriy@10.211.55.6 "cd $PWD; echo "Connected to 10.211.55.6"; fish"'
     alias m='open -a /Applications/MacVim.app'
     alias v='/usr/local/lib/vimr'
     alias ls='gls --color -h --group-directories-first'
@@ -37,5 +42,4 @@ end
 function fish_prompt
   set_color $fish_color_cwd
   echo (basename $PWD) "> "
-  # echo (eval $PWD) "> "
 end
