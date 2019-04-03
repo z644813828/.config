@@ -1,0 +1,31 @@
+set daemon 30 with start delay 5
+set logfile syslog facility log_daemon
+set idfile /var/lib/monit/id
+set statefile /var/lib/monit/state
+set httpd port 2812 and
+    ssl enable
+    pemfile /var/certs/monit.pem
+    allow localhost        # allow localhost to connect to the server
+    allow 192.168.2.254    # self
+    allow 192.168.2.1      # home net
+    allow 192.168.2.128    # mac
+    allow admin:monit_pass
+set eventqueue
+    basedir /var/lib/monit/events
+    slots 100
+include /etc/monit/conf.d/*
+
+set mail-format {
+    from: server_gmail
+    subject: $EVENT
+    message: $EVENT Service $SERVICE
+        Date:        $DATE
+        Action:      $ACTION
+        Host:        $HOST
+        Description: $DESCRIPTION
+    Monit }
+
+set alert my_gmail with reminder on 1 cycle
+set mailserver smtp.gmail.com port 587
+    username "server_gmail" password "monit_pass"
+    using tls

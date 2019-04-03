@@ -1,0 +1,23 @@
+RANDFILE = ./openssl.rnd
+[ req ]
+default_bits = 1024
+encrypt_key = yes
+distinguished_name = req_dn
+x509_extensions = cert_type
+    [ req_dn ]
+    countryName = RUSSIAN FEDERATION (2 letter code)
+    countryName_default = RU
+    stateOrProvinceName    = RUSSIA
+    stateOrProvinceName_default     = RUSSIA
+    localityName                    = Moscow
+    localityName_default            = Monittown
+    organizationName                = the_company
+    organizationName_default        = Monit Inc.
+    organizationalUnitName          = Organizational Unit Name
+    organizationalUnitName_default  = Dept. of Monitoring Technologies
+    commonName                      = SERVER
+    commonName_default              = server.monit.mo
+    emailAddress                    = server_gmail
+    emailAddress_default            = root@monit.mo
+    [ cert_type ]
+    nsCertType = server
