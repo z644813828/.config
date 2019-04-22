@@ -4,11 +4,18 @@ if &shell =~# 'fish$'
   set shell=/bin/bash
 endif
 
+let uname = substitute(system('uname'), '\n', '', '')
+
 " {{{ Plugins
-call plug#begin('~/.vim/plugged')
+if uname == 'Darwin'
+    call plug#begin('/Users/dmitriy/.vim/plugged')
+else
+    call plug#begin('/home/dmitriy/.vim/plugged')
+endif
 
 " {{{ UI & appearance
 Plug 'https://github.com/itchyny/lightline.vim'
+Plug 'https://github.com/Shougo/unite.vim'
 Plug 'https://github.com/jubnzv/gruvbox'           " Color scheme
 Plug 'https://github.com/chrisbra/Colorizer'       " Colorize color names and codes
 Plug 'https://github.com/junegunn/vim-peekaboo'    " Shows vim registers content into vertical split
@@ -18,7 +25,7 @@ Plug 'https://github.com/liuchengxu/vim-which-key' " Display available keybindin
 Plug 'https://github.com/jubnzv/vim-cursorword'    " Highlight word under cursor
 Plug 'https://github.com/godlygeek/tabular'         " Vim script for text filtering and alignment
 Plug 'https://github.com/tpope/vim-surround'
-Plug 'MattesGroeger/vim-bookmarks'
+Plug 'https://github.com/MattesGroeger/vim-bookmarks'
 if has("gui_running")
 Plug 'https://github.com/jiangmiao/auto-pairs'      " Insert or delete brackets, parens, quotes in pair
 endif
@@ -238,7 +245,7 @@ vnoremap // y/<C-R>"<CR>
 nnoremap <leader>s :w<CR>
 
 " Close
-nnoremap <leader>q :q<CR>
+nnoremap <leader>q :bd<CR>:echo<CR>
 
 " Still didn't fixed buffers overwriting 
 " d => delete
@@ -630,8 +637,21 @@ set completeopt=menu,noinsert
 endif
 " }}}
 
+" {{{ Bookmarks
+
+let g:bookmark_save_per_working_dir = 1
+let g:bookmark_auto_save = 1
+
+call unite#custom#profile('source/vim_bookmarks', 'context', {
+	\   'winheight': 13,
+	\   'direction': 'botright',
+	\   'start_insert': 0,
+	\   'keep_focus': 1,
+	\   'no_quit': 0,
+	\ })
+" }}} 
+
 " {{{ if Darwin
-let uname = substitute(system('uname'), '\n', '', '')
 if uname == 'Darwin'
 " {{{ Dash
 nnoremap K :Dash<CR>

@@ -9,6 +9,7 @@ call plug#begin('~/.nvim/plugged')
 
 " {{{ UI & appearance
 Plug 'https://github.com/itchyny/lightline.vim'
+Plug 'https://github.com/Shougo/unite.vim'
 Plug 'https://github.com/arcticicestudio/nord-vim'
 Plug 'https://github.com/chrisbra/Colorizer'       " Colorize color names and codes
 Plug 'https://github.com/junegunn/vim-peekaboo'    " Shows vim registers content into vertical split
@@ -133,9 +134,6 @@ hi CursorLine ctermbg=236
 hi CursorLineNr ctermbg=236
 hi ColorColumn ctermbg=236
 hi Todo ctermfg=130 guibg=#af3a03
-
-let g:bookmark_save_per_working_dir = 1
-let g:bookmark_auto_save = 1
 
 " let g:indentLine_concealcursor = 'inc'
 let g:indentLine_conceallevel = 10
@@ -301,7 +299,7 @@ nnoremap <S-D-t> :call ReopenLastTab()<CR>:echo<CR>
 nnoremap <leader>s :w<CR>
 
 " Close
-nnoremap <leader>q :q<CR>
+nnoremap <leader>q :bd<CR>
 
 " d => cut
 " leader d => delete
@@ -845,6 +843,20 @@ let g:neosnippet#enable_conceal_marker = 1
 " If your snippets trigger are same with builtin snippets, your snippets overwrite them.
 let g:neosnippet#snippets_directory='~/.config/nvim/snippets'
 " }}}
+
+" {{{ Bookmarks
+
+let g:bookmark_save_per_working_dir = 1
+let g:bookmark_auto_save = 1
+
+call unite#custom#profile('source/vim_bookmarks', 'context', {
+	\   'winheight': 13,
+	\   'direction': 'botright',
+	\   'start_insert': 0,
+	\   'keep_focus': 1,
+	\   'no_quit': 0,
+	\ })
+" }}} 
 
 " {{{ FZF
 set rtp+=/usr/local/opt/fzf

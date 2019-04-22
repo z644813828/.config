@@ -16,16 +16,18 @@ set eventqueue
 include /etc/monit/conf.d/*
 
 set mail-format {
-    from: server_gmail
-    subject: $EVENT
-    message: $EVENT Service $SERVICE
-        Date:        $DATE
-        Action:      $ACTION
-        Host:        $HOST
-        Description: $DESCRIPTION
-    Monit }
+from: server_gmail
+subject: $EVENT
+message: $EVENT Service $SERVICE
 
-set alert my_gmail with reminder on 1 cycle
+>  Date:        $DATE
+>  Action:      $ACTION
+>  Host:        $HOST
+>  Description: $DESCRIPTION
+
+Monit }
+
+set alert my_gmail but not on { icmp } with reminder on 1 cycle
 set mailserver smtp.gmail.com port 587
     username "server_gmail" password "monit_pass"
     using tls
