@@ -19,7 +19,7 @@ Plug 'https://github.com/liuchengxu/vim-which-key' " Display available keybindin
 Plug 'https://github.com/jubnzv/vim-cursorword'    " Highlight word under cursor
 Plug 'https://github.com/godlygeek/tabular'         " Vim script for text filtering and alignment
 Plug 'https://github.com/tpope/vim-surround'
-Plug 'MattesGroeger/vim-bookmarks'
+Plug 'https://github.com/MattesGroeger/vim-bookmarks'
 Plug 'https://github.com/jiangmiao/auto-pairs'      " Insert or delete brackets, parens, quotes in pair
 " }}}
 
@@ -296,10 +296,21 @@ inoremap <M-BS> <C-o>b<C-o>de
 nnoremap <S-D-t> :call ReopenLastTab()<CR>:echo<CR>
 
 " Save 
-nnoremap <leader>s :w<CR>
+nnoremap <silent><leader>s :w<CR>
 
 " Close
-nnoremap <leader>q :bd<CR>
+nnoremap <silent><leader>q :call Close()<CR>
+nnoremap <silent><D-w> :call Close()<CR>
+inoremap <silent><D-w> <C-o>:call Close()<CR>
+inoremap <silent><S-D-w> <C-o>:qa<CR>
+nnoremap <silent><S-D-w> :qa<CR>
+function! Close()
+    if len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
+        quit
+    else
+        :bd
+    endif
+endfunction
 
 " d => cut
 " leader d => delete
@@ -429,9 +440,9 @@ imap <C-_> <C-o><leader>c<Space>
 
 " {{{ Tagbar
 " nnoremap <A-\> :TagbarOpenAutoClose<CR>
-nnoremap <D-\> :TagbarOpenAutoClose<CR>
+nnoremap <silent><D-\> :TagbarOpenAutoClose<CR>
 " inoremap <A-\> <C-o>:TagbarOpenAutoClose<CR>
-inoremap <D-\> <C-o>:TagbarOpenAutoClose<CR>
+inoremap <silent><D-\> <C-o>:TagbarOpenAutoClose<CR>
 " }}}
 
 " {{{ Git workflow
@@ -469,6 +480,7 @@ nnoremap <leader>xf :Files<CR>
 nnoremap <D-p> :Files<CR>
 nnoremap <leader>ft :Tags<CR>
 nnoremap <S-D-i> :Tags<CR>
+nnoremap <leader>bt :BTags<CR>
 nnoremap <D-i> :BTags<CR>
 nnoremap <leader>fm :Marks<CR>
 nnoremap <leader>b :Buffers<CR>
@@ -487,15 +499,6 @@ nnoremap <leader>fC :AgCC<CR>
 nnoremap <leader>fp :AgPython<CR>
 nnoremap <leader>fr :AgRust<CR>
 " }}} 
-
-" {{{ GUI
-map <M-s> <ESC>:w<CR>
-" nnoremap <M-w> :q<CR>
-" inoremap <M-w> <ESC><C-o>:q<CR>
-nnoremap <D-w> :q<CR>
-inoremap <D-w> <ESC><C-o>:q<CR>
-map <D-n> :tabnew<CR>
-" }}}
 
 " {{{ C/C++
 " open tag in new tab
@@ -574,12 +577,12 @@ endfunction
 " }}}
 
 " {{{ Move lines
-nnoremap <C-j> :m .+1<CR>==
-nnoremap <C-k> :m .-2<CR>==
-inoremap <C-j> <Esc>:m .+1<CR>==gi
-inoremap <C-k> <Esc>:m .-2<CR>==gi
-vnoremap <C-j> :m '>+1<CR>gv=gv
-vnoremap <C-k> :m '<-2<CR>gv=gv
+nnoremap <silent><C-j> :m .+1<CR>==
+nnoremap <silent><C-k> :m .-2<CR>==
+inoremap <silent><C-j> <Esc>:m .+1<CR>==gi
+inoremap <silent><C-k> <Esc>:m .-2<CR>==gi
+vnoremap <silent><C-j> :m '>+1<CR>gv=gv
+vnoremap <silent><C-k> :m '<-2<CR>gv=gv
 " }}}
 
 " {{{ Deoplete

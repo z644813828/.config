@@ -34,7 +34,7 @@ case Darwin
     alias cdd='cd ~/Documents/Documents/'
     alias cdz='cd ~/Downloads/'
     alias ctr='ctags -R --languages=c,c++'
-    alias config='open -a /Applications/MacVim.app ~/.config/.bashrc ~/.config/fish/config.fish ~/.config/.vimrc ~/.config/nvim/init.vim ~/.config/karabiner/karabiner.json'
+    alias config='open -a /Applications/MacVim.app ~/.config/{.bashrc, fish/config.fish, .vimrc, nvim/init.vim, karabiner/karabiner.json, install.sh, .tmux.conf}'
 case '*'
     echo Unsupported system detected!
 end

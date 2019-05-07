@@ -69,7 +69,12 @@ set viminfo='1000,f1                        " Save global marks for up to 1000 f
 set scrolloff=7                             " 7 lines above/below cursor when scrolling
 set scroll=7                                " Number of lines scrolled by <C-u> and <C-d>
 set undofile
-set undodir=$HOME/.vim/undo
+if uname == 'Darwin'
+    set undodir=/Users/dmitriy/.vim/undo
+else
+    set undodir=/home/dmitriy/.vim/undo
+endif
+
 set undolevels=1000
 set undoreload=10000
 set clipboard=unnamedplus,unnamed           " Use system clipboard
@@ -242,10 +247,23 @@ vnoremap // y/<C-R>"<CR>
 " inoremap <M-BS> <C-o>b<C-o>dw
 
 " Save 
-nnoremap <leader>s :w<CR>
+nnoremap <silent><leader>s :w<CR>
+nnoremap <silent><leader>S :w!<CR>
 
 " Close
-nnoremap <leader>q :bd<CR>:echo<CR>
+nnoremap <silent><leader>q :call Close()<CR>
+nnoremap <silent><D-w> :call Close()<CR>
+inoremap <silent><D-w> <C-o>:call Close()<CR>
+function! Close()
+    if len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
+        quit
+    else
+        :bd
+    endif
+endfunction
+
+" Toggle LineNumbers
+nnoremap <silent><leader>tr :set relativenumber!<CR>
 
 " Still didn't fixed buffers overwriting 
 " d => delete
@@ -432,12 +450,12 @@ nnoremap <leader>fr :AgRust<CR>
 " }}} 
 
 " {{{ Move lines
-nnoremap <C-j> :m .+1<CR>==
-nnoremap <C-k> :m .-2<CR>==
-inoremap <C-j> <Esc>:m .+1<CR>==gi
-inoremap <C-k> <Esc>:m .-2<CR>==gi
-vnoremap <C-j> :m '>+1<CR>gv=gv
-vnoremap <C-k> :m '<-2<CR>gv=gv
+nnoremap <silent><C-j> :m .+1<CR>==
+nnoremap <silent><C-k> :m .-2<CR>==
+inoremap <silent><C-j> <Esc>:m .+1<CR>==gi
+inoremap <silent><C-k> <Esc>:m .-2<CR>==gi
+vnoremap <silent><C-j> :m '>+1<CR>gv=gv
+vnoremap <silent><C-k> :m '<-2<CR>gv=gv
 " }}}
 
 " {{{ Deoplete
@@ -468,6 +486,15 @@ inoremap <silent><expr> <C-Space> deoplete#mappings#manual_complete()
 "Escape: exit autocompletion, go to Normal mode
 " inoremap <silent><expr> <Esc> pumvisible() ? "<C-o><Esc>" : "<Esc>"
 " }}} 
+
+" {{{ if Darwin
+if uname == 'Darwin'
+" {{{ Dash
+nnoremap K :Dash<CR>
+" }}}
+
+endif
+" }}}
 
 " }}}
 
@@ -651,11 +678,3 @@ call unite#custom#profile('source/vim_bookmarks', 'context', {
 	\ })
 " }}} 
 
-" {{{ if Darwin
-if uname == 'Darwin'
-" {{{ Dash
-nnoremap K :Dash<CR>
-" }}} 
-
-endif
-" }}}

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-cp .vimrc ../
-cp .bashrc ../
+cp -r .vimrc .gvimrc .bashrc .tmux.conf ../
 
 vim +PlugInstall +qall
 nvim +PlugInstall +qall
@@ -21,7 +20,7 @@ EXEC_SERV="vim +PlugInstall +qall; \
 SCP(){
     scp .vimrc dmitriy@$1:/home/dmitriy/
     scp .bashrc dmitriy@$1:/home/dmitriy/
-    scp ~/.tmux.conf dmitriy@$1:/home/dmitriy/
+    scp .tmux.conf dmitriy@$1:/home/dmitriy/
     scp fish/config.fish dmitriy@$1:/home/dmitriy/.config/fish/
 }
 
