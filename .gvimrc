@@ -1,3 +1,8 @@
+" defaults write org.vim.MacVim MMNoTitleBarWindow true
+" defaults write org.vim.MacVim MMTextInsetTop 0
+" defaults write org.vim.MacVim MMTextInsetBottom 0
+set guifont=SF\ MONO:h13
+colorscheme gruvbox
 set showtabline=0 
 set lines=60 columns=256
 " macmenu File.Save key=<nop>

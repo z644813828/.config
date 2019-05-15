@@ -30,6 +30,8 @@ Plug 'https://github.com/airblade/vim-gitgutter'
 " {{{ Writing code
 Plug 'https://github.com/majutsushi/tagbar'            " Vim plugin that displays tags in a window
 Plug 'https://github.com/ludovicchabant/vim-gutentags' " Auto (re)generate tag files
+Plug 'prurigro/vim-markdown-concealed'
+Plug 'masukomi/vim-markdown-folding'
 Plug 'https://github.com/terryma/vim-expand-region'    " Visually select increasingly larger regions of text
 Plug 'https://github.com/Shougo/echodoc.vim'           " Displays function signatures from completions in the command line
 Plug 'https://github.com/scrooloose/nerdcommenter'
@@ -135,8 +137,11 @@ hi CursorLineNr ctermbg=236
 hi ColorColumn ctermbg=236
 hi Todo ctermfg=130 guibg=#af3a03
 
-" let g:indentLine_concealcursor = 'inc'
-let g:indentLine_conceallevel = 10
+highlight htmlBold gui=bold guifg=#af0000 ctermfg=124
+highlight htmlItalic gui=italic guifg=#af8700 ctermfg=214
+
+let g:indentLine_concealcursor = ''
+let g:indentLine_conceallevel = 0
 
 let g:indentLine_char = '⎸'
 
@@ -251,7 +256,6 @@ set foldtext=CustomFoldText()
 " Binds that changes default vim behavior, separated from plugins
 " configuration.
 "
-inoremap jj <Esc>
 nnoremap <leader>h :noh<CR>
 map <Leader><ESC> :pclose<CR>:noh<CR>:echo<CR>
 nnoremap <ENTER> :pclose<CR>:noh<CR>:echo<CR>
@@ -259,9 +263,12 @@ nnoremap <ENTER> :pclose<CR>:noh<CR>:echo<CR>
 " Insert newline without entering insert mode
 nmap zj o<Esc>k
 nmap zk O<Esc>j
+nmap яо zj
+nmap ял zk
 
 " Reload vimrc
 nnoremap <leader>R :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
+nmap <leader>К <leader>R
 
 " Clear ':'
 nmap <F1> :echo <CR>
@@ -292,14 +299,25 @@ vnoremap // y/<C-R>"<CR>
 " Delete word in insert
 inoremap <M-BS> <C-o>b<C-o>de
 
+nnoremap <silent><leader>e :e<CR>
+nnoremap <silent><leader>у :e<CR>
+nnoremap <silent><leader>E :e!<CR>
+nnoremap <silent><leader>У :e!<CR>
+
 " Tab Restore
 nnoremap <S-D-t> :call ReopenLastTab()<CR>:echo<CR>
 
 " Save 
 nnoremap <silent><leader>s :w<CR>
+nnoremap <silent><leader>ы :w<CR>
+nnoremap <silent><leader>S :w!<CR>
+nnoremap <silent><leader>Ы :w!<CR>
 
 " Close
 nnoremap <silent><leader>q :call Close()<CR>
+nnoremap <silent><leader>й :call Close()<CR>
+nnoremap <silent><leader>Q :call Close_force()<CR>
+nnoremap <silent><leader>Й :call Close_force()<CR>
 nnoremap <silent><D-w> :call Close()<CR>
 inoremap <silent><D-w> <C-o>:call Close()<CR>
 inoremap <silent><S-D-w> <C-o>:qa<CR>
@@ -311,15 +329,32 @@ function! Close()
         :bd
     endif
 endfunction
+function! Close_force()
+    if len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
+        quit!
+    else
+        :bd!
+    endif
+endfunction
 
-" d => cut
+" Toggle LineNumbers
+nnoremap <silent><leader>tr :set relativenumber!<CR>
+nnoremap <silent><leader>ек :set relativenumber!<CR>
+
+" Clear registers 
+" let regs='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-"' | let i=0 | while (i<strlen(regs)) | exec 'let @'.regs[i].'=""' | let i=i+1 | endwhile | unlet regs
+
+" Fix regs overwriting
+" dd => cut
 " leader d => delete
-" nnoremap p "_dP
-" xnoremap p "_dP
-" nnoremap <leader>d "_d
-" vnoremap <leader>d "_d
-" nnoremap <leader>D "_D
-" nnoremap <leader>x "_x
+nnoremap x "_x
+vnoremap x "_x
+nnoremap D "_D
+xnoremap p "_dP
+
+nnoremap <leader>d ""d
+vnoremap <leader>d ""d
+nnoremap <leader>D ""D
 " }}}
 
 " {{{ Tabs with cmd +[0..9] 
@@ -447,15 +482,24 @@ inoremap <silent><D-\> <C-o>:TagbarOpenAutoClose<CR>
 
 " {{{ Git workflow
 nmap [v <Plug>GitGutterPrevHunk
+nmap хм <Plug>GitGutterPrevHunk
 nmap ]v <Plug>GitGutterNextHunk
+nmap ъм <Plug>GitGutterNextHunk
 nmap <Leader>v <Plug>GitGutterPreviewHunk
+nmap <Leader>м <Plug>GitGutterPreviewHunk
 " }}}
 
 " {{{ Folding
 nnoremap <leader>z za
+nnoremap <leader>я za
+nnoremap <Tab> za<CR>k
+nnoremap <S-Tab> zA<CR>k
 nnoremap zz za
+nnoremap яя za
 nnoremap za zM
+nnoremap яф zM
 nnoremap zA zR
+nnoremap яК zR
 " }}}
 
 " {{{ Encoding menu
@@ -471,33 +515,51 @@ map <C-U> :emenu Encoding.
 " {{{ FZF 
 let $FZF_DEFAULT_COMMAND = 'ag -g ""'
 nmap <A-z> <plug>(fzf-maps-n)
+nmap <A-я> <plug>(fzf-maps-n)
 xmap <A-z> <plug>(fzf-maps-x)
+xmap <A-я> <plug>(fzf-maps-x)
 omap <A-z> <plug>(fzf-maps-o)
+omap <A-я> <plug>(fzf-maps-o)
 autocmd FileType fzf tnoremap <buffer> <Esc> <c-g>
 
 nnoremap <leader><space> :Commands<CR>
 nnoremap <leader>xf :Files<CR>
+nnoremap <leader>ча :Files<CR>
 nnoremap <D-p> :Files<CR>
 nnoremap <leader>ft :Tags<CR>
+nnoremap <leader>ае :Tags<CR>
 nnoremap <S-D-i> :Tags<CR>
 nnoremap <leader>bt :BTags<CR>
+nnoremap <leader>ие :BTags<CR>
 nnoremap <D-i> :BTags<CR>
 nnoremap <leader>fm :Marks<CR>
+nnoremap <leader>аь :Marks<CR>
 nnoremap <leader>b :Buffers<CR>
+nnoremap <leader>и :Buffers<CR>
 nnoremap <leader>w :Windows<CR>
+nnoremap <leader>ц :Windows<CR>
 nnoremap <A-tab> :Buffers<CR>
 nnoremap <leader>xr :FZFMru <CR>
+nnoremap <leader>чк :FZFMru <CR>
 nnoremap Q :History/<CR>
+nnoremap Й :History/<CR>
 nnoremap <leader>fs :Ag<CR>
+nnoremap <leader>аы :Ag<CR>
 nnoremap <D-f> :Ag<CR>
 nnoremap <Leader>fw :Ag<Space><C-r><C-w><CR>
+nnoremap <Leader>ац :Ag<Space><C-r><C-w><CR>
 nnoremap <S-D-f> :Ag<Space><C-r><C-w><CR>
 
 nnoremap <leader>fc :AgC<CR>
+nnoremap <leader>ас :AgC<CR>
 nnoremap <leader>fh :AgH<CR>
+nnoremap <leader>ар :AgH<CR>
 nnoremap <leader>fC :AgCC<CR>
+nnoremap <leader>аС :AgCC<CR>
 nnoremap <leader>fp :AgPython<CR>
+nnoremap <leader>аз :AgPython<CR>
 nnoremap <leader>fr :AgRust<CR>
+nnoremap <leader>ак :AgRust<CR>
 " }}} 
 
 " {{{ C/C++
@@ -770,11 +832,22 @@ endif
 "}}}
 
 " {{{ Other files
+autocmd FileType markdown set foldmethod=expr
+au FileType markdown set fen tw=0 sw=2 foldlevel=0 foldexpr=NestedMarkdownFolds()
+au FileType markdown let g:indentLine_conceallevel = 1
+let g:vim_markdown_override_foldtext = 0
+let g:vim_markdown_folding_style_pythonic = 1
+let g:vim_markdown_folding_level = 0
+let g:vim_markdown_initial_foldlevel=0
+let g:vim_markdown_folding_disabled=1
 au FileType conf set foldmethod=marker foldenable
 au Filetype css setlocal ts=4
 au Filetype html setlocal ts=4
 au BufReadPre,BufRead,BufNewFile *.fish set filetype=sh
 au BufReadPre,BufRead,BufNewFile *.bashrc set filetype=sh
+au BufReadPre,BufRead,BufNewFile *.conf set filetype=conf
+au BufReadPre,BufRead,BufNewFile *.cnf set filetype=conf
+au BufReadPre,BufRead,BufNewFile monitrc set filetype=conf
 
 " buildbot configuration files
 au BufNewFile,BufRead   master.cfg      set ft=python foldmethod=marker foldenable tw=120
