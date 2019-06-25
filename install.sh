@@ -1,10 +1,5 @@
 #!/bin/bash
 
-cp -r .vimrc .gvimrc .bashrc .tmux.conf ../
-
-vim +PlugInstall +qall
-nvim +PlugInstall +qall
-
 EXEC_USER="curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
         https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim; \
         sed -i 's/(basename \$PWD) //g' ~/.config/fish/config.fish; \
@@ -45,10 +40,31 @@ EXEC_S(){
     fi
 }
 
-EXEC_C 10.211.55.3
-EXEC_C 10.211.55.4
-EXEC_C 10.211.55.5
-EXEC_C 10.211.55.6
-
-EXEC_S 192.168.2.254
-EXEC_S 192.168.2.255
+if [[ "$1" == "0" ]]; then
+    cp -r .vimrc .gvimrc .bashrc .tmux.conf ../
+    cp -r .bashrc .tmux.conf ../.sshrc.d
+    cp .vimrc_ ../.sshrc.d/.vimrc
+    vim +PlugInstall +qall
+    nvim +PlugInstall +qall
+elif [[ "$1" == "" ]]; then
+    # Parallels 
+    EXEC_C 10.211.55.3
+    EXEC_C 10.211.55.4
+    EXEC_C 10.211.55.5
+    EXEC_C 10.211.55.6
+    # PI 
+    EXEC_S 192.168.2.220
+    # Server 
+    EXEC_S 192.168.2.254
+    EXEC_S 192.168.2.255
+else
+    echo Enter [c/s] [client/server]
+    read S
+    if [[ "$S" == "c" ]]; then
+        EXEC_C $1
+    elif [[ "$S" == "s" ]]; then
+        EXEC_S $1
+    else
+        echo Unsupported case
+    fi
+fi

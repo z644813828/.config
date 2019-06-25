@@ -171,11 +171,20 @@
                 {
                   "from" : {
                     "key_code" : "hyphen",
+                    "modifiers" : {"mandatory" : ["right_option"]}
+                  },
+                  "to" :
+                      [ {"shell_command" : "open '/Applications/Fork.app'"} ],
+                  "type" : "basic"
+                },
+                {
+                  "from" : {
+                    "key_code" : "equal_sign",
                     "modifiers" :
                         {"mandatory" : [ "right_option" ]}
                   },
                   "to" :
-                      [ {"shell_command" : "open '/Applications/Fork.app'"} ],
+                      [ {"shell_command" : "open '/Applications/Joplin.app'"} ],
                   "type" : "basic"
                 }
               ]
@@ -355,9 +364,8 @@
                   "key_code" : "slash",
                   "modifiers" : {"mandatory" : ["left_control"]}
                 },
-                "to" : [
-                  {"key_code" : "hyphen", "modifiers" : ["left_control"]}
-                ],
+                "to" :
+                    [ {"key_code" : "hyphen", "modifiers" : ["left_control"]} ],
                 "type" : "basic"
               } ]
             }
