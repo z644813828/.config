@@ -256,19 +256,18 @@ set foldtext=CustomFoldText()
 " Binds that changes default vim behavior, separated from plugins
 " configuration.
 "
-nnoremap <leader>h :noh<CR>
 map <Leader><ESC> :pclose<CR>:noh<CR>:echo<CR>
 nnoremap <ENTER> :pclose<CR>:noh<CR>:echo<CR>
 
 " Insert newline without entering insert mode
-nmap zj o<Esc>k
-nmap zk O<Esc>j
-nmap яо zj
-nmap ял zk
+nnoremap zj o<Esc>k
+nnoremap zk O<Esc>j
+nnoremap яо o<Esc>k
+nnoremap ял O<Esc>j
 
 " Reload vimrc
 nnoremap <leader>R :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
-nmap <leader>К <leader>R
+nnoremap <leader>К :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 
 " Clear ':'
 nmap <F1> :echo <CR>
@@ -303,6 +302,10 @@ nnoremap <silent><leader>e :e<CR>
 nnoremap <silent><leader>у :e<CR>
 nnoremap <silent><leader>E :e!<CR>
 nnoremap <silent><leader>У :e!<CR>
+
+" New buffer 
+nnoremap <D-t> :enew<CR>
+inoremap <D-t> <C-o>:enew<CR>
 
 " Tab Restore
 nnoremap <S-D-t> :call ReopenLastTab()<CR>:echo<CR>
@@ -499,7 +502,7 @@ nnoremap яя za
 nnoremap za zM
 nnoremap яф zM
 nnoremap zA zR
-nnoremap яК zR
+nnoremap яФ zR
 " }}}
 
 " {{{ Encoding menu
@@ -509,7 +512,7 @@ menu Encoding.cp866 :e ++enc=cp866 ++ff=dos<CR>
 menu Encoding.utf-8 :e ++enc=utf8<CR>
 menu Encoding.koi8-u :e ++enc=koi8-u ++ff=unix<CR>
 
-map <C-U> :emenu Encoding.
+nmap <C-U> :emenu Encoding.
 " }}}
 
 " {{{ FZF 
@@ -523,43 +526,41 @@ omap <A-я> <plug>(fzf-maps-o)
 autocmd FileType fzf tnoremap <buffer> <Esc> <c-g>
 
 nnoremap <leader><space> :Commands<CR>
-nnoremap <leader>xf :Files<CR>
-nnoremap <leader>ча :Files<CR>
+nnoremap <leader>p :Files<CR>
+nnoremap <leader>з :Files<CR>
 nnoremap <D-p> :Files<CR>
-nnoremap <leader>ft :Tags<CR>
-nnoremap <leader>ае :Tags<CR>
+nnoremap <leader>I :Tags<CR>
+nnoremap <leader>Ш :Tags<CR>
 nnoremap <S-D-i> :Tags<CR>
-nnoremap <leader>bt :BTags<CR>
-nnoremap <leader>ие :BTags<CR>
+nnoremap <leader>i :BTags<CR>
+nnoremap <leader>ш :BTags<CR>
 nnoremap <D-i> :BTags<CR>
-nnoremap <leader>fm :Marks<CR>
-nnoremap <leader>аь :Marks<CR>
+nnoremap <leader>m :Marks<CR>
+nnoremap <leader>ь :Marks<CR>
 nnoremap <leader>b :Buffers<CR>
 nnoremap <leader>и :Buffers<CR>
 nnoremap <leader>w :Windows<CR>
 nnoremap <leader>ц :Windows<CR>
 nnoremap <A-tab> :Buffers<CR>
-nnoremap <leader>xr :FZFMru <CR>
-nnoremap <leader>чк :FZFMru <CR>
 nnoremap Q :History/<CR>
 nnoremap Й :History/<CR>
-nnoremap <leader>fs :Ag<CR>
-nnoremap <leader>аы :Ag<CR>
+nnoremap <leader>f :Ag<CR>
+nnoremap <leader>а :Ag<CR>
 nnoremap <D-f> :Ag<CR>
-nnoremap <Leader>fw :Ag<Space><C-r><C-w><CR>
-nnoremap <Leader>ац :Ag<Space><C-r><C-w><CR>
+nnoremap <Leader>Fw :Ag<Space><C-r><C-w><CR>
+nnoremap <Leader>Ац :Ag<Space><C-r><C-w><CR>
 nnoremap <S-D-f> :Ag<Space><C-r><C-w><CR>
 
-nnoremap <leader>fc :AgC<CR>
-nnoremap <leader>ас :AgC<CR>
-nnoremap <leader>fh :AgH<CR>
-nnoremap <leader>ар :AgH<CR>
-nnoremap <leader>fC :AgCC<CR>
-nnoremap <leader>аС :AgCC<CR>
-nnoremap <leader>fp :AgPython<CR>
-nnoremap <leader>аз :AgPython<CR>
-nnoremap <leader>fr :AgRust<CR>
-nnoremap <leader>ак :AgRust<CR>
+nnoremap <leader>Fc :AgC<CR>
+nnoremap <leader>Ас :AgC<CR>
+nnoremap <leader>Fh :AgH<CR>
+nnoremap <leader>Ар :AgH<CR>
+nnoremap <leader>FC :AgCC<CR>
+nnoremap <leader>АС :AgCC<CR>
+nnoremap <leader>Fp :AgPython<CR>
+nnoremap <leader>Аз :AgPython<CR>
+nnoremap <leader>Fr :AgRust<CR>
+nnoremap <leader>Ак :AgRust<CR>
 " }}} 
 
 " {{{ C/C++
