@@ -159,6 +159,10 @@ nnoremap <leader>С :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/
 nnoremap <leader>B :cd ~/OneDrive/Notes<CR>:FZF<CR>
 nnoremap <leader>И :cd ~/OneDrive/Notes<CR>:FZF<CR>
 
+" Insert current time
+nnoremap <leader>td "=strftime("%x %X")<CR>P
+nnoremap <leader>ев "=strftime("%x %X")<CR>P
+
 " Highlight search results incrementally (haya14busa/incsearch.vim)
 map /  <Plug>(incsearch-forward)
 map ?  <Plug>(incsearch-backward)
@@ -194,6 +198,7 @@ nnoremap <silent><leader>s :w<CR>
 nnoremap <silent><leader>ы :w<CR>
 nnoremap <silent><leader>S :w!<CR>
 nnoremap <silent><leader>Ы :w!<CR>
+command SaveSudo w !sudo tee %
 
 " Close
 nnoremap <silent><leader>q :call Close()<CR>
@@ -233,8 +238,11 @@ nnoremap D "_D
 xnoremap p "_dP
 
 nnoremap <leader>d ""d
+nnoremap <leader>в ""d
 vnoremap <leader>d ""d
+vnoremap <leader>в ""d
 nnoremap <leader>D ""D
+nnoremap <leader>В ""D
 " }}}
 
 " {{{ Tabs with cmd +[0..9] 

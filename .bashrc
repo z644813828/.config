@@ -3,6 +3,8 @@ export EDITOR='vim'
 export HISTCONTROL='ignorespace'
 alias r='ranger'
 alias rm='rm -i'
+alias vi='vim -u ~/.vimrc_'
+alias sudo='sudo '
 
 export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nornu noma' -\""
 

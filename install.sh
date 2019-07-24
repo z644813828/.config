@@ -14,6 +14,7 @@ EXEC_SERV="vim +PlugInstall +qall; \
 
 SCP(){
     scp .vimrc dmitriy@$1:/home/dmitriy/
+    scp .vimrc_ dmitriy@$1:/home/dmitriy/
     scp .bashrc dmitriy@$1:/home/dmitriy/
     scp .tmux.conf dmitriy@$1:/home/dmitriy/
     scp fish/config.fish dmitriy@$1:/home/dmitriy/.config/fish/
@@ -44,6 +45,7 @@ if [[ "$1" == "0" ]]; then
     cp -r .vimrc .gvimrc .bashrc .tmux.conf ../
     cp -r .bashrc .tmux.conf ../.sshrc.d
     cp .vimrc_ ../.sshrc.d/.vimrc
+    cp .vimrc_ ../
     vim +PlugInstall +qall
     nvim +PlugInstall +qall
 elif [[ "$1" == "" ]]; then

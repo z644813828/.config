@@ -1,7 +1,9 @@
 " defaults write org.vim.MacVim MMNoTitleBarWindow true
-" defaults write org.vim.MacVim MMTextInsetTop 0
-" defaults write org.vim.MacVim MMTextInsetBottom 0
-set guifont=SF\ MONO:h13
+" defaults write org.vim.MacVim MMTextInsetTop 5;
+" defaults write org.vim.MacVim MMTextInsetBottom 5;
+" defaults write org.vim.MacVim MMTextInsetLeft 0;
+" defaults write org.vim.MacVim MMTextInsetRight 0;
+set guifont=SF\ MONO:h12
 colorscheme gruvbox
 set showtabline=0 
 set lines=60 columns=256

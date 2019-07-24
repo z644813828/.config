@@ -6,6 +6,11 @@ set -x SCRIPTS ~/.config/scripts
 alias r='ranger'
 alias rm='rm -i'
 alias vim-='vim -R -'
+alias vi='vim -u ~/.vimrc_'
+
+function sudo 
+    command sudo -sE $argv 
+end
 
 export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nornu noma' -\""
 
@@ -24,11 +29,17 @@ case Linux
     alias ll='ls -lh -G --color -h --group-directories-first'
     alias config='cd /etc/monit; vim -p /etc/monit/{monitrc,conf.d/auth_log.conf,conf.d/daemon_log.conf,conf.d/messages.conf,conf.d/syslog.conf,ip_location.sh,whitelist_ips.regex}'
 case Darwin
+
+    function ssh
+        command $SCRIPTS/ssh.sh $argv
+    end
+
     alias s=' ssh -X -t dmitriy@10.211.55.3 "cd $PWD; echo "Connected to 10.211.55.3"; fish"'
     alias s2='ssh -X -t dmitriy@10.211.55.4 "cd $PWD; echo "Connected to 10.211.55.4"; fish"'
     alias s3='ssh -X -t dmitriy@10.211.55.5 "cd $PWD; echo "Connected to 10.211.55.5"; fish"'
     alias s4='ssh -X -t dmitriy@10.211.55.6 "cd $PWD; echo "Connected to 10.211.55.6"; fish"'
     alias m='/Applications/MacVim.app/Contents/bin/mvim'
+    alias m_cli='/usr/local/bin/m'
     alias mivm='/Applications/MacVim.app/Contents/bin/mvim'
     alias v='/usr/local/lib/vimr'
     alias ls='gls --color -h --group-directories-first'

@@ -110,7 +110,7 @@ set langmap+=ЖжЭэХхЪъ;\:\;\"\'{[}]
 " {{{ UI options
 set guioptions-=m                           " Remove menu bar
 set guioptions-=T                           " Remove toolbar
-" set guioptions-=r                           " Remove right-hand scroll bar
+set guioptions-=r                           " Remove right-hand scroll bar
 set guioptions-=L                           " Remove left-hand scroll bar
 set shortmess+=Ic                           " Don't display the intro message on starting vim
 set noshowmode
@@ -268,6 +268,7 @@ nnoremap <silent><leader>s :w<CR>
 nnoremap <silent><leader>ы :w<CR>
 nnoremap <silent><leader>S :w!<CR>
 nnoremap <silent><leader>Ы :w!<CR>
+command SaveSudo w !sudo tee %
 
 " Close
 nnoremap <silent><leader>q :call Close()<CR>
