@@ -1,5 +1,3 @@
 #!/bin/bash
-
-cd /usr/local/bin/browserosaurus/ 
-nohup yarn start &>/dev/null &
+yarn --cwd /usr/local/bin/browserosaurus/ start >> /Users/dmitriy/browserosaurus_log
 

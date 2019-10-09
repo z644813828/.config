@@ -222,8 +222,8 @@ nnoremap <leader>R :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 nnoremap <leader>К :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 
 " Open config files
-nnoremap <leader>C :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf<CR>
-nnoremap <leader>С :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf<CR>
+nnoremap <leader>C :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf .zshrc<CR>
+nnoremap <leader>С :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf .zshrc<CR>
 
 " Open bookmarks
 nnoremap <leader>B :cd ~/OneDrive/Notes<CR>:FZF<CR>
@@ -463,6 +463,90 @@ menu Encoding.koi8-u :e ++enc=koi8-u ++ff=unix<CR>
 nmap <C-U> :emenu Encoding.
 " }}}
 
+" {{{ Grammar menu
+" cd $(vim -e -T dumb --cmd 'exe "set t_cm=\<C-M>"|echo $VIMRUNTIME|quit' | tr -d '\015')
+" cat <(ls -1 ftplugin/*.vim) <(ls -1 syntax/*.vim) | tr '\n' '\0' | xargs -0 -n 1 basename | sort | uniq | cut -f 1 -d '.'
+menu Grammar.vim :set filetype=vim<CR>
+menu Grammar.bash :set filetype=bash<CR>
+menu Grammar.basic :set filetype=basic<CR>
+menu Grammar.cfg :set filetype=cfg<CR>
+menu Grammar.cf :set filetype=cf<CR>
+menu Grammar.changelog :set filetype=changelog<CR>
+menu Grammar.change :set filetype=change<CR>
+menu Grammar.ch :set filetype=ch<CR>
+menu Grammar.clean :set filetype=clean<CR>
+menu Grammar.cmake :set filetype=cmake<CR>
+menu Grammar.cmod :set filetype=cmod<CR>
+menu Grammar.cmusrc :set filetype=cmusrc<CR>
+menu Grammar.cobol :set filetype=cobol<CR>
+menu Grammar.coco :set filetype=coco<CR>
+menu Grammar.config :set filetype=config<CR>
+menu Grammar.conf :set filetype=conf<CR>
+menu Grammar.context :set filetype=context<CR>
+menu Grammar.cpp :set filetype=cpp<CR>
+menu Grammar.crontab :set filetype=crontab<CR>
+menu Grammar.css :set filetype=css<CR>
+menu Grammar.cs :set filetype=cs<CR>
+menu Grammar.cterm :set filetype=cterm<CR>
+menu Grammar.c :set filetype=c<CR>
+menu Grammar.def :set filetype=def<CR>
+menu Grammar.diff :set filetype=diff<CR>
+menu Grammar.dns :set filetype=dns<CR>
+menu Grammar.gdb :set filetype=gdb<CR>
+menu Grammar.gitcommit :set filetype=gitcommit<CR>
+menu Grammar.gitconfig :set filetype=gitconfig<CR>
+menu Grammar.git :set filetype=git<CR>
+menu Grammar.haskell :set filetype=haskell<CR>
+menu Grammar.logcheck :set filetype=logcheck<CR>
+menu Grammar.loginaccess :set filetype=loginaccess<CR>
+menu Grammar.lua :set filetype=lua<CR>
+menu Grammar.m4 :set filetype=m4<CR>
+menu Grammar.make :set filetype=make<CR>
+menu Grammar.manconf :set filetype=manconf<CR>
+menu Grammar.manual :set filetype=manual<CR>
+menu Grammar.man :set filetype=man<CR>
+menu Grammar.markdown :set filetype=markdown<CR>
+menu Grammar.messages :set filetype=messages<CR>
+menu Grammar.mysql :set filetype=mysql<CR>
+menu Grammar.objcpp :set filetype=objcpp<CR>
+menu Grammar.objc :set filetype=objc<CR>
+menu Grammar.obj :set filetype=obj<CR>
+menu Grammar.ocaml :set filetype=ocaml<CR>
+menu Grammar.pascal :set filetype=pascal<CR>
+menu Grammar.passwd :set filetype=passwd<CR>
+menu Grammar.pdf :set filetype=pdf<CR>
+menu Grammar.php :set filetype=php<CR>
+menu Grammar.phtml :set filetype=phtml<CR>
+menu Grammar.psf :set filetype=psf<CR>
+menu Grammar.python :set filetype=python<CR>
+menu Grammar.raml :set filetype=raml<CR>
+menu Grammar.rcs :set filetype=rcs<CR>
+menu Grammar.rc :set filetype=rc<CR>
+menu Grammar.readline :set filetype=readline<CR>
+menu Grammar.registry :set filetype=registry<CR>
+menu Grammar.resolv :set filetype=resolv<CR>
+menu Grammar.scheme :set filetype=scheme<CR>
+menu Grammar.sshconfig :set filetype=sshconfig<CR>
+menu Grammar.sshdconfig :set filetype=sshdconfig<CR>
+menu Grammar.stp :set filetype=stp<CR>
+menu Grammar.sudoers :set filetype=sudoers<CR>
+menu Grammar.syntax :set filetype=syntax<CR>
+menu Grammar.sysctl :set filetype=sysctl<CR>
+menu Grammar.systemd :set filetype=systemd<CR>
+menu Grammar.tags :set filetype=tags<CR>
+menu Grammar.text :set filetype=text<CR>
+menu Grammar.tmux :set filetype=tmux<CR>
+menu Grammar.wget :set filetype=wget<CR>
+menu Grammar.whitespace :set filetype=whitespace<CR>
+menu Grammar.xml :set filetype=xml<CR>
+menu Grammar.xmodmap :set filetype=xmodmap<CR>
+menu Grammar.xquery :set filetype=xquery<CR>
+menu Grammar.yaml :set filetype=yaml<CR>
+menu Grammar.zsh :set filetype=zsh<CR>
+
+nmap <C-O> :emenu Grammar.
+" }}}
+
 " {{{ FZF 
 let $FZF_DEFAULT_COMMAND = 'ag -g ""'
 nmap <A-z> <plug>(fzf-maps-n)
@@ -651,6 +735,7 @@ let g:vim_markdown_folding_level = 0
 let g:vim_markdown_initial_foldlevel=0
 let g:vim_markdown_folding_disabled=1
 au FileType conf set foldmethod=marker foldenable
+au FileType zsh setlocal foldmethod=marker foldlevel=0 foldenable
 au Filetype css setlocal ts=4
 au Filetype html setlocal ts=4
 au BufReadPre,BufRead,BufNewFile *.fish set filetype=sh

@@ -249,6 +249,8 @@
    At the bottom of the pane, select the “Show Develop menu in menu bar” checkbox.  
    From the menu bar, go to Developer and check the Allow JavaScript from Apple Events  
 
+### [No clamshell mode](https://github.com/pirj/noclamshell)
+
 ### TimeMachine on NAS fail fixing 
 >  Sometime TimeMachine on NAS failes to check it's backup copy and tries to make a new one. This software can fix it's behavior and let to continue using old backup.  
 add `fsck_hfs` to `settings-> full disk access`  
