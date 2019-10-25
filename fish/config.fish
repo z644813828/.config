@@ -25,11 +25,21 @@ alias cdo='cd ~/OneDrive'
 switch (uname)
 case Linux
     alias v='vim'
+    alias pvs = "$SCRIPTS/pvs.sh"
     alias ls='ls --color -h --group-directories-first'
     alias ll='ls -lh -G --color -h --group-directories-first'
     alias config='cd /etc/monit; vim -p /etc/monit/{monitrc,conf.d/auth_log.conf,conf.d/daemon_log.conf,conf.d/messages.conf,conf.d/syslog.conf,ip_location.sh,whitelist_ips.regex}'
 
 case Darwin
+
+    function check_pull
+        if count $argv > /dev/null
+            git remote update
+            git status
+        else
+            command $SCRIPTS/chec_pull.sh $argv
+        end
+    end
 
     function ssh
         command $SCRIPTS/ssh.sh $argv
@@ -40,7 +50,6 @@ case Darwin
             command ssh -o LogLevel=QUIET -t dmitriy@10.211.55.3 "cd $PWD; $argv"
         else
             command ssh -t dmitriy@10.211.55.3 "cd $PWD; echo "Connected to 10.211.55.3"; fish"
-
         end
     end
 
@@ -56,7 +65,7 @@ case Darwin
     alias ll='gls -lh -G --color -h --group-directories-first'
     alias ctr='ctags -R --languages=c,c++'
     alias config='/Applications/MacVim.app/Contents/bin/mvim ~/.config/{.bashrc, fish/config.fish, .vimrc, nvim/init.vim, karabiner/karabiner.json, install.sh, .tmux.conf}'
-    alias browserosaurus='cd /usr/local/bin/browserosaurus/; bash -c -- "nohup yarn start &>/dev/null &"; cd -'
+    alias browserosaurus='cd /usr/local/bin/browserosaurus/; bash -c -- "nohup yarn start &>/dev/null &" cd -'
     alias cat='bat'
 
 case '*'

@@ -8,11 +8,11 @@
       : [ {
         "complex_modifications" : {
           "parameters" : {
-            "basic.simultaneous_threshold_milliseconds" : 50,
-            "basic.to_delayed_action_delay_milliseconds" : 500,
-            "basic.to_if_alone_timeout_milliseconds" : 1000,
-            "basic.to_if_held_down_threshold_milliseconds" : 500,
-            "mouse_motion_to_scroll.speed" : 100
+            "basic.simultaneous_threshold_milliseconds" : 5,
+            "basic.to_delayed_action_delay_milliseconds" : 5,
+            "basic.to_if_alone_timeout_milliseconds" : 10,
+            "basic.to_if_held_down_threshold_milliseconds" : 50,
+            "mouse_motion_to_scroll.speed" : 10
           },
           "rules" : [
             {
@@ -180,6 +180,16 @@
                 },
                 {
                   "from" : {
+                    "key_code" : "hyphen",
+                    "modifiers" :
+                        {"mandatory" : [ "right_option", "right_shift" ]}
+                  },
+                  "to" :
+                      [ {"shell_command" : "open '/Applications/Reeder.app'"} ],
+                  "type" : "basic"
+                },
+                {
+                  "from" : {
                     "key_code" : "equal_sign",
                     "modifiers" : {"mandatory" : ["right_option"]}
                   },
@@ -194,7 +204,17 @@
                         {"mandatory" : [ "right_option", "right_shift" ]}
                   },
                   "to" :
-                      [ {"shell_command" : "open '/Applications/Marked 2.app'"} ],
+                      [ {"shell_command" : "open '/Applications/Notes.app'"} ],
+                  "type" : "basic"
+                },
+                {
+                  "from" : {
+                    "key_code" : "escape",
+                    "modifiers" :
+                        {"mandatory" : [ "left_control" ]}
+                  },
+                  "to" :
+                      [ {"shell_command" : "open '/Users/dmitriy/Parallels/Windows 10.pvm/Windows 10.app'"} ],
                   "type" : "basic"
                 }
               ]
@@ -401,6 +421,23 @@
                 "to" :
                     [ {"key_code" : "hyphen", "modifiers" : ["left_control"]} ],
                 "type" : "basic"
+              } ]
+            },
+            {
+              "description" : "Microsoft Remote Desktop",
+              "manipulators" : [ {
+                "conditions" : [ {
+                  "bundle_identifiers" : ["com.microsoft.rdc.macos"],
+                  "type" : "frontmost_application_if"
+                } ],
+                "from" : {
+                  "key_code" : "right_command",
+                    "modifiers" :
+                        {"optional" : ["any"]}
+                },
+                "to" :
+                    [ ],
+                  "type" : "basic"
               } ]
             }
           ]
