@@ -20,6 +20,7 @@ SCP(){
     scp .zshrc dmitriy@$1:/home/dmitriy/
     scp fish/config.fish dmitriy@$1:/home/dmitriy/.config/fish/
     scp ranger/* dmitriy@$1:/home/dmitriy/.config/ranger/
+    scp -r scripts dmitriy@$1:/home/dmitriy/.config
 }
 
 EXEC_C(){
@@ -62,7 +63,7 @@ elif [[ "$1" == "" ]]; then
     EXEC_S 192.168.2.254
     # EXEC_S 192.168.2.255
 else
-    echo Enter [c/s] [client/server]
+    printf "Enter [c/s] [client/server]: "
     read S
     if [[ "$S" == "c" ]]; then
         EXEC_C $1

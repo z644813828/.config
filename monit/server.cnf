@@ -1,0 +1,23 @@
+RANDFILE = ./openssl.rnd
+[ req ]
+    default_bits = 1024
+    encrypt_key = yes
+    distinguished_name = req_dn
+    x509_extensions = cert_type
+[ req_dn ]
+    countryName = RUSSIAN FEDERATION (2 letter code)
+    countryName_default = RU
+    stateOrProvinceName    = stateOrProvinceName 
+    stateOrProvinceName_default     = RUSSIA
+    localityName                    = localityName 
+    localityName_default            = Moscow
+    organizationName                = organizationName 
+    organizationName_default        = OMV
+    organizationalUnitName          = organizationalUnitName 
+    organizationalUnitName_default  = D INDUSTRIES
+    commonName                      = commonName 
+    commonName_default              = SERVER
+    emailAddress                    = emailAddress
+    emailAddress_default            = my_gmail
+[ cert_type ]
+    nsCertType = server

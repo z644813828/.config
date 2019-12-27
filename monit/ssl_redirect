@@ -1,0 +1,17 @@
+server {
+    listen SSL_PORT default_server ssl;
+    ssl_certificate     /var/certs/server.crt;
+    ssl_certificate_key /var/certs/server.key;
+    server_name  SERVER_NAME;
+
+    access_log  /var/log/nginx/ACCESS_LOG.access.log;
+
+    location / {
+        proxy_pass        http://localhost:HTTP_PORT;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /var/www/nginx-default;
+    }
+}

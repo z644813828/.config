@@ -544,7 +544,7 @@ menu Grammar.xquery :set filetype=xquery<CR>
 menu Grammar.yaml :set filetype=yaml<CR>
 menu Grammar.zsh :set filetype=zsh<CR>
 
-nmap <C-O> :emenu Grammar.
+" nmap <C-O> :emenu Grammar.
 " }}}
 
 " {{{ FZF 
@@ -735,6 +735,7 @@ let g:vim_markdown_folding_level = 0
 let g:vim_markdown_initial_foldlevel=0
 let g:vim_markdown_folding_disabled=1
 au FileType conf set foldmethod=marker foldenable
+au FileType sh set foldmethod=marker foldenable
 au FileType zsh setlocal foldmethod=marker foldlevel=0 foldenable
 au Filetype css setlocal ts=4
 au Filetype html setlocal ts=4

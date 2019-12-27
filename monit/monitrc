@@ -4,7 +4,7 @@ set idfile /var/lib/monit/id
 set statefile /var/lib/monit/state
 set httpd port 2812 and
     ssl enable
-    pemfile /var/certs/monit.pem
+    pemfile /var/certs/server.pem
     allow localhost        # allow localhost to connect to the server
     allow 192.168.2.254    # self
     allow 192.168.2.1      # home net

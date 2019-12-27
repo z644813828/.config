@@ -25,10 +25,12 @@ alias cdo='cd ~/OneDrive'
 switch (uname)
 case Linux
     alias v='vim'
-    alias pvs = "$SCRIPTS/pvs.sh"
     alias ls='ls --color -h --group-directories-first'
     alias ll='ls -lh -G --color -h --group-directories-first'
     alias config='cd /etc/monit; vim -p /etc/monit/{monitrc,conf.d/auth_log.conf,conf.d/daemon_log.conf,conf.d/messages.conf,conf.d/syslog.conf,ip_location.sh,whitelist_ips.regex}'
+    function pvs 
+        eval $SCRIPTS/pvs.sh $argv
+    end
 
 case Darwin
 
@@ -39,6 +41,17 @@ case Darwin
         else
             command $SCRIPTS/chec_pull.sh $argv
         end
+    end
+    
+    function git_server_new
+        command $SCRIPTS/git_server_new.sh $argv
+    end
+
+    function git_server_list
+        command $SCRIPTS/git_server_list.sh
+    end
+    function git_server_clone
+        command $SCRIPTS/git_server_clone.sh $argv
     end
 
     function ssh
@@ -51,6 +64,26 @@ case Darwin
         else
             command ssh -t dmitriy@10.211.55.3 "cd $PWD; echo "Connected to 10.211.55.3"; fish"
         end
+    end
+
+    function sssh
+        if count $argv > /dev/null
+            set ip $argv
+        else
+            set ip 10.211.55.3
+        end
+            while true; 
+                command ~/.config/scripts/ssh.sh "$ip"; 
+                if test "$status" = 0 
+                    break
+                else
+                    sleep 1
+                end
+            end
+    end
+
+    function mminicom
+        env LC_ALL=ru_RU.CP1251 sudo minicom -C ~/temp/minicom_log/(date +%Y.%m.%d-%H:%M:%S) -8 -m --device $argv 
     end
 
     alias s2='ssh -t dmitriy@10.211.55.4 "cd $PWD; echo "Connected to 10.211.55.4"; fish"'
