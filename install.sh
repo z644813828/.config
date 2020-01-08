@@ -9,7 +9,7 @@ EXEC_ROOT="curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
         cp /home/dmitriy/{.vimrc,.bashrc,.tmux.conf} /root/; \
         cp /home/dmitriy/.config/fish/config.fish /root/.config/fish/"
 EXEC_SERV="vim +PlugInstall +qall; \
-        sudo bash -c -- 'cp /home/dmitriy/{.vimrc,.bashrc,.tmux.conf, .zshrc} /root/; \
+        sudo bash -c -- 'cp /home/dmitriy/{.vimrc,.bashrc,.tmux.conf} /root/; \
         cp /home/dmitriy/.config/fish/config.fish /root/.config/fish/'"
 
 SCP(){
@@ -17,7 +17,6 @@ SCP(){
     scp .vimrc_ dmitriy@$1:/home/dmitriy/
     scp .bashrc dmitriy@$1:/home/dmitriy/
     scp .tmux.conf dmitriy@$1:/home/dmitriy/
-    scp .zshrc dmitriy@$1:/home/dmitriy/
     scp fish/config.fish dmitriy@$1:/home/dmitriy/.config/fish/
     scp ranger/* dmitriy@$1:/home/dmitriy/.config/ranger/
     scp -r scripts dmitriy@$1:/home/dmitriy/.config
@@ -45,7 +44,7 @@ EXEC_S(){
 }
 
 if [[ "$1" == "0" ]]; then
-    cp -r .vimrc .zshrc .gvimrc .bashrc .tmux.conf ../
+    cp -r .vimrc .gvimrc .bashrc .tmux.conf ../
     cp -r .bashrc .tmux.conf ../.sshrc.d
     cp .vimrc_ ../.sshrc.d/.vimrc
     cp .vimrc_ ../

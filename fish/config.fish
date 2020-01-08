@@ -32,6 +32,11 @@ case Linux
         eval $SCRIPTS/pvs.sh $argv
     end
 
+    function ddu 
+        command du -k $argv | sort -nr | cut -f2 | xargs -d '\n' du -sh 
+    end
+
+
 case Darwin
 
     function check_pull
@@ -98,7 +103,6 @@ case Darwin
     alias ll='gls -lh -G --color -h --group-directories-first'
     alias ctr='ctags -R --languages=c,c++'
     alias config='/Applications/MacVim.app/Contents/bin/mvim ~/.config/{.bashrc, fish/config.fish, .vimrc, nvim/init.vim, karabiner/karabiner.json, install.sh, .tmux.conf}'
-    alias browserosaurus='cd /usr/local/bin/browserosaurus/; bash -c -- "nohup yarn start &>/dev/null &" cd -'
     alias cat='bat'
 
 case '*'

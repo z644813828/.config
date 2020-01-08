@@ -1,0 +1,36 @@
+[sshd]
+enabled = true
+ignoreip = 127.0.0.1 192.168.2.1 192.168.2.128
+port = ssh
+action = %(action_)s
+filter = sshd
+logpath = /var/log/auth.log
+bantime = 7200
+maxretry = 1
+
+[sshd-ddos]
+enabled = no
+ignoreip = 127.0.0.1 192.168.2.1 192.168.2.128
+port = ssh
+filter = sshd-ddos
+logpath = /var/log/auth.log
+bantime = 7200
+maxretry = 1
+
+[omv-webgui]
+enabled = no
+ignoreip = 127.0.0.1 192.168.2.1 192.168.2.128
+port = http,https
+filter = omv-webgui
+logpath = /var/log/auth.log
+bantime = 7200
+maxretry = 1
+
+[nginx-404]
+enabled = no
+ignoreip = 127.0.0.1 192.168.2.1 192.168.2.128
+port = http,https
+filter = nginx-404
+logpath = /var/log/nginx*/*access*.log
+bantime = 7200
+maxretry = 1
