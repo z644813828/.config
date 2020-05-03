@@ -31,9 +31,8 @@ rm -rf transmission netdata
 # }}}
 
 # {{{ generate certificates
-openssl req -new -x509 -nodes -days 365 -config /var/certs/server.cnf -keyout /var/certs/server.pem -out /var/certs/server.pem
-openssl req -new -x509 -nodes -days 365 -config /var/certs/server.cnf -keyout /var/certs/server.key -out /var/certs/server.crt
-chmod 700 /var/certs/server.pem
+openssl req -new -x509 -nodes -days 313 -config /var/certs/server.cnf -out /var/certs/server.pem -keyout /var/certs/server.pem
+chmod 600 /var/certs/server.pem
 # }}}
 
 # {{{ restart srevices
@@ -41,4 +40,5 @@ systemctl restart monit.service
 systemctl restart fail2ban.service
 systemctl restart transmission-daemon.service
 systemctl restart nginx.service
+systemctl restart netdata.service
 # }}}

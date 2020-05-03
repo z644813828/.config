@@ -18,8 +18,8 @@ mkdir -p $D\1/omvbackup
 mkdir -p $D\2/Acronis
 
 LAST_BACKUP="`find $SF/Software/omvbackup/* -ctime -30`"
-LAST=       "`find $SF/Software/omvbackup/* -ctime -30 -printf '%f\n'`"
-COPY=       "`find $D\1/omvbackup\/* -printf '%f\n'`"
+LAST="`find $SF/Software/omvbackup/* -ctime -30 -printf '%f\n'`"
+COPY="`find $D\1/omvbackup\/* -printf '%f\n'`"
 
 echo -e       "# BACK-----Software/_Software----------"  $($DATE) | $LOG
 $CMD1 $SF/Software/_Software/ $D\1/_Software/                     | $LOG
@@ -28,7 +28,11 @@ $CMD1 $SF/Software/OS/        $D\1/OS/                            | $LOG
 echo -e "\n\n\n# BACK---------TimeMachine-------------"  $($DATE) | $LOG
 $CMD1 $SF/TimeMachine/        $D\1/TimeMachine/                   | $LOG
 echo -e "\n\n\n# BACK-----------UserData--------------"  $($DATE) | $LOG
-$CMD1 $SF/UserData/           $D\1/UserData/                      | $LOG
+users=($(ls $SF/UserData))
+for user in "${users[@]}"; do
+echo -e       "## -----------UserData/$user-----------"  $($DATE) | $LOG
+$CMD1 $SF/$user/              $D\1/UserData/$user                 | $LOG
+done
 echo -e "\n\n\n# BACK------Software/Acronis-----------"  $($DATE) | $LOG
 $CMD2 $SF/Software/Acronis/   $D\2/Acronis/                       | $LOG
 echo -e "\n\n\n# BACK----------OmvBACKUP--------------"  $($DATE) | $LOG
@@ -44,7 +48,9 @@ $DIFF $SF/Software/OS/        $D\1/OS/                            | $LOG
 echo -e "\n\n\n# TEST---------TimeMachine-------------"  $($DATE) | $LOG
 $DIFF $SF/TimeMachine/        $D\1/TimeMachine/                   | $LOG
 echo -e "\n\n\n# TEST-----------UserData--------------"  $($DATE) | $LOG
-$DIFF $SF/UserData/           $D\1/UserData/                      | $LOG
+for user in "${users[@]}"; do
+$DIFF $SF/$user               $D\1/UserData/$user                 | $LOG
+done
 echo -e "\n\n\n# TEST------Software/Acronis-----------"  $($DATE) | $LOG
 $DIFF $SF/Software/Acronis/   $D\2/Acronis/                       | $LOG
 echo -e "\n\n\n# ---------------Finished--------------"  $($DATE) | $LOG

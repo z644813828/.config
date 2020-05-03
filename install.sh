@@ -1,49 +1,74 @@
 #!/bin/bash
 
+USER="dmitriy"
+
+client_ip=()
+server_ip=()
+
+client_ip+=(10.211.55.3 Debian)
+client_ip+=(10.211.55.4 Debian_2)
+client_ip+=(10.211.55.5 Debian_3)
+client_ip+=(10.211.55.6 Debian_VPN)
+client_ip+=(10.211.55.9 Debian_Clean)
+
+server_ip+=(192.168.2.251 Rasbperry_PI)
+server_ip+=(192.168.2.254 Server_OMV)
+# server_ip+=(192.168.2.255 Server_2)
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+NC='\033[0m' # No Color
+
 EXEC_USER="curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
         https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim; \
         sed -i 's/(basename \$PWD) //g' ~/.config/fish/config.fish; \
         vim +PlugInstall +qall"
 EXEC_ROOT="curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
         https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim; \
-        cp /home/dmitriy/{.vimrc,.bashrc,.tmux.conf} /root/; \
-        cp /home/dmitriy/.config/fish/config.fish /root/.config/fish/"
+        cp /home/$USER/{.vimrc,.bashrc,.tmux.conf} /root/; \
+        cp /home/$USER/.config/fish/config.fish /root/.config/fish/"
 EXEC_SERV="vim +PlugInstall +qall; \
-        sudo bash -c -- 'cp /home/dmitriy/{.vimrc,.bashrc,.tmux.conf} /root/; \
-        cp /home/dmitriy/.config/fish/config.fish /root/.config/fish/'"
+        sudo bash -c -- 'cp /home/$USER/{.vimrc,.bashrc,.tmux.conf} /root/; \
+        cp /home/$USER/.config/fish/config.fish /root/.config/fish/'"
 
 SCP(){
-    scp .vimrc dmitriy@$1:/home/dmitriy/
-    scp .vimrc_ dmitriy@$1:/home/dmitriy/
-    scp .bashrc dmitriy@$1:/home/dmitriy/
-    scp .tmux.conf dmitriy@$1:/home/dmitriy/
-    scp fish/config.fish dmitriy@$1:/home/dmitriy/.config/fish/
-    scp ranger/* dmitriy@$1:/home/dmitriy/.config/ranger/
-    scp -r scripts dmitriy@$1:/home/dmitriy/.config
+    scp .vimrc $USER@$1:/home/$USER/
+    scp .vimrc_ $USER@$1:/home/$USER/
+    scp .bashrc $USER@$1:/home/$USER/
+    scp .tmux.conf $USER@$1:/home/$USER/
+    scp fish/config.fish $USER@$1:/home/$USER/.config/fish/
+    scp ranger/* $USER@$1:/home/$USER/.config/ranger/
+    scp -r scripts $USER@$1:/home/$USER/.config
 }
 
 EXEC_C(){
-    if ping -c 1 -W 1 $1 &> /dev/null
+    hostname=$(ssh -G $1 | awk '/^hostname / { print $2 }')
+    if ping -c 1 -W 1 $hostname &> /dev/null
     then
+        printf "\n${GREEN}Connecting to ${YELLOW}$2 [$1]${GREEN} (client) ${NC}\n"
         SCP $1
-        ssh -t dmitriy@$1 $EXEC_USER
+        ssh -t $USER@$1 $EXEC_USER
         ssh -t root@$1 $EXEC_ROOT
     else
-        echo host $1 unreachable 
+        printf "\n${RED}Host ${YELLOW}$2 [$1]${RED} (client) is unreachable!${NC}\n"
     fi
 }
 
 EXEC_S(){
-    if ping -c 1 -W 1 $1 &> /dev/null
+    hostname=$(ssh -G $1 | awk '/^hostname / { print $2 }')
+    if ping -c 1 -W 1 $hostname &> /dev/null
     then
+        printf "\n${GREEN}Connecting to ${YELLOW}$2 [$1]${GREEN} (server) ${NC}\n"
         SCP $1
-        ssh -t dmitriy@$1 $EXEC_SERV
+        ssh -t $USER@$1 $EXEC_SERV
     else
-        echo host $1 unreachable 
+        printf "\n${RED}Host ${YELLOW}$2 [$1]${RED} (server) is unreachable!${NC}\n"
     fi
 }
 
 if [[ "$1" == "0" ]]; then
+    printf "\n${GREEN}Installing on localhost${NC}\n"
     cp -r .vimrc .gvimrc .bashrc .tmux.conf ../
     cp -r .bashrc .tmux.conf ../.sshrc.d
     cp .vimrc_ ../.sshrc.d/.vimrc
@@ -51,16 +76,12 @@ if [[ "$1" == "0" ]]; then
     vim +PlugInstall +qall
     nvim +PlugInstall +qall
 elif [[ "$1" == "" ]]; then
-    # Parallels 
-    EXEC_C 10.211.55.3
-    EXEC_C 10.211.55.4
-    EXEC_C 10.211.55.5
-    EXEC_C 10.211.55.6
-    # PI 
-    EXEC_S 192.168.2.220
-    # Server 
-    EXEC_S 192.168.2.254
-    # EXEC_S 192.168.2.255
+    for (( i = 0; i < "${#client_ip[@]}"; i+=2 )); do
+        EXEC_C ${client_ip[$i]} ${client_ip[$i+1]}
+    done
+    for (( i = 0; i < "${#server_ip[@]}"; i+=2 )); do
+        EXEC_S ${server_ip[$i]} ${server_ip[$i+1]}
+    done
 else
     printf "Enter [c/s] [client/server]: "
     read S

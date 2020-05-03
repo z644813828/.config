@@ -1,5 +1,10 @@
 #!/bin/bash
 
 git=$1
-git clone git@server:/~/$git
-cd $git
+path=$2
+git clone git@server:/~/$git $path
+if [[ -z "$path" ]]; then
+    cd $git
+else
+    cd $path
+fi

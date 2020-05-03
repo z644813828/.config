@@ -6,15 +6,17 @@ YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
 dirs=()
-dirs+=(~/Documents/Projects/myproject)
+# dirs+=(Projects/my_project                    master)
 
-for dir in "${dirs[@]}"; do
-    cd $dir
-    git clean -xfd > /dev/null 2>&1
+for (( i = 0; i < "${#dirs[@]}"; i+=2 )); do
+    dir=${dirs[$i]}
+    branch=${dirs[$i+1]}
+    cd ~/Documents/$dir
+    git clean -Xf > /dev/null 2>&1
     git remote update > /dev/null 2>&1
     ret=$(git status)
-    if [[ $ret != *"On branch master"* ]]; then
-        printf "${RED}%-60s%s${NC}\n" "$dir" "ERR Not master branch"
+    if [[ $ret != *"On branch $branch"* ]]; then
+        printf "${RED}%-60s%s${NC}\n" "$dir" "ERR Not $branch branch"
     elif [[ $ret == *"Your branch is behind"* ]]; then
         printf "${YELLOW}%-60s%s${NC}\n" "$dir" "Can be updated";
         printf "Git pull? [Y/n]:  "
@@ -26,6 +28,8 @@ for dir in "${dirs[@]}"; do
         else
             git pull;
         fi
+    elif [[ $ret == *"Your branch is ahead"* ]]; then
+        printf "${YELLOW}%-60s%s${NC}\n" "$dir" "Can be published";
     elif [[ $ret == *"Changes not staged for commit"* ]]; then
         printf "${RED}%-60s%s${NC}\n" "$dir" "ERR"
         git status --short

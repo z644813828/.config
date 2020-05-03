@@ -1,7 +1,7 @@
 server {
     listen SSL_PORT default_server ssl;
-    ssl_certificate     /var/certs/server.crt;
-    ssl_certificate_key /var/certs/server.key;
+    ssl_certificate     /var/certs/server.pem;
+    ssl_certificate_key /var/certs/server.pem;
     server_name  SERVER_NAME;
 
     access_log  /var/log/nginx/ACCESS_LOG.access.log;
