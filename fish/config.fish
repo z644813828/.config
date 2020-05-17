@@ -1,19 +1,21 @@
 set fish_greeting
-set -x EDITOR vim
+set -x EDITOR nvim
 # Don't save history if leading space 
 set -x HISTCONTROL ignorespace ignoredups
 set -x SCRIPTS ~/.config/scripts
 alias r='ranger'
 alias rm='rm -i'
-alias vim-='vim -R -'
 alias vi='vim -u ~/.vimrc_'
+abbr vim 'nvim'
+alias vimdiff='nvim -d'
+alias vim-='nvim -R -'
 abbr -- - 'cd -'
 
 function sudo 
     command sudo -sE $argv 
 end
 
-export MANPAGER="/bin/sh -c \"col -b | vim -c 'set ft=man ts=8 nomod nolist nornu noma' -\""
+export MANPAGER="/bin/sh -c \"col -b | nvim -c 'set ft=man ts=8 nomod nolist nornu noma' -\""
 
 # ln -s /media/psf/Home/{Documents,Desktop,Downloads,OneDrive,Pictures} ~
 abbr cdp 'cd ~/Documents/Projects/'
@@ -25,10 +27,10 @@ abbr cdo 'cd ~/OneDrive'
 
 switch (uname)
 case Linux
-    abbr v 'vim'
+    alias v='nvim'
     alias ls='ls --color -h --group-directories-first'
     alias ll='ls -lh -G --color -h --group-directories-first'
-    alias config='cd /etc/monit; vim -p /etc/monit/{monitrc,conf.d/auth_log.conf,conf.d/daemon_log.conf,conf.d/messages.conf,conf.d/syslog.conf,ip_location.sh,whitelist_ips.regex}'
+    alias config='cd /etc/monit; nvim -p /etc/monit/{monitrc,conf.d/auth_log.conf,conf.d/daemon_log.conf,conf.d/messages.conf,conf.d/syslog.conf,ip_location.sh,whitelist_ips.regex}'
     function pvs 
         eval $SCRIPTS/pvs.sh $argv
     end
@@ -124,3 +126,6 @@ function fish_prompt
         echo (basename $PWD) "> "
     end
 end
+
+test -e {$HOME}/.iterm2_shell_integration.fish ; and source {$HOME}/.iterm2_shell_integration.fish
+

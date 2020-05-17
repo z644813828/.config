@@ -17,6 +17,7 @@ endif
 Plug 'https://github.com/itchyny/lightline.vim'
 Plug 'https://github.com/Shougo/unite.vim'
 Plug 'https://github.com/jubnzv/gruvbox'           " Color scheme
+Plug 'https://github.com/arcticicestudio/nord-vim'
 Plug 'https://github.com/chrisbra/Colorizer'       " Colorize color names and codes
 Plug 'https://github.com/junegunn/vim-peekaboo'    " Shows vim registers content into vertical split
 Plug 'https://github.com/Yggdroot/indentLine'      " Show indentation as vertical lines
@@ -26,9 +27,7 @@ Plug 'https://github.com/jubnzv/vim-cursorword'    " Highlight word under cursor
 Plug 'https://github.com/godlygeek/tabular'         " Vim script for text filtering and alignment
 Plug 'https://github.com/tpope/vim-surround'
 Plug 'https://github.com/MattesGroeger/vim-bookmarks'
-if has("gui_running")
 Plug 'https://github.com/jiangmiao/auto-pairs'      " Insert or delete brackets, parens, quotes in pair
-endif
 " }}}
 
 " {{{ Git
@@ -36,11 +35,6 @@ Plug 'https://github.com/airblade/vim-gitgutter'
 " }}}
 
 " {{{ Writing code
-if has("gui_running")
-Plug 'Shougo/deoplete.nvim'
-Plug 'roxma/nvim-yarp'
-Plug 'roxma/vim-hug-neovim-rpc'
-endif
 Plug 'https://github.com/darfink/vim-plist'
 Plug 'prurigro/vim-markdown-concealed'
 Plug 'masukomi/vim-markdown-folding'
@@ -137,13 +131,9 @@ set t_ZR=^[[23m
 let g:gruvbox_sign_column='bg0'
 let g:gruvbox_color_column='bg0'
 let g:gruvbox_number_column='bg0'
-colorscheme gruvbox
+" colorscheme gruvbox
 
-" Highlighting
-hi CursorLine ctermbg=236
-hi CursorLineNr ctermbg=236
-hi ColorColumn ctermbg=236
-hi Todo ctermfg=130 guibg=#af3a03
+colorscheme nord
 
 " Not working with macvim 
 highlight htmlBold gui=bold guifg=#af0000 ctermfg=124
@@ -162,21 +152,39 @@ let g:indentLine_char = ''
 " }}}
 
 " {{{ Lightline
-let g:lightline = {
-  \ 'colorscheme': 'gruvbox',
-  \ 'active': {
-  \   'left':  [ [ 'mode', 'paste' ],
-  \              [ 'filename', 'modified' ] ],
-  \   'right': [ [ 'lineinfo' ],
-  \              [ 'percent' ],
-  \              [ 'lsp_status' ],
-  \              [ 'fileformat', 'fileencoding', 'filetype' ] ],
-  \ },
-  \ 'component': {
-  \   'lineinfo': "%c:%{line('.') . '/' . line('$')}",
-  \   'modified': '%{&filetype=="help"?"":&modified?"":&modifiable?"":"\u2757"}',
-  \ },
-  \ }
+if has("gui_running")
+    let g:lightline = {
+      \ 'colorscheme': 'gruvbox',
+      \ 'active': {
+      \   'left':  [ [ 'mode', 'paste' ],
+      \              [ 'filename', 'modified' ] ],
+      \   'right': [ [ 'lineinfo' ],
+      \              [ 'percent' ],
+      \              [ 'lsp_status' ],
+      \              [ 'fileformat', 'fileencoding', 'filetype' ] ],
+      \ },
+      \ 'component': {
+      \   'lineinfo': "%c:%{line('.') . '/' . line('$')}",
+      \   'modified': '%{&filetype=="help"?"":&modified?"":&modifiable?"":"\u2757"}',
+      \ },
+      \ }
+else
+    let g:lightline = {
+      \ 'colorscheme': 'nord',
+      \ 'active': {
+      \   'left':  [ [ 'mode', 'paste' ],
+      \              [ 'filename', 'modified' ] ],
+      \   'right': [ [ 'lineinfo' ],
+      \              [ 'percent' ],
+      \              [ 'lsp_status' ],
+      \              [ 'fileformat', 'fileencoding', 'filetype' ] ],
+      \ },
+      \ 'component': {
+      \   'lineinfo': "%c:%{line('.') . '/' . line('$')}",
+      \   'modified': '%{&filetype=="help"?"":&modified?"":&modifiable?"":"\u2757"}',
+      \ },
+      \ }
+endif
 " }}}
 
 " {{{ Jump to the last position when reopening a file 
@@ -256,7 +264,7 @@ vnoremap // y/<C-R>"<CR>
 
 " Delete word in insert (iTerm doesn't recognize 'alt<-delete', mvim use default
 " emacs binds)
-" inoremap <M-BS> <C-o>b<C-o>dw
+inoremap <M-BS> <C-o>b<C-o>de
 
 nnoremap <silent><leader>e :e<CR>
 nnoremap <silent><leader>у :e<CR>
@@ -432,12 +440,12 @@ imap <C-_> <C-o><leader>c<Space>
 " }}}
 
 " {{{ Git workflow
-nmap [v <Plug>GitGutterPrevHunk
-nmap хм <Plug>GitGutterPrevHunk
-nmap ]v <Plug>GitGutterNextHunk
-nmap ъм <Plug>GitGutterNextHunk
-nmap <Leader>v <Plug>GitGutterPreviewHunk
-nmap <Leader>м <Plug>GitGutterPreviewHunk
+nmap [v <Plug>(GitGutterPrevHunk)
+nmap хм <Plug>(GitGutterPrevHunk)
+nmap ]v <Plug>(GitGutterNextHunk)
+nmap ъм <Plug>(GitGutterNextHunk)
+nmap <Leader>v <Plug>(GitGutterPreviewHunk)
+nmap <Leader>м <Plug>(GitGutterPreviewHunk)
 " }}}
 
 " {{{ Folding
@@ -603,35 +611,6 @@ inoremap <silent><C-k> <Esc>:m .-2<CR>==gi
 vnoremap <silent><C-j> :m '>+1<CR>gv=gv
 vnoremap <silent><C-k> :m '<-2<CR>gv=gv
 " }}}
-
-" {{{ Deoplete
-" deoplete tab-complete
-function! TabWrap()
-    if pumvisible()
-        return "\<C-N>"
-    elseif strpart( getline('.'), 0, col('.') - 1 ) =~ '^\s*$'
-        return "\<tab>"
-    elseif &omnifunc !~ ''
-        return "\<C-X>\<C-O>"
-    else
-        return "\<C-N>"
-    endif
-endfunction
-
-" "use <tab> for completion
-" imap <silent><expr><tab> TabWrap()
-" inoremap <expr><tab> pumvisible()? "\<ENTER>" : "\<tab>"
-
-" Enter: complete&close popup if visible (so next Enter works); else: break undo
-inoremap <silent><expr> <Cr> pumvisible() ?
-            \ deoplete#mappings#close_popup() : "<C-g>u<Cr>"
-
-" Ctrl-Space: summon FULL (synced) auocompletion
-inoremap <silent><expr> <C-Space> deoplete#mappings#manual_complete()
-
-"Escape: exit autocompletion, go to Normal mode
-" inoremap <silent><expr> <Esc> pumvisible() ? "<C-o><Esc>" : "<Esc>"
-" }}} 
 
 " {{{ if Darwin
 if uname == 'Darwin'
@@ -814,26 +793,6 @@ let g:fzf_colors =
   \ 'marker':  ['fg', 'Keyword'],
   \ 'spinner': ['fg', 'Label'],
   \ 'header':  ['fg', 'Comment'] }
-" }}}
-
-" {{{ deoplete
-if has("gui_running")
-let g:deoplete#enable_at_startup = 1
-call deoplete#custom#option('min_pattern_length', 1)
-call deoplete#custom#var('around', {
-\   'range_above': 10,
-\   'range_below': 10,
-\   'mark_above': '[↑]',
-\   'mark_below': '[↓]',
-\   'mark_changes': '[]',
-\})
-
-call deoplete#custom#source('_',
-  \ 'matchers', ['matcher_full_fuzzy'])
-
-set completeopt=menu,noinsert
-" set completeopt+=preview
-endif
 " }}}
 
 " {{{ Bookmarks

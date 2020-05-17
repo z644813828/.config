@@ -5,6 +5,13 @@
 " defaults write org.vim.MacVim MMTextInsetRight 0;
 set guifont=SF\ MONO:h12
 colorscheme gruvbox
+
+" Highlighting
+hi CursorLine ctermbg=236
+hi CursorLineNr ctermbg=236
+hi ColorColumn ctermbg=236
+hi Todo ctermfg=130 guibg=#af3a03
+
 set showtabline=0 
 set lines=60 columns=256
 " macmenu File.Save key=<nop>
