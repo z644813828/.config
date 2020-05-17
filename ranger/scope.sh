@@ -39,7 +39,7 @@ FILE_EXTENSION="${FILE_PATH##*.}"
 FILE_EXTENSION_LOWER="$(printf "%s" "${FILE_EXTENSION}" | tr '[:upper:]' '[:lower:]')"
 
 ## Settings
-HIGHLIGHT_SIZE_MAX=262143  # 256KiB
+HIGHLIGHT_SIZE_MAX=256  # 256KiB
 HIGHLIGHT_TABWIDTH=${HIGHLIGHT_TABWIDTH:-8}
 HIGHLIGHT_STYLE=${HIGHLIGHT_STYLE:-pablo}
 HIGHLIGHT_OPTIONS="--replace-tabs=${HIGHLIGHT_TABWIDTH} --style=${HIGHLIGHT_STYLE} ${HIGHLIGHT_OPTIONS:-}"
@@ -292,7 +292,7 @@ handle_mime() {
         ## Text
         text/* | */xml)
             ## Syntax highlight
-            if [[ "$( stat --printf='%s' -- "${FILE_PATH}" )" -gt "${HIGHLIGHT_SIZE_MAX}" ]]; then
+            if [[ `du -k "${FILE_PATH}" | cut -f1` -gt ${HIGHLIGHT_SIZE_MAX} ]]; then
                 exit 2
             fi
             if [[ "$( tput colors )" -ge 256 ]]; then
