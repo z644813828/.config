@@ -7,3 +7,8 @@ fish/fish_variables
 karabiner/automatic_backups/*
 joplin*
 neofetch/config.conf
+fish/completions
+fish/conf.d
+fish/functions
+fisher
+fish/fishd.*

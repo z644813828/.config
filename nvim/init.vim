@@ -30,6 +30,7 @@ Plug 'https://github.com/Shougo/unite.vim'
 Plug 'https://github.com/arcticicestudio/nord-vim'
 Plug 'https://github.com/chrisbra/Colorizer'       " Colorize color names and codes
 Plug 'https://github.com/jubnzv/IEC.vim'
+Plug 'https://github.com/dag/vim-fish'
 Plug 'https://github.com/junegunn/vim-peekaboo'    " Shows vim registers content into vertical split
 Plug 'https://github.com/Yggdroot/indentLine'      " Show indentation as vertical lines
 Plug 'https://github.com/haya14busa/incsearch.vim' " Incrementally highlight search results
@@ -169,11 +170,11 @@ if !has("gui_running")
 endif
 
 " Highlighting
-" hi Todo ctermfg=130 guibg=#af3a03
+hi Todo ctermfg=130 guibg=#af3a03
 
 " Not working with macvim 
-" highlight htmlBold gui=bold guifg=#af0000 ctermfg=124
-" highlight htmlItalic gui=italic guifg=#af8700 ctermfg=214
+highlight htmlBold gui=bold guifg=#af0000 ctermfg=124
+highlight htmlItalic gui=italic guifg=#af8700 ctermfg=214
 
 let g:indentLine_concealcursor = ''
 let g:indentLine_conceallevel = 0
@@ -205,7 +206,7 @@ let g:lightline = {
   \ },
   \ 'component': {
   \   'lineinfo': "%c:%{line('.') . '/' . line('$')}",
-  \   'modified': '%{&filetype=="help"?"":&modified?"":&modifiable?"":"\u2757"}',
+  \   'modified': '%{&filetype=="help"?"":&modified?"":&modifiable?"":"\u2757"}',
   \   'fugitive': '%{exists("*fugitive#head")?fugitive#head():""}',
   \   'tagbar': '%{tagbar#currenttag("[%s]", "", "f")}',
   \ },
@@ -259,8 +260,7 @@ function! CustomFoldText()
 
   let w = &l:textwidth - 3 - &foldcolumn - (&number ? 8 : 0)
   let foldSize = 1 + v:foldend - v:foldstart
-  " let foldLevelStr = "" . string(v:foldlevel)
-  let foldLevelStr = ""
+  let foldLevelStr = ""
   let lineCount = line("$")
   let foldSizeStr = printf("[%4dL|%4.1f%%]", foldSize, (foldSize*1.0)/lineCount*100)
   let expansionString = " " . repeat(" ", w - strwidth(foldSizeStr.line.foldLevelStr))
@@ -823,6 +823,7 @@ endif
 " }}}
 
 " {{{ Git workflow
+let g:gitgutter_sign_column_always = 1
 let g:gitgutter_override_sign_column_highlight = 0
 let g:gitgutter_map_keys = 0
 " }}}
@@ -986,10 +987,11 @@ let g:vim_markdown_initial_foldlevel=0
 let g:vim_markdown_folding_disabled=1
 au FileType conf set foldmethod=marker foldenable
 au FileType sh set foldmethod=marker foldenable
+au FileType fish setlocal foldmethod=marker foldlevel=0 foldenable
 au FileType zsh setlocal foldmethod=marker foldlevel=0 foldenable
 au Filetype css setlocal ts=4
 au Filetype html setlocal ts=4
-au BufReadPre,BufRead,BufNewFile *.fish set filetype=sh
+au BufReadPre,BufRead,BufNewFile *.fish set filetype=fish
 au BufReadPre,BufRead,BufNewFile *.bashrc set filetype=sh
 au BufReadPre,BufRead,BufNewFile *.conf set filetype=conf
 au BufReadPre,BufRead,BufNewFile *.cnf set filetype=conf
@@ -1041,7 +1043,7 @@ call deoplete#custom#var('around', {
 \   'range_below': 100,
 \   'mark_above': '[↑]',
 \   'mark_below': '[↓]',
-\   'mark_changes': '[]',
+\   'mark_changes': '[]',
 \})
 call deoplete#custom#source('_',
  \ 'matchers', ['matcher_full_fuzzy'])

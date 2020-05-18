@@ -25,19 +25,22 @@ INSTALL_PLUG="curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
         mkdir -p ~/.local/share/nvim/site/autoload/; \
         cp -r ~/.vim/autoload/plug.vim ~/.local/share/nvim/site/autoload; "
 
-MKDIR="mkdir -p /home/$USER/.config/{fish,ranger,scripts,nvim}"
+MKDIR="mkdir -p /home/$USER/.config/{fish,ranger,scripts,nvim};"
+MKDIR2="mkdir -p /root/.config/{fish,ranger,scripts,nvim};"
 
-EXEC_USER="$INSTALL_PLUG \
-        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim; \
-        sed -i 's/(basename \$PWD) //g' ~/.config/fish/config.fish; \
+EXEC_USER="$MKDIR \
+        $INSTALL_PLUG \
         vim +PlugInstall +qall; nvim +PlugInstall +qall"
-EXEC_ROOT="$INSTALL_PLUG \
+EXEC_ROOT="$MKDIR2 \
+        $INSTALL_PLUG \
         cp /home/$USER/{.vimrc,.bashrc,.tmux.conf} /root/; \
-        cp /home/$USER/.config/fish/config.fish /root/.config/fish/"
-EXEC_SERV="$INSTALL_PLUG \
+        cp /home/$USER/.config/fish/{config.fish,fishfile} /root/.config/fish/; \
+        cp /home/$USER/.config/nvim/init.vim /root/.config/nvim"
+EXEC_SERV="$MKDIR \
+        $INSTALL_PLUG \
         vim +PlugInstall +qall; nvim +PlugInstall +qall \
         sudo bash -c -- 'cp /home/$USER/{.vimrc,.bashrc,.tmux.conf} /root/; \
-        cp /home/$USER/.config/fish/config.fish /root/.config/fish/; \
+        cp /home/$USER/.config/fish/{config.fish,fishfile} /root/.config/fish/; \
         cp -r /home/$USER/.config/nvim /root/.config/'"
 
 SCP(){
@@ -45,7 +48,7 @@ SCP(){
     scp .vimrc_ $USER@$1:/home/$USER/
     scp .bashrc $USER@$1:/home/$USER/
     scp .tmux.conf $USER@$1:/home/$USER/
-    scp fish/config.fish $USER@$1:/home/$USER/.config/fish/
+    scp -r fish/{config.fish,fishfile} $USER@$1:/home/$USER/.config/fish/
     scp -r nvim/* $USER@$1:/home/$USER/.config/nvim/
     scp ranger/* $USER@$1:/home/$USER/.config/ranger/
     scp -r scripts $USER@$1:/home/$USER/.config
@@ -56,7 +59,6 @@ EXEC_C(){
     if ping -c 1 -W 1 $hostname &> /dev/null
     then
         printf "\n${GREEN}Connecting to ${YELLOW}$2 [$1]${GREEN} (client) ${NC}\n"
-        ssh -t $USER@$1 $MKDIR
         SCP $1
         ssh -t $USER@$1 $EXEC_USER
         ssh -t root@$1 $EXEC_ROOT
@@ -70,7 +72,6 @@ EXEC_S(){
     if ping -c 1 -W 1 $hostname &> /dev/null
     then
         printf "\n${GREEN}Connecting to ${YELLOW}$2 [$1]${GREEN} (server) ${NC}\n"
-        ssh -t $USER@$1 $MKDIR
         SCP $1
         ssh -t $USER@$1 $EXEC_SERV
     else
