@@ -4,14 +4,31 @@ if &shell =~# 'fish$'
   set shell=/bin/bash
 endif
 
+" {{{ Darwin & Python3
 let uname = substitute(system('uname'), '\n', '', '')
 
-" {{{ Plugins
+let path_install_plug = '/dmitriy/.vim/autoload/plug.vim'
+let path_plugged = '/dmitriy/.vim/plugged'
 if uname == 'Darwin'
-    call plug#begin('/Users/dmitriy/.vim/plugged')
+    let path_install_plug = '/Users' . path_install_plug
+    let path_plugged = '/Users' . path_plugged
 else
-    call plug#begin('/home/dmitriy/.vim/plugged')
+    let path_install_plug = '/home' . path_install_plug
+    let path_plugged = '/home' . path_plugged
 endif
+" }}}
+
+" {{{ Plugins
+
+" {{{ Install plug
+if empty(glob(path_install_plug))
+    execute '!curl -fLo ' path_install_plug '--create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
+endif
+" }}}
+
+call plug#begin(path_plugged)
 
 " {{{ UI & appearance
 Plug 'https://github.com/itchyny/lightline.vim'

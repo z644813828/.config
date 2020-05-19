@@ -15,14 +15,29 @@ if has('python3')
         let python_min_version = 0
     endif
 endif
+
+let path_install_plug = '/dmitriy/.local/share/nvim/site/autoload/plug.vim'
+let path_plugged = '/dmitriy/.nvim/plugged'
+if uname == 'Darwin'
+    let path_install_plug = '/Users' . path_install_plug
+    let path_plugged = '/Users' . path_plugged
+else
+    let path_install_plug = '/home' . path_install_plug
+    let path_plugged = '/home' . path_plugged
+endif
 " }}}
 
 " {{{ Plugins
-if uname == 'Darwin'
-    call plug#begin('/Users/dmitriy/.nvim/plugged')
-else
-    call plug#begin('/home/dmitriy/.nvim/plugged')
+
+" {{{ Install plug
+if empty(glob(path_install_plug))
+    execute '!curl -fLo ' path_install_plug '--create-dirs
+    \ https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+  autocmd VimEnter * PlugInstall --sync | source $MYVIMRC
 endif
+" }}}
+
+call plug#begin(path_plugged)
 
 " {{{ UI & appearance
 Plug 'https://github.com/itchyny/lightline.vim'
@@ -1056,7 +1071,7 @@ set completeopt+=menu,noinsert
 " set completeopt+=noinsert
 " set completeopt+=preview
 else
-echo "Deoplete disabled!"
+    autocmd VimEnter * echo "Deoplete disabled!"
 endif
 " }}}
 

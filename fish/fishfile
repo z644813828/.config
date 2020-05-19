@@ -1,7 +1,26 @@
-jethrokuan/fzf
-laughedelic/pisces
-oh-my-fish/theme-bobthefish
-oh-my-fish/plugin-bang-bang
-oh-my-fish/plugin-grc
-# oh-my-fish/plugin-brew # MacOS
-# oh-my-fish/plugin-local-config
+# fisher packages list
+
+
+# Prompt theme
+oh-my-fish/theme-bobthefish         
+
+# Improved fzf-integration
+jethrokuan/fzf                      
+
+# Helper for pairing simbols
+laughedelic/pisces                  
+
+# Bash style history substitution
+oh-my-fish/plugin-bang-bang         
+
+# Code highlighting
+oh-my-fish/plugin-grc               
+
+# Integrate Homebrew paths into shell 
+# oh-my-fish/plugin-brew            
+
+# Homebrew completions
+# aughedelic/brew-completions       
+
+# Support different config files
+# oh-my-fish/plugin-local-config    

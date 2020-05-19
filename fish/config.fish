@@ -219,7 +219,7 @@ end
 #
 # possible states:
 # default         # nerd fonts
-# set -x PROMPT 0 # minimal prompt '>'
+# set -x PROMPT 0 # minimal prompt '▶'
 # set -x PROMPT 1 # no pathed fonts
 # set -x PROMPT 2 # patched fonts
 
@@ -228,7 +228,7 @@ switch (echo "$PROMPT")
 case 0
     # export TERM="dumb" # hmm... that's not working (functions/fish_prompt.fish:1048)
     function fish_prompt -d 'simple fish_prompt'
-        echo "> "
+        echo "▶ "
     end
 case 1
     set -g theme_powerline_fonts no
@@ -238,26 +238,7 @@ case '*'
     set -g theme_nerd_fonts yes
 end
 
-# }}}
 
-# {{{ Generic settings
-set -g theme_display_user no
-set -g theme_display_date no
-set -g fish_prompt_pwd_dir_length 1
-set -g theme_title_display_process yes
-set -g theme_avoid_ambiguous_glyphs yes
-set -g theme_display_jobs_verbose yes
-set -g default_user dmitriy
-set -g theme_display_sudo_user no
-# set -g theme_display_hostname ssh
-set -g theme_display_hostname no
-set -g theme_color_scheme dark
-function bobthefish_colors -S -d 'Define a custom bobthefish color scheme'
-    set -x color_path                  black
-    set -x color_path_basename         black
-    set -x color_username              white
-end
-function fish_greeting; end
 # }}}
 
 # OS depending 
@@ -266,6 +247,7 @@ switch (uname)
 # {{{ | Linux
 case Linux
     set -g theme_display_git no
+    set -g path_color white
 # }}}
 
 # {{{ | MacOS
@@ -278,8 +260,26 @@ case Darwin
     set -g theme_display_git_stashed_verbose no
     set -g theme_display_git_master_branch no
     set -g theme_git_worktree_support no
-
+    set -g path_color black
+# }}}
 end
+
+# {{{ Generic settings
+set -g theme_display_user no
+set -g theme_display_date no
+set -g fish_prompt_pwd_dir_length 1
+set -g theme_title_display_process yes
+set -g theme_avoid_ambiguous_glyphs yes
+set -g theme_display_jobs_verbose yes
+set -g theme_display_sudo_user no
+set -g theme_display_hostname ssh
+set -g theme_color_scheme dark
+function bobthefish_colors -S -d 'Define a custom bobthefish color scheme'
+    set -x color_path                  $path_color
+    set -x color_path_basename         $path_color
+    set -x color_username              white
+end
+function fish_greeting; end
 # }}}
 
 # }}}
@@ -298,7 +298,7 @@ if bind -M insert >/dev/null 2>/dev/null
 end
 
 set -U FZF_FIND_FILE_COMMAND "ag -l --hidden --ignore .git \$dir 2> /dev/null"
-set -U FZF_TMUX 1
+set -U FZF_TMUX 0
 set -U FZF_ENABLE_OPEN_PREVIEW 1
 set -U FZF_CD_WITH_HIDDEN_OPTS 1
 set -U FZF_COMPLETE 1

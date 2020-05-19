@@ -20,28 +20,21 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-INSTALL_PLUG="curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
-        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim; \
-        mkdir -p ~/.local/share/nvim/site/autoload/; \
-        cp -r ~/.vim/autoload/plug.vim ~/.local/share/nvim/site/autoload; "
-
 MKDIR="mkdir -p /home/$USER/.config/{fish,ranger,scripts,nvim};"
 MKDIR2="mkdir -p /root/.config/{fish,ranger,scripts,nvim};"
 
 EXEC_USER="$MKDIR \
-        $INSTALL_PLUG \
-        vim +PlugInstall +qall; nvim +PlugInstall +qall"
+        bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"
 EXEC_ROOT="$MKDIR2 \
-        $INSTALL_PLUG \
         cp /home/$USER/{.vimrc,.bashrc,.tmux.conf} /root/; \
-        cp /home/$USER/.config/fish/{config.fish,fishfile} /root/.config/fish/; \
+        cp /home/$USER/.config/fish/config.fish /root/.config/fish/; \
         cp /home/$USER/.config/nvim/init.vim /root/.config/nvim"
 EXEC_SERV="$MKDIR \
-        $INSTALL_PLUG \
-        vim +PlugInstall +qall; nvim +PlugInstall +qall \
-        sudo bash -c -- 'cp /home/$USER/{.vimrc,.bashrc,.tmux.conf} /root/; \
-        cp /home/$USER/.config/fish/{config.fish,fishfile} /root/.config/fish/; \
-        cp -r /home/$USER/.config/nvim /root/.config/'"
+        sudo bash -c -- '$MKDIR2 \
+        cp /home/$USER/{.vimrc,.bashrc,.tmux.conf} /root/; \
+        cp /home/$USER/.config/fish/config.fish /root/.config/fish/; \
+        cp -r /home/$USER/.config/nvim /root/.config/'; \
+        bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"
 
 SCP(){
     scp .vimrc $USER@$1:/home/$USER/
