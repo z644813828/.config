@@ -86,6 +86,7 @@ alias r='ranger'
 abbr r 'ranger'
 alias rm='rm -i'
 alias vi="bash -c 'vim -u ~/.vimrc_'"
+alias v 'nvim'
 alias vim 'nvim'
 alias vimdiff='nvim -d'
 alias vim-='nvim -R -'
@@ -106,7 +107,6 @@ end
 # }}}
 
 # {{{ Other 
-    alias v='nvim'
     alias ls='ls --color -h --group-directories-first'
     alias ll='ls -lh -G --color -h --group-directories-first'
     alias config='cd /etc/monit; nvim -p /etc/monit/{monitrc,conf.d/auth_log.conf,conf.d/daemon_log.conf,conf.d/messages.conf,conf.d/syslog.conf,ip_location.sh,whitelist_ips.regex}'
@@ -188,11 +188,57 @@ case Darwin
     alias s4='ssh -Xt dmitriy@$VM_DEBIAN_4 "cd $PWD; echo "Connected to $VM_DEBIAN_4"; fish"'
     # }}}
 
+    # {{{ JS minify
+    function js_minify
+        set input_file $argv
+        set output_file $argv.min
+        set compiler '/opt/compiler-latest/closure-compiler-v20200517.jar'
+        set flags1 '--charset=UTF-8'
+        set flags2 '--strict_mode_input=false' 
+        echo java -jar \
+            $compiler \
+            $flags1 \
+            --js $input_file \
+            --js_output_file $output_file \
+            $flags2
+        echo ">>"
+        java -jar \
+            $compiler \
+            $flags1 \
+            --js $input_file \
+            --js_output_file $output_file \
+            $flags2
+    end
+    # }}}
+
+    # {{{ ScrCPY 
+    # https://github.com/Genymobile/scrcpy
+    # adb tcpip 5555; 
+    function sscrcpy
+        if count $argv > /dev/null
+            set ip (ssh -G $argv | grep "^hostname " | awk '{printf "%s", $2}')
+            adb connect $ip:5555;
+            scrcpy -s $ip:5555 --rotation 0 --turn-screen-off -b2M -m800 --max-fps 15
+        else
+            scrcpy --rotation 0 --turn-screen-off -b2M -m800 --max-fps 15
+        end
+    end
+    # }}}
+    
+    # {{{ SSHFS
+    function ssshfs
+        set ip (ssh -G $argv | grep "^hostname " | awk '{printf "%s", $2}')
+        sudo mkdir /Volumes/$ip; 
+        set args "reconnect,ServerAliveInterval=15,ServerAliveCountMax=3,defer_permissions,noappledouble"
+        echo "sudo sshfs -o" $args $ip":/ /Volumes/"$ip 
+        sudo sshfs -o $args $ip:/ /Volumes/$ip 
+end
+    # }}}
+
     # {{{ Other
     alias m='/Applications/MacVim.app/Contents/bin/mvim'
     alias m_cli='/usr/local/bin/m'
     alias mvim='/Applications/MacVim.app/Contents/bin/mvim'
-    alias v='/usr/local/lib/vimr'
     alias a='atom'
     alias ls='gls -N --color -h --group-directories-first'
     alias ll='gls -N -lh -G --color -h --group-directories-first'

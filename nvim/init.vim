@@ -5,6 +5,7 @@ if &shell =~# 'fish$'
 endif
 
 " {{{ Darwin & Python3
+" Check python3 version for deoplete support 
 let uname = substitute(system('uname'), '\n', '', '')
 let python_min_version = 0
 if has('python3')
@@ -16,6 +17,16 @@ if has('python3')
     endif
 endif
 
+" LanguageClient disable
+" temporary disabled for all
+let languageClient_enable = 0
+" if uname == 'Darwin'
+    " let languageClient_enable = 1
+" else
+    " let languageClient_enable = 0
+" endif
+
+" Extenstions installation path
 let path_install_plug = '/dmitriy/.local/share/nvim/site/autoload/plug.vim'
 let path_plugged = '/dmitriy/.nvim/plugged'
 if uname == 'Darwin'
@@ -77,7 +88,10 @@ Plug 'https://github.com/Shougo/neoinclude.vim'
 if python_min_version 
     Plug 'https://github.com/Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 endif
-Plug 'autozimu/LanguageClient-neovim', { 'tag': 'release-1.2.3-bin-darwin' }
+
+if languageClient_enable 
+    Plug 'autozimu/LanguageClient-neovim'
+endif
 Plug 'https://github.com/ervandew/supertab'
 Plug 'https://github.com/jubnzv/DoxygenToolkit.vim'
 " Plug 'https://github.com/vivien/vim-linux-coding-style'
@@ -701,12 +715,12 @@ nnoremap <leader>Fc :AgC<CR>
 nnoremap <leader>Ас :AgC<CR>
 nnoremap <leader>Fh :AgH<CR>
 nnoremap <leader>Ар :AgH<CR>
-nnoremap <leader>FC :AgCC<CR>
-nnoremap <leader>АС :AgCC<CR>
+nnoremap <leader>FF :Ag!<CR>
+nnoremap <leader>АА :Ag!<CR>
 nnoremap <leader>Fp :AgPython<CR>
 nnoremap <leader>Аз :AgPython<CR>
-nnoremap <leader>Fr :AgRust<CR>
-nnoremap <leader>Ак :AgRust<CR>
+nnoremap <leader>/  :BLines<CR>
+nnoremap <leader>.  :BLines<CR>
 " }}} 
 
 " {{{ C/C++
@@ -1139,19 +1153,9 @@ command! -bang -nargs=? -complete=dir Files
   \ call fzf#vim#files(<q-args>, fzf#vim#with_preview(), <bang>0)
 
 " Search in specific file types
-command! -bang -nargs=* AgC
-\ call fzf#vim#ag(<q-args>, '--path-to-ignore ~/.ignore -G \.c$',
-\                 <bang>0 ? fzf#vim#with_preview('up:60%')
-\                         : fzf#vim#with_preview('right:50%', '?'),
-\                 <bang>0)
-command! -bang -nargs=* AgH
-\ call fzf#vim#ag(<q-args>, '--path-to-ignore ~/.ignore -G \.h$',
-\                 <bang>0 ? fzf#vim#with_preview('up:60%')
-\                         : fzf#vim#with_preview('right:50%', '?'),
-\                 <bang>0)
-command! -bang -nargs=* AgCC call fzf#vim#ag(<q-args>, '--cc', {'down': '~40%'})
+command! -bang -nargs=* AgC call fzf#vim#ag(<q-args>, '-G \\\.\(c\|cpp\|cxx\)\$', {'down': '~40%'})
+command! -bang -nargs=* AgH call fzf#vim#ag(<q-args>, '-G \\\.\(h\|hh\|hpp\)\$', {'down': '~40%'})
 command! -bang -nargs=* AgPython call fzf#vim#ag(<q-args>, '--python', {'down': '~40%'})
-command! -bang -nargs=* AgRust call fzf#vim#ag(<q-args>, '--rust', {'down': '~40%'})
 " }}}
 
 " {{{ LanguageClient settings

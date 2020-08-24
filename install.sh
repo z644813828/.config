@@ -26,12 +26,12 @@ MKDIR2="mkdir -p /root/.config/{fish,ranger,scripts,nvim};"
 EXEC_USER="$MKDIR \
         bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"
 EXEC_ROOT="$MKDIR2 \
-        cp /home/$USER/{.vimrc,.bashrc,.tmux.conf} /root/; \
+        cp /home/$USER/{.vimrc,.vimrc_,.bashrc,.tmux.conf} /root/; \
         cp /home/$USER/.config/fish/config.fish /root/.config/fish/; \
         cp /home/$USER/.config/nvim/init.vim /root/.config/nvim"
 EXEC_SERV="$MKDIR \
         sudo bash -c -- '$MKDIR2 \
-        cp /home/$USER/{.vimrc,.bashrc,.tmux.conf} /root/; \
+        cp /home/$USER/{.vimrc,.vimrc_,.bashrc,.tmux.conf} /root/; \
         cp /home/$USER/.config/fish/config.fish /root/.config/fish/; \
         cp -r /home/$USER/.config/nvim /root/.config/'; \
         bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"

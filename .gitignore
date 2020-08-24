@@ -13,3 +13,6 @@ fish/functions
 fisher
 fish/fishd.*
 tags
+QtProject
+*tags*
+htop

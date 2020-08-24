@@ -35,10 +35,10 @@
         -  BeardedSpice
         -  SlowQuitApps
     - [Other software](#other-software)
-- [Cli-tools ](#cli-tools)  
--  [Fixing errors and usefull commands](#fixing-errors-and-usefull-commands)  
+- [Cli-tools](#cli-tools)
+-  [Fixing errors and usefull commands](#fixing-errors-and-usefull-commands)
     -  BeardedSpice
-    -  TimeMachine on NAS fail fixing 
+    -  TimeMachine on NAS fail fixing
     -  Remove tittle-bar
     -  Remove invisible shadow around windows
     -  Remove symbols on long press
@@ -52,6 +52,10 @@
     -  [Hosts](#hosts)
     -  [Server software: ](#server-software)
     -  [Client software: ](#client-software)
+- [Windows configuration](#windows-configuration)
+    -  [Dependencies](#Dependencies)
+    -  [Terminal settings](#terminal-settings)
+    -  [WSL installation](#wsl-installation)
 
 
 #  MacOS settings and applications
@@ -330,3 +334,32 @@ Here's list of used software, hardware and utilities that helped me setup all th
      - Tonido    
      - Asus Router    
      - Transmission remote GUI  
+
+# Windows configuration
+## Dependencies
+
+-   terminal text editor [vim](https://www.vim.org/download.php)
+-   terminal file manager [vifm](https://vifm.info)
+-   terminal emulator [Windows terminal](https://github.com/microsoft/terminal)
+-   Monospace patched fonts [Nerd fonts for terminal (Cascadia Code)](https://github.com/microsoft/cascadia-code)
+        Unzip and install both ttl->PL fonts
+
+## Terminal settings
+
+-   open default configuration file: alt + click on arrow -> settings (gvim is required)
+-   merge WSL.json to configuration file `default.json`
+-   set WSL as a default (startup) profile    
+-   relaunch terminal
+
+## WSL installation
+
+Some info on this [link](https://aka.ms/wslinstall)
+
+-   The Windows Subsystem for Linux optional component is not enabled:
+    `dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart`
+-   optional: update to WSL ver2
+-   `bash -c "$(wget https://raw.githubusercontent.com/mskyaxl/wsl-terminal/master/scripts/install.sh -qO -)"`
+-   WSL default user name MUST be the same as Windows (Unix conf file)
+-   install dependencies `sudo apt install vim neovim ctags fish tmux sudo git curl autoconf autopoint libtool bison flex ranger highlight silversearcher-ag fzf make cmake grc`
+-   get install script
+-   install dependencies
