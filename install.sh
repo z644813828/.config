@@ -10,6 +10,7 @@ client_ip+=(10.211.55.4 Debian_2)
 client_ip+=(10.211.55.5 Debian_3)
 client_ip+=(10.211.55.6 Debian_VPN)
 client_ip+=(10.211.55.9 Debian_Clean)
+client_ip+=(192.168.2.131 Laptop_2)
 
 server_ip+=(192.168.2.251 Rasbperry_PI)
 server_ip+=(192.168.2.254 Server_OMV)

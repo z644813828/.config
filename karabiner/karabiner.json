@@ -4,8 +4,7 @@
     "show_in_menu_bar" : false,
     "show_profile_name_in_menu_bar" : false
   },
-             "profiles"
-      : [ {
+  "profiles" : [ {
         "complex_modifications" : {
           "parameters" : {
             "basic.simultaneous_threshold_milliseconds" : 5,
@@ -16,46 +15,50 @@
           },
           "rules" : [
             {
-              "manipulators" : [
-                {
-                  "description" : "Change caps_lock to control",
-                  "from" : {
-                    "key_code" : "caps_lock",
-                    "modifiers" : {"optional" : ["any"]}
-                  },
-                  "to" : [ {"key_code" : "left_control"} ],
-                  "type" : "basic"
+              "description" : "Change caps_lock to control",
+              "manipulators" : [ {
+                "from" : {
+                  "key_code" : "caps_lock",
+                  "modifiers" : {"optional" : ["any"]}
                 },
-                {
-                  "description" : "Disable Command-Shift-Q",
-                  "from" : {
-                    "key_code" : "q",
-                    "modifiers" :
-                        {"mandatory" : [ "left_shift", "left_command" ]}
-                  },
-                  "to" : [ {"key_code" : "left_control"} ],
-                  "type" : "basic"
+                "to" : [ {"key_code" : "left_control"} ],
+                "type" : "basic"
+              } ]
+            },
+            {
+              "description" : "Disable Command-Shift-Q",
+              "manipulators" : [ {
+                "from" : {
+                  "key_code" : "q",
+                  "modifiers" :
+                      {"mandatory" : [ "left_shift", "left_command" ]}
                 },
-                {
-                  "description" : "Disable Command-H hotkey.",
-                  "from" : {
-                    "key_code" : "h",
-                    "modifiers" : {"mandatory" : ["left_command"]}
-                  },
-                  "to" : [ {"key_code" : "left_control"} ],
-                  "type" : "basic"
+                "to" : [ {"key_code" : "left_control"} ],
+                "type" : "basic"
+              } ]
+            },
+            {
+              "description" : "Disable Command-H hotkey.",
+              "manipulators" : [ {
+                "from" : {
+                  "key_code" : "h",
+                  "modifiers" : {"mandatory" : ["left_command"]}
                 },
-                {
-                  "description" : "Disable Command-Alt-H hotkey",
-                  "from" : {
-                    "key_code" : "h",
-                    "modifiers" :
-                        {"mandatory" : [ "left_command", "left_option" ]}
-                  },
-                  "to" : [ {"key_code" : "left_control"} ],
-                  "type" : "basic"
-                }
-              ]
+                "to" : [ {"key_code" : "left_control"} ],
+                "type" : "basic"
+              } ]
+            },
+            {
+              "description" : "Disable Command-Alt-H hotkey",
+              "manipulators" : [ {
+                "from" : {
+                  "key_code" : "h",
+                  "modifiers" :
+                      {"mandatory" : [ "left_command", "left_option" ]}
+                },
+                "to" : [ {"key_code" : "left_control"} ],
+                "type" : "basic"
+              } ]
             },
             {
               "description" : "Launch apps by right_option + letters.",
@@ -116,8 +119,9 @@
                     "modifiers" :
                         {"mandatory" : [ "right_option", "right_shift" ]}
                   },
-                  "to" :
-                      [ {"shell_command" : "open '/System/Applications/Mail.app'"} ],
+                  "to" : [ {
+                    "shell_command" : "open '/System/Applications/Mail.app'"
+                  } ],
                   "type" : "basic"
                 },
                 {
@@ -143,16 +147,6 @@
                 },
                 {
                   "from" : {
-                    "key_code" : "0",
-                    "modifiers" :
-                        {"mandatory" : [ "right_option", "right_shift" ]}
-                  },
-                  "to" :
-                      [ {"shell_command" : "open '/Applications/MacVim.app'"} ],
-                  "type" : "basic"
-                },
-                {
-                  "from" : {
                     "key_code" : "u",
                     "modifiers" : {"mandatory" : ["right_option"]}
                   },
@@ -165,9 +159,10 @@
                     "key_code" : "y",
                     "modifiers" : {"mandatory" : ["right_option"]}
                   },
-                  "to" :
-                      [ {"shell_command" : "open '/System/Applications/Music.app'"} ],
-                      
+                  "to" : [ {
+                    "shell_command" : "open '/System/Applications/Music.app'"
+                  } ],
+
                   "type" : "basic"
                 },
                 {
@@ -190,21 +185,22 @@
                 },
                 {
                   "from" : {
-                    "key_code" : "hyphen",
-                    "modifiers" :
-                        {"mandatory" : [ "right_option", "right_shift" ]}
-                  },
-                  "to" :
-                      [ {"shell_command" : "open '/Applications/Reeder.app'"} ],
-                  "type" : "basic"
-                },
-                {
-                  "from" : {
                     "key_code" : "equal_sign",
                     "modifiers" : {"mandatory" : ["right_option"]}
                   },
                   "to" :
-                      [ {"shell_command" : "open '/Applications/Joplin.app'"} ],
+                      [ {"shell_command" : "open '/Applications/Microsoft Remote Desktop.app'"} ],
+                  "type" : "basic"
+                },
+                {
+                  "from" : {
+                    "key_code" : "hyphen",
+                    "modifiers" :
+                        {"mandatory" : [ "right_option", "right_shift" ]}
+                  },
+                  "to" : [
+                    {"shell_command" : "open '/Applications/Utilities/XQuartz.app'"}
+                  ],
                   "type" : "basic"
                 },
                 {
@@ -213,18 +209,9 @@
                     "modifiers" :
                         {"mandatory" : [ "right_option", "right_shift" ]}
                   },
-                  "to" :
-                      [ {"shell_command" : "open '/System/Applications/Notes.app'"} ],
-                  "type" : "basic"
-                },
-                {
-                  "from" : {
-                    "key_code" : "escape",
-                    "modifiers" :
-                        {"mandatory" : [ "left_control" ]}
-                  },
-                  "to" :
-                      [ {"shell_command" : "open '/Users/dmitriy/Parallels/Windows 10.pvm/Windows 10.app'"} ],
+                  "to" : [
+                    {"shell_command" : "open '/Applications/Parallels desktop.app'"}
+                  ],
                   "type" : "basic"
                 }
               ]
@@ -271,9 +258,41 @@
               ]
             },
             {
-              "description" : "Add Emacs binds",
+              "description" : "Add Emacs binds (not for [iTerm, Atom, RDC])",
               "manipulators" : [
                 {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.github.atom", "com.microsoft.rdc.macos"],
+                    "type" : "frontmost_application_unless"
+                  } ],
+                  "from" : {
+                    "key_code" : "a",
+                    "modifiers" : {"mandatory" : ["left_control"]}
+                  },
+                  "to" : [
+                    {"key_code" : "left_arrow", "modifiers" : ["left_control"]}
+                  ],
+                  "type" : "basic"
+                },
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.github.atom", "com.microsoft.rdc.macos"],
+                    "type" : "frontmost_application_unless"
+                  } ],
+                  "from" : {
+                    "key_code" : "e",
+                    "modifiers" : {"mandatory" : ["left_control"]}
+                  },
+                  "to" : [
+                    {"key_code" : "right_arrow", "modifiers" : ["left_control"]}
+                  ],
+                  "type" : "basic"
+                },
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.rdc.macos"],
+                    "type" : "frontmost_application_unless"
+                  } ],
                   "from" : {
                     "key_code" : "d",
                     "modifiers" : {"mandatory" : ["left_control"]}
@@ -282,6 +301,10 @@
                   "type" : "basic"
                 },
                 {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.rdc.macos"],
+                    "type" : "frontmost_application_unless"
+                  } ],
                   "from" : {
                     "key_code" : "u",
                     "modifiers" : {"mandatory" : ["left_control"]}
@@ -290,6 +313,10 @@
                   "type" : "basic"
                 },
                 {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.rdc.macos"],
+                    "type" : "frontmost_application_unless"
+                  } ],
                   "from" : {
                     "key_code" : "w",
                     "modifiers" : {"mandatory" : ["left_control"]}
@@ -301,6 +328,10 @@
                   "type" : "basic"
                 },
                 {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.rdc.macos"],
+                    "type" : "frontmost_application_unless"
+                  } ],
                   "from" : {
                     "key_code" : "b",
                     "modifiers" : {"mandatory" : ["left_option"]}
@@ -311,64 +342,12 @@
                   "type" : "basic"
                 },
                 {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.rdc.macos"],
+                    "type" : "frontmost_application_unless"
+                  } ],
                   "from" : {
                     "key_code" : "f",
-                    "modifiers" : {"mandatory" : ["left_option"]}
-                  },
-                  "to" : [
-                    {"key_code" : "right_arrow", "modifiers" : ["left_option"]}
-                  ],
-                  "type" : "basic"
-                }
-              ]
-            },
-            {
-              "description" : "Add Emacs rus binds",
-              "manipulators" : [
-                {
-                  "from" : {
-                    "key_code" : "ф",
-                    "modifiers" : {"mandatory" : ["left_control"]}
-                  },
-                  "to" : [
-                    {"key_code" : "left_arrow", "modifiers" : ["left_command"]}
-                  ],
-                  "type" : "basic"
-                },
-                {
-                  "from" : {
-                    "key_code" : "у",
-                    "modifiers" : {"mandatory" : ["left_control"]}
-                  },
-                  "to" : [
-                    {"key_code" : "right_arrow", "modifiers" : ["left_command"]}
-                  ],
-                  "type" : "basic"
-                },
-                {
-                  "from" : {
-                    "key_code" : "ц",
-                    "modifiers" : {"mandatory" : ["left_control"]}
-                  },
-                  "to" : [ {
-                    "key_code" : "delete_or_backspace",
-                    "modifiers" : ["left_option"]
-                  } ],
-                  "type" : "basic"
-                },
-                {
-                  "from" : {
-                    "key_code" : "и",
-                    "modifiers" : {"mandatory" : ["left_option"]}
-                  },
-                  "to" : [
-                    {"key_code" : "left_arrow", "modifiers" : ["left_option"]}
-                  ],
-                  "type" : "basic"
-                },
-                {
-                  "from" : {
-                    "key_code" : "а",
                     "modifiers" : {"mandatory" : ["left_option"]}
                   },
                   "to" : [
@@ -418,6 +397,72 @@
               ]
             },
             {
+              "description" : "Twitter hotkeys",
+              "manipulators" : [
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["maccatalyst.com.atebits.Tweetie2"],
+                    "type" : "frontmost_application_if"
+                  } ],
+                  "from" : {"key_code" : "r"},
+                  "to" : [
+                    {"key_code" : "up_arrow", "modifiers" : ["left_command"]}
+                  ],
+                  "type" : "basic"
+                },
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["maccatalyst.com.atebits.Tweetie2"],
+                    "type" : "frontmost_application_if"
+                  } ],
+                  "from" : {"key_code" : "j"},
+                  "to" : [ {"key_code" : "down_arrow"} ],
+                  "type" : "basic"
+                },
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["maccatalyst.com.atebits.Tweetie2"],
+                    "type" : "frontmost_application_if"
+                  } ],
+                  "from" : {"key_code" : "k"},
+                  "to" : [ {"key_code" : "up_arrow"} ],
+                  "type" : "basic"
+                }
+              ]
+            },
+            {
+              "description" : "Browserosaurus (1-Safari, 2/option - chrome)",
+              "manipulators" : [
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.browserosaurus"],
+                    "type" : "frontmost_application_if"
+                  } ],
+                  "from" : {"key_code" : "1"},
+                  "to" : [ {"key_code" : "s"} ],
+                  "type" : "basic"
+                },
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.browserosaurus"],
+                    "type" : "frontmost_application_if"
+                  } ],
+                  "from" : {"key_code" : "2"},
+                  "to" : [ {"key_code" : "g"} ],
+                  "type" : "basic"
+                },
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.browserosaurus"],
+                    "type" : "frontmost_application_if"
+                  } ],
+                  "from" : {"key_code" : "left_option"},
+                  "to" : [ {"key_code" : "g"} ],
+                  "type" : "basic"
+                }
+              ]
+            },
+            {
               "description" : "MacVim Key Binding Resolver",
               "manipulators" : [ {
                 "conditions" : [ {
@@ -441,13 +486,24 @@
                   "type" : "frontmost_application_if"
                 } ],
                 "from" : {
-                  "key_code" : "right_command",
-                    "modifiers" :
-                        {"optional" : ["any"]}
+                  "key_code" : "right_command"
                 },
-                "to" :
-                    [ ],
-                  "type" : "basic"
+                "to" : [],
+                "type" : "basic"
+              } ]
+            },
+            {
+              "description" : "Transmission",
+              "manipulators" : [ {
+                "conditions" : [ {
+                  "bundle_identifiers" : ["com.transgui"],
+                  "type" : "frontmost_application_if"
+                } ],
+                "from" : {
+                  "key_code" : "escape"
+                },
+                "to" : [],
+                "type" : "basic"
               } ]
             }
           ]
@@ -515,4 +571,3 @@
             {"country_code" : 0, "mouse_key_xy_scale" : 100}
       } ]
 }
-

@@ -108,11 +108,8 @@ Plug 'https://github.com/cespare/vim-toml'
 " }}}
 
 " {{{ fzf
-Plug 'https://github.com/junegunn/fzf.vim'
-Plug 'https://github.com/junegunn/fzf', {
-  \ 'dir': '~/.local/opt/fzf',
-  \ 'do': './install --all'
-  \ }
+Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
+Plug 'junegunn/fzf.vim'
 " }}}
 
 call plug#end()
@@ -334,16 +331,12 @@ nnoremap <leader>R :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 nnoremap <leader>К :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 
 " Open config files
-nnoremap <leader>C :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf .zshrc<CR>
-nnoremap <leader>С :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf .zshrc<CR>
+nnoremap <silent><leader>C :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf .zshrc<CR>
+nnoremap <silent><leader>С :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf .zshrc<CR>
 
 " Insert current time
-nnoremap <leader>td "=strftime("%x %X")<CR>P
-nnoremap <leader>ев "=strftime("%x %X")<CR>P
-" Clear ':'
-nmap <F1> :echo <CR>
-imap <F1> <C-o>:echo <CR>
-nmap <A-k> :noh<CR>:echo<CR>
+nnoremap <silent><leader>td "=strftime("%x %X")<CR>P
+nnoremap <silent><leader>ев "=strftime("%x %X")<CR>P
 
 " Highlight search results incrementally (haya14busa/incsearch.vim)
 map /  <Plug>(incsearch-forward)
@@ -354,14 +347,8 @@ map g/ <Plug>(incsearch-stay)
 cnoreabbrev Tab Tabularize
 
 " Create new split
-inoremap <D-d> <C-o>:vsplit_v<CR>
-nnoremap <D-d> :vsplit_v<CR>
-
-"Go to next split
-nnoremap <A-w> <C-w><C-W>
-
-" Inserting new line
-inoremap <A-ENTER> <C-o>o
+nnoremap <silent><leader>k :vsplit_v<CR>
+nnoremap <silent><leader>л :vsplit_v<CR>
 
 " Search highlighted text
 vnoremap // y/<C-R>"<CR>
@@ -376,11 +363,11 @@ nnoremap <silent><leader>E :e!<CR>
 nnoremap <silent><leader>У :e!<CR>
 
 " New buffer 
-nnoremap <D-t> :enew<CR>
-inoremap <D-t> <C-o>:enew<CR>
+nnoremap <silent><leader>е :enew<CR>
+nnoremap <silent><leader>t :enew<CR>
 
 " Tab Restore
-nnoremap <S-D-t> :call ReopenLastTab()<CR>:echo<CR>
+nnoremap <silent><leader>t> :call ReopenLastTab()<CR>:echo<CR>
 
 " Save 
 nnoremap <silent><leader>s :w<CR>
@@ -394,10 +381,6 @@ nnoremap <silent><leader>q :call Close()<CR>
 nnoremap <silent><leader>й :call Close()<CR>
 nnoremap <silent><leader>Q :call Close_force()<CR>
 nnoremap <silent><leader>Й :call Close_force()<CR>
-nnoremap <silent><D-w> :call Close()<CR>
-inoremap <silent><D-w> <C-o>:call Close()<CR>
-inoremap <silent><S-D-w> <C-o>:qa<CR>
-nnoremap <silent><S-D-w> :qa<CR>
 function! Close()
     if len(filter(range(1, bufnr('$')), 'buflisted(v:val)')) == 1
         quit
@@ -588,7 +571,8 @@ menu Encoding.cp866 :e ++enc=cp866 ++ff=dos<CR>
 menu Encoding.utf-8 :e ++enc=utf8<CR>
 menu Encoding.koi8-u :e ++enc=koi8-u ++ff=unix<CR>
 
-nmap <C-U> :emenu Encoding.
+nmap <leader>u :emenu Encoding.
+nmap <leader>г :emenu Encoding.
 " }}}
 
 " {{{ Grammar menu
@@ -672,7 +656,8 @@ menu Grammar.xquery :set filetype=xquery<CR>
 menu Grammar.yaml :set filetype=yaml<CR>
 menu Grammar.zsh :set filetype=zsh<CR>
 
-" nmap <C-O> :emenu Grammar.
+nmap <leader>o :emenu Grammar.
+nmap <leader>щ :emenu Grammar.
 " }}}
 
 " {{{ FZF 
@@ -685,67 +670,46 @@ omap <A-z> <plug>(fzf-maps-o)
 omap <A-я> <plug>(fzf-maps-o)
 autocmd FileType fzf tnoremap <buffer> <Esc> <c-g>
 
-nnoremap <leader><space> :Commands<CR>
-nnoremap <leader>p :Files<CR>
-nnoremap <leader>з :Files<CR>
-nnoremap <D-p> :Files<CR>
-nnoremap <leader>I :Tags<CR>
-nnoremap <leader>Ш :Tags<CR>
-nnoremap <S-D-i> :Tags<CR>
-nnoremap <leader>i :BTags<CR>
-nnoremap <leader>ш :BTags<CR>
-nnoremap <D-i> :BTags<CR>
-nnoremap <leader>m :Marks<CR>
-nnoremap <leader>ь :Marks<CR>
-nnoremap <leader>b :Buffers<CR>
-nnoremap <leader>и :Buffers<CR>
-nnoremap <leader>w :Windows<CR>
-nnoremap <leader>ц :Windows<CR>
-nnoremap <A-tab> :Buffers<CR>
-nnoremap Q :History/<CR>
-nnoremap Й :History/<CR>
-nnoremap <leader>f :Ag<CR>
-nnoremap <leader>а :Ag<CR>
-nnoremap <D-f> :Ag<CR>
-nnoremap <Leader>Fw :Ag<Space><C-r><C-w><CR>
-nnoremap <Leader>Ац :Ag<Space><C-r><C-w><CR>
-nnoremap <S-D-f> :Ag<Space><C-r><C-w><CR>
+nnoremap <silent><leader><space> :Commands<CR>
+nnoremap <silent><leader>p :Files<CR>
+nnoremap <silent><leader>з :Files<CR>
+nnoremap <silent><leader>I :Tags<CR>
+nnoremap <silent><leader>Ш :Tags<CR>
+nnoremap <silent><leader>i :BTags<CR>
+nnoremap <silent><leader>ш :BTags<CR>
+nnoremap <silent><leader>m :Marks<CR>
+nnoremap <silent><leader>ь :Marks<CR>
+nnoremap <silent><leader>b :Buffers<CR>
+nnoremap <silent><leader>и :Buffers<CR>
+nnoremap <silent><leader>w :Windows<CR>
+nnoremap <silent><leader>ц :Windows<CR>
+nnoremap <silent>Q :History/<CR>
+nnoremap <silent>Й :History/<CR>
+nnoremap <silent><leader>f :Ag<CR>
+nnoremap <silent><leader>а :Ag<CR>
+nnoremap <silent><Leader>Fw :Ag<Space><C-r><C-w><CR>
+nnoremap <silent><Leader>Ац :Ag<Space><C-r><C-w><CR>
 
-nnoremap <leader>Fc :AgC<CR>
-nnoremap <leader>Ас :AgC<CR>
-nnoremap <leader>Fh :AgH<CR>
-nnoremap <leader>Ар :AgH<CR>
-nnoremap <leader>FF :Ag!<CR>
-nnoremap <leader>АА :Ag!<CR>
-nnoremap <leader>Fp :AgPython<CR>
-nnoremap <leader>Аз :AgPython<CR>
-nnoremap <leader>/  :BLines<CR>
-nnoremap <leader>.  :BLines<CR>
+nnoremap <silent><leader>Fc :AgC<CR>
+nnoremap <silent><leader>Ас :AgC<CR>
+nnoremap <silent><leader>Fh :AgH<CR>
+nnoremap <silent><leader>Ар :AgH<CR>
+nnoremap <silent><leader>FF :Ag!<CR>
+nnoremap <silent><leader>АА :Ag!<CR>
+nnoremap <silent><leader>Fp :AgPython<CR>
+nnoremap <silent><leader>Аз :AgPython<CR>
+nnoremap <silent><leader>/  :BLines<CR>
+nnoremap <silent><leader>.  :BLines<CR>
 " }}} 
 
 " {{{ C/C++
 " open tag in new tab
-nnoremap <silent><C-S-]> <C-w><C-]><C-w>T
-nnoremap <M-]> <C-]>
+nnoremap <silent><leader>] <C-w><C-]><C-w>T
 " Switch between header and sources
 nmap <A-a> :A<CR>
 " }}}
 
 " {{{ neosnippet
-imap <A-l> <Plug>(neosnippet_expand_or_jump)
-smap <A-l> <Plug>(neosnippet_expand_or_jump)
-smap <A-l> <Plug>(neosnippet_expand_or_jump)
-xmap <A-l> <Plug>(neosnippet_expand_target)
-imap <C-l> <Plug>(neosnippet_expand_or_jump)
-smap <C-l> <Plug>(neosnippet_expand_or_jump)
-xmap <C-l> <Plug>(neosnippet_expand_target)
-inoremap <silent> <Esc> <esc>:NeoSnippetClearMarkers<cr>
-snoremap <silent> <Esc> <esc>:NeoSnippetClearMarkers<cr>
-
-
-" smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
-" \ "\<Plug>(neosnippet_expand_or_jump)" : "\<TAB>"
-
 " imap <expr><TAB> neosnippet#jumpable() ?
 imap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 \ "\<Plug>(neosnippet_expand_or_jump)"
@@ -888,39 +852,6 @@ augroup ReopenLastTab
 augroup END
 "}}} 
 
-" {{{ NerdTree
-" autocmd vimenter * NERDTree
-
-let g:NERDTreeFileExtensionHighlightFullName = 1
-let g:NERDTreeExactMatchHighlightFullName = 1
-let g:NERDTreePatternMatchHighlightFullName = 1
-" set encoding=utf8
-" let g:NERDTreeShowIgnoredStatus = 1
-let NERDTreeRespectWildIgnore=1
-" set guifont=font-hack-nerd-font
-" NERDTress File highlighting
-function! NERDTreeHighlightFile(extension, fg, bg, guifg, guibg)
- exec 'autocmd filetype nerdtree highlight ' . a:extension .' ctermbg='. a:bg .' ctermfg='. a:fg .' guibg='. a:guibg .' guifg='. a:guifg
- exec 'autocmd filetype nerdtree syn match ' . a:extension .' #^\s\+.*'. a:extension .'$#'
-endfunction
-
-call NERDTreeHighlightFile('jade', 'green', 'none', 'green', '#151515')
-" call NERDTreeHighlightFile('c', 'green', 'none', 'green', '#151515')
-call NERDTreeHighlightFile('ini', 'yellow', 'none', 'yellow', '#151515')
-call NERDTreeHighlightFile('md', 'blue', 'none', '#3366FF', '#151515')
-call NERDTreeHighlightFile('yml', 'yellow', 'none', 'yellow', '#151515')
-call NERDTreeHighlightFile('config', 'yellow', 'none', 'yellow', '#151515')
-call NERDTreeHighlightFile('conf', 'yellow', 'none', 'yellow', '#151515')
-call NERDTreeHighlightFile('json', 'yellow', 'none', 'yellow', '#151515')
-call NERDTreeHighlightFile('html', 'yellow', 'none', 'yellow', '#151515')
-call NERDTreeHighlightFile('styl', 'cyan', 'none', 'cyan', '#151515')
-call NERDTreeHighlightFile('css', 'cyan', 'none', 'cyan', '#151515')
-call NERDTreeHighlightFile('coffee', 'Red', 'none', 'red', '#151515')
-call NERDTreeHighlightFile('js', 'Red', 'none', '#ffa500', '#151515')
-call NERDTreeHighlightFile('php', 'Magenta', 'none', '#ff00ff', '#151515')
-" 
-" }}} 
-
 " {{{ C/C++
 au FileType c,h,cpp setlocal commentstring=//\ %s
 au FileType c,h,cpp setlocal tw=80
@@ -992,7 +923,7 @@ au FileType vim nnore <silent><buffer> K <Esc>:help <C-R><C-W><CR>
 au FileType help noremap <buffer> q :q<cr>
 " }}}
 
-"{{{ The Silver Searcher
+" {{{ The Silver Searcher
 if executable('ag')
   " Use ag over grep
   set grepprg=ag\ --nogroup\ --nocolor

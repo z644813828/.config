@@ -62,17 +62,17 @@ end
 
 # {{{ Reload
 function fish_reload
-    set jobs_list (jobs)
-    if test $jobs_list
-        echo "Error active jobs;" 
-        echo $jobs_list
+    set -l jobs_list (jobs)
+    if test -n "$jobs_list"
+        printf "\033[0;31m Error!\033[0m \n"
+        jobs
         return 1;
     else
         source $HOME/.config/fish/config.fish
         if count $argv > /dev/null
             set -x PROMPT $argv;
         end
-        echo "Config reloaded"
+        printf "\033[0;32m Config reloaded !\033[0m \n"
         fish; kill -9 $fish_pid
     end
 end
@@ -84,6 +84,7 @@ abbr R fish_reload
 # {{{ Generic
 alias r='ranger'
 abbr r 'ranger'
+abbr g 'git'
 alias rm='rm -i'
 alias vi="bash -c 'vim -u ~/.vimrc_'"
 alias v 'nvim'
@@ -119,6 +120,48 @@ end
 
 # {{{ | MacOS
 case Darwin
+    # {{{ Atom
+    function _atom
+        if count $argv > /dev/null
+            atom $argv
+        else
+            atom .
+        end
+    end
+    alias a='_atom'
+    # }}}
+
+    # {{{ Wakeonlan 
+    function wakeonlan
+        # set -a MAC_ADDR FA:EB:DC:CD:BE:AF # example
+        set -a MAC_ADDR 1C:1B:0D:F7:2D:9B # Z-home
+        set -a MAC_ADDR 84:16:F9:05:75:85 # Server
+        set -a MAC_ADDR 70:8B:CD:7F:25:A9 # Work
+        if not string match --quiet --regex '\D' $argv
+            if [ $argv -gt (count $MAC_ADDR) ]
+                printf "\033[0;31m Error! $argv not in list:\033[0m \n"
+                echo -e $MAC_ADDR | tr ' ' '\n'
+            else
+                eval command wakeonlan $MAC_ADDR[$argv]
+            end
+        else 
+            command wakeonlan $argv
+        end
+    end
+    # }}} 
+
+    # {{{ Get program identifier
+    function get_identifier
+        if not test -d /Applications/$argv.app
+            printf "\033[0;31m Error!\033[0m Program no found\n"
+        else
+            set cmd '/usr/libexec/PlistBuddy -c \'Print CFBundleIdentifier\' /Applications/'$argv'.app/Contents/Info.plist'
+            echo $cmd
+            eval command $cmd
+        end
+    end
+    # }}} 
+
     # {{{ Check new updates in project
     function check_pull
         if count $argv > /dev/null
@@ -147,13 +190,26 @@ case Darwin
         command $SCRIPTS/ssh.sh $argv
     end
     # }}}
+    
+    # {{{ SSHFS with password from `~/.ssh/config` and flags
+    function sshfs
+        command $SCRIPTS/sshfs.sh $argv
+    end
+    # }}}
+
+    # {{{ SCP with password from `~/.ssh/config`
+    # function scp
+        # command $SCRIPTS/scp.sh $argv
+    # end
+    # }}}
 
     # {{{ SSH wrapper to connect to VM or run a command
     function s
+        set -U path (string replace -a ' ' '\\ ' $PWD)
         if count $argv > /dev/null
-            command ssh -Xo LogLevel=QUIET -t dmitriy@$VM_DEBIAN_1 "cd $PWD; $argv"
+            command ssh -Xo LogLevel=QUIET -t dmitriy@$VM_DEBIAN_1 "cd $path; $argv"
         else
-            command ssh -Xt dmitriy@$VM_DEBIAN_1 "cd $PWD; echo "Connected to $VM_DEBIAN_1"; fish"
+            command ssh -Xt dmitriy@$VM_DEBIAN_1 "cd $path; echo "Connected to $VM_DEBIAN_1"; fish"
         end
     end
     # }}}
@@ -166,7 +222,7 @@ case Darwin
             set ip $VM_DEBIAN_1
         end
             while true; 
-                command ~/.config/scripts/ssh.sh "$ip"; 
+                command $SCRIPTS/ssh.sh $ip
                 if test "$status" = 0 
                     break
                 else
@@ -224,22 +280,12 @@ case Darwin
         end
     end
     # }}}
-    
-    # {{{ SSHFS
-    function ssshfs
-        set ip (ssh -G $argv | grep "^hostname " | awk '{printf "%s", $2}')
-        sudo mkdir /Volumes/$ip; 
-        set args "reconnect,ServerAliveInterval=15,ServerAliveCountMax=3,defer_permissions,noappledouble"
-        echo "sudo sshfs -o" $args $ip":/ /Volumes/"$ip 
-        sudo sshfs -o $args $ip:/ /Volumes/$ip 
-end
-    # }}}
 
     # {{{ Other
+    alias cdi='cd ~/Library/Mobile\ Documents/com~apple~CloudDocs'
     alias m='/Applications/MacVim.app/Contents/bin/mvim'
     alias m_cli='/usr/local/bin/m'
     alias mvim='/Applications/MacVim.app/Contents/bin/mvim'
-    alias a='atom'
     alias ls='gls -N --color -h --group-directories-first'
     alias ll='gls -N -lh -G --color -h --group-directories-first'
     alias ctr='ctags -R --languages=c,c++'
@@ -359,6 +405,7 @@ end
 # }}}
 
 # {{{ Iterm iterm2_shell_integration.fish
+# curl -L https://iterm2.com/shell_integration/fish -o ~/.iterm2_shell_integration.fish
 test -e {$HOME}/.iterm2_shell_integration.fish ; and source {$HOME}/.iterm2_shell_integration.fish
 # }}}
 
