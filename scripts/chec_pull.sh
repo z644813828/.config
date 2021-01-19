@@ -4,6 +4,9 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
+DATE="date +%Y.%m.%d-%H:%M:%S"
+LOG_FILE="$HOME/temp/check_pull/$($DATE).md" 
+mkdir -p $HOME/temp/check_pull
 
 dirs=()
 uptodate=()
@@ -66,26 +69,38 @@ echo
 echo
 echo
 len=${#uptodate[@]}
-echo "Up to date  : " $len " projects"
+echo "Up to date  :  $len projects" 
+echo "# Up to date  :  $len projects" >> $LOG_FILE
 for (( i=0; i<$len; i++ )); do 
-    printf "${GREEN}%s${NC}\n" "${uptodate[$i]}" ; done
+    echo "- " ${uptodate[$i]} >> $LOG_FILE;
+    printf "${GREEN}%s${NC}\n" "${uptodate[$i]}" ;
+done
 echo 
 
 len=${#updated[@]}
-echo "Updated     :" $len " projects"
+echo "Updated     :  $len projects"
+echo "# Updated     :  $len projects" >> $LOG_FILE
 for (( i=0; i<$len; i++ )); do 
-    printf "${YELLOW}%s${NC}\n" "${updated[$i]}" ; done
+    echo "- " ${updated[$i]} >> $LOG_FILE;
+    printf "${YELLOW}%s${NC}\n" "${updated[$i]}" | $LOG;
+done
 echo
 
 len=${#notupdated[@]}
-echo "Not updated :" $len " projects"
+echo "Not updated :  $len projects"
+echo "# Not updated :  $len projects" >> $LOG_FILE
 for (( i=0; i<$len; i++ )); do 
-    printf "${YELLOW}%s${NC}\n" "${notupdated[$i]}" ; done
+    echo "- " ${notupdated[$i]} >> $LOG_FILE;
+    printf "${YELLOW}%s${NC}\n" "${notupdated[$i]}" ;
+done
 echo
 
 len=${#error[@]}
-echo "Error       :" $len " projects"
+echo "Error       :  $len projects"
+echo "# Error       :  $len projects" >> $LOG_FILE
 for (( i=0; i<$len; i++ )); do 
-    printf "${RED}%s${NC}\n" "${error[$i]}" ; done
+    echo "- " ${error[$i]} >> $LOG_FILE;
+    printf "${RED}%s${NC}\n" "${error[$i]}" ;
+done
 echo
 

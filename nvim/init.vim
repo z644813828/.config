@@ -7,6 +7,7 @@ endif
 " {{{ Darwin & Python3
 " Check python3 version for deoplete support 
 let uname = substitute(system('uname'), '\n', '', '')
+let user_name = 'dmitriy'
 let python_min_version = 0
 if has('python3')
     python3 import vim; from sys import version_info as v; vim.command('let python_version=%d' % (v[0] * 10000 + v[1] * 100 + v[2]))
@@ -27,13 +28,11 @@ let languageClient_enable = 0
 " endif
 
 " Extenstions installation path
-let path_install_plug = '/dmitriy/.local/share/nvim/site/autoload/plug.vim'
-let path_plugged = '/dmitriy/.nvim/plugged'
+let path_install_plug = '~/.local/share/nvim/site/autoload/plug.vim'
+let path_plugged = '/' . user_name . '/.nvim/plugged'
 if uname == 'Darwin'
-    let path_install_plug = '/Users' . path_install_plug
     let path_plugged = '/Users' . path_plugged
 else
-    let path_install_plug = '/home' . path_install_plug
     let path_plugged = '/home' . path_plugged
 endif
 " }}}
@@ -125,9 +124,9 @@ set scrolloff=7                             " 7 lines above/below cursor when sc
 set scroll=7                                " Number of lines scrolled by <C-u> and <C-d>
 set undofile
 if uname == 'Darwin'
-    set undodir=/Users/dmitriy/.vim/undo
+    exec 'set undodir=/Users/' . user_name . '/.vim/undo'
 else
-    set undodir=/home/dmitriy/.vim/undo
+    exec 'set undodir=/home/' . user_name . '/.vim/undo'
 endif
 
 set undolevels=1000
@@ -174,6 +173,7 @@ set background=dark
 set t_Co=256                                " 256-colors mode
 set guicursor+=c-ci-cr:block                " Cursor style
 set noswapfile
+let &fcs='eob: '                            " Remove '~' on blank lines
 
 let &t_SI.="\e[5 q" "SI = INSERT mode
 let &t_SR.="\e[4 q" "SR = REPLACE mode
@@ -269,7 +269,6 @@ set foldnestmax=6
 set nofoldenable       " Disable folding when open file
 set foldlevel=2
 set foldcolumn=0
-set fillchars=fold:\ 
 " }}}
 
 " {{{ Customized `CustomFoldText` function:
@@ -284,13 +283,14 @@ function! CustomFoldText()
     let line = substitute(getline(fs), '\t', repeat(' ', &tabstop), 'g')
   endif
 
-  let w = &l:textwidth - 3 - &foldcolumn - (&number ? 8 : 0)
+  let sub = line . repeat(" ", 200)
   let foldSize = 1 + v:foldend - v:foldstart
-  let foldLevelStr = ""
   let lineCount = line("$")
-  let foldSizeStr = printf("[%4dL|%4.1f%%]", foldSize, (foldSize*1.0)/lineCount*100)
-  let expansionString = " " . repeat(" ", w - strwidth(foldSizeStr.line.foldLevelStr))
-  return  line . expansionString . foldLevelStr . " " . foldSizeStr
+  let info = printf("[%4dL|%4.1f%%]", foldSize, (foldSize*1.0)/lineCount*100)
+  let num_w = getwinvar( 0, '&number' ) * getwinvar( 0, '&numberwidth' )
+  let fold_w = getwinvar( 0, '&foldcolumn' )
+  let sub = strpart( sub, 0, winwidth(0) - strlen( info ) - num_w - fold_w - 6 )
+  return sub . info
 endf
 set foldtext=CustomFoldText()
 " }}}

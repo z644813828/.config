@@ -354,6 +354,20 @@
                     {"key_code" : "right_arrow", "modifiers" : ["left_option"]}
                   ],
                   "type" : "basic"
+                },
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.rdc.macos"],
+                    "type" : "frontmost_application_unless"
+                  } ],
+                  "from" : {
+                    "key_code" : "h",
+                    "modifiers" : {"mandatory" : ["left_control"]}
+                  },
+                  "to" : [
+                    {"key_code" : "home"}
+                  ],
+                  "type" : "basic"
                 }
               ]
             },
@@ -553,7 +567,7 @@
           },
           {
             "from" : {"key_code" : "f10"},
-            "to" : {"consumer_key_code" : "mute"}
+            "to" : {"key_code" : "f10"}
           },
           {
             "from" : {"key_code" : "f11"},

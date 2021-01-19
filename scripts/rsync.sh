@@ -57,7 +57,7 @@ mkdir -p $D\1/omvbackup
 # }}}
 
 # {{{ Check free space on backup drive
-echo -e "# TEST -------DISK 1 FREE SPACE--------"  $($DATE) | $LOG
+echo -e "# TEST--------DISK 1 FREE SPACE--------"  $($DATE) | $LOG
 DISK_SIZE_1=$(df | grep $D\1 | awk '{print $2}');
 
 GB=1048576
@@ -151,7 +151,7 @@ mkdir -p $D\2/Acronis
 # }}}
 
 # {{{ Check free space on backup drive
-echo -e "# TEST -------DISK 2 FREE SPACE--------"  $($DATE) | $LOG
+echo -e "# TEST--------DISK 2 FREE SPACE--------"  $($DATE) | $LOG
 DISK_SIZE_1=$(df | grep $D\1 | awk '{print $2}');
 DISK_SIZE_2=$(df | grep $D\2 | awk '{print $2}');
 
