@@ -15,6 +15,8 @@ set -x VM_DEBIAN_2 "10.211.55.4"
 set -x VM_DEBIAN_3 "10.211.55.5"
 set -x VM_DEBIAN_4 "10.211.55.6"
 
+set -x TOOLCHAINS_PATH "$HOME/Documents/Libs/_Toolchain"
+
 # }}} 
 
 # {{{ Extensions path
@@ -28,11 +30,27 @@ end
 # }}} 
 
 # {{{ Install fisher plugin manager and packages if not exist
+function PlugInstall
+    set -x plugins_list
+    set -a plugins_list "oh-my-fish/theme-bobthefish"       # Prompt theme
+    set -a plugins_list "jethrokuan/fzf"                    # Improved fzf-integration
+    set -a plugins_list "laughedelic/pisces"                # Helper for pairing simbols
+    set -a plugins_list "oh-my-fish/plugin-bang-bang"       # Bash style history substitution
+    set -a plugins_list "oh-my-fish/plugin-grc"             # Code highlighting
+    set -a plugins_list "jethrokuan/z"                      # Z port for fish
+    set -a plugins_list "jorgebucaran/getopts.fish"         # Parse CLI options
+    # set -a plugins_list "oh-my-fish/plugin-brew"          # Integrate Homebrew paths into shell 
+    # set -a plugins_list "aughedelic/brew-completions"     # Homebrew completions
+    # set -a plugins_list "oh-my-fish/plugin-local-config"  # Support different config files
+    for i in $plugins_list; fisher install $i; end
+    fish_reload
+end
+
 # if test uname = Darwin # not sure about install path on Linux/MacOS
 if not functions -q fisher
     set -q XDG_CONFIG_HOME; or set XDG_CONFIG_HOME ~/.config
     curl https://git.io/fisher --create-dirs -sLo $XDG_CONFIG_HOME/fish/functions/fisher.fish
-    fish -c fisher
+    fish -c PlugInstall
 end
 # end
 # }}} 
@@ -46,6 +64,7 @@ set -U fish_key_bindings fish_default_key_bindings
 
 # {{{ Linked Linux VM to MacOS /Users/dmitriy directory
 # ln -s /media/psf/Home/{Documents,Desktop,Downloads,Pictures} ~
+# ln -s /media/psf/Home/ /Users/dmitriy
 abbr cdp 'cd ~/Documents/Projects/'
 abbr cdb 'cd ~/Documents/Beremiz/'
 abbr cdl 'cd ~/Documents/Libs/'
@@ -91,7 +110,27 @@ alias v 'nvim'
 alias vim 'nvim'
 alias vimdiff='nvim -d'
 alias vim-='nvim -R -'
+alias jmake='make -j(nproc)'
 abbr -- - 'cd -'
+# }}}
+
+# {{{ Toolchain
+function toolchain
+    if test -e $TOOLCHAINS_PATH/$argv
+        set -a L_PATH "$TOOLCHAINS_PATH/$argv/lib"
+        set -a H_PATH "$TOOLCHAINS_PATH/$argv/include/"
+        printf "\033[0;32m Include path: \033[0m $H_PATH \n"
+        printf "\033[0;32m Library path: \033[0m $L_PATH \n"
+    else
+        set -a L_PATH ""
+        set -a H_PATH ""
+        printf "\033[0;31m Error!\033[0m Toolchain no found\n"
+    end
+        export CPATH=$H_PATH
+        export C_FLAGS=$H_PATH
+        export LIBRARY_PATH=$L_PATH
+        export LD_LIBRARY_PATH=$L_PATH
+end
 # }}}
 
 # }}} 
@@ -233,9 +272,7 @@ case Darwin
     # }}}
 
     # {{{ Minicom wrapper
-    function mminicom
-        env LC_ALL=ru_RU.CP1251 sudo minicom -C ~/temp/minicom_log/(date +%Y.%m.%d-%H:%M:%S) -8 -m --device $argv 
-    end
+    abbr mminicom 'env LC_ALL=ru_RU.CP1251 sudo minicom -C ~/temp/minicom_log/(date +%Y.%m.%d-%H:%M:%S) -8 -m --device'
     # }}}
 
     # {{{ SSH to extra VM
@@ -302,6 +339,10 @@ case '*'
 end
 # }}}
 
+# }}}
+
+# {{{ dev/tty1
+string match -r -q -- '/dev/tty[0-9]' (tty); and set -x PROMPT 0; and exit;
 # }}}
 
 # {{{ UI customization
@@ -405,8 +446,8 @@ end
 # }}}
 
 # {{{ Iterm iterm2_shell_integration.fish
-# curl -L https://iterm2.com/shell_integration/fish -o ~/.iterm2_shell_integration.fish
-test -e {$HOME}/.iterm2_shell_integration.fish ; and source {$HOME}/.iterm2_shell_integration.fish
+test -e {$HOME}/.iterm2_shell_integration.fish ; or curl -L https://iterm2.com/shell_integration/fish -o ~/.iterm2_shell_integration.fish
+source {$HOME}/.iterm2_shell_integration.fish
 # }}}
 
 

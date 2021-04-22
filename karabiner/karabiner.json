@@ -213,6 +213,16 @@
                     {"shell_command" : "open '/Applications/Parallels desktop.app'"}
                   ],
                   "type" : "basic"
+                },
+                {
+                  "from" : {
+                    "key_code" : "f10",
+                    "modifiers" : {"mandatory" : ["right_option"]}
+                  },
+                  "to" : [ {
+                    "shell_command" : "/usr/local/bin/BluetoothConnector 4C-6b-e8-90-54-aa"
+                  } ],
+                  "type" : "basic"
                 }
               ]
             },
@@ -496,7 +506,7 @@
               "description" : "Microsoft Remote Desktop",
               "manipulators" : [ {
                 "conditions" : [ {
-                  "bundle_identifiers" : ["com.microsoft.rdc.macos"],
+                  "bundle_identifiers" : ["com.microsoft.rdc.macos REMOVE"],
                   "type" : "frontmost_application_if"
                 } ],
                 "from" : {

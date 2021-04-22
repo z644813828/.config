@@ -19,7 +19,7 @@ for (( i = 0; i < "${#dirs[@]}"; i+=2 )); do
     dir=${dirs[$i]}
     branch=${dirs[$i+1]}
     cd ~/Documents/$dir
-    git clean -Xf > /dev/null 2>&1
+    # git clean -Xf > /dev/null 2>&1
     git remote update > /dev/null 2>&1
     ret=$(git status)
     if [[ $ret != *"On branch $branch"* ]]; then
@@ -82,7 +82,7 @@ echo "Updated     :  $len projects"
 echo "# Updated     :  $len projects" >> $LOG_FILE
 for (( i=0; i<$len; i++ )); do 
     echo "- " ${updated[$i]} >> $LOG_FILE;
-    printf "${YELLOW}%s${NC}\n" "${updated[$i]}" | $LOG;
+    printf "${YELLOW}%s${NC}\n" "${updated[$i]}" ;
 done
 echo
 

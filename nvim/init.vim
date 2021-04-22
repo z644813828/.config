@@ -65,6 +65,7 @@ Plug 'https://github.com/godlygeek/tabular'         " Vim script for text filter
 Plug 'https://github.com/tpope/vim-surround'
 Plug 'https://github.com/MattesGroeger/vim-bookmarks'
 Plug 'https://github.com/jiangmiao/auto-pairs'      " Insert or delete brackets, parens, quotes in pair
+Plug 'https://github.com/will133/vim-dirdiff'       " Diff directories
 " }}}
 
 " {{{ Git
@@ -91,7 +92,7 @@ endif
 if languageClient_enable 
     Plug 'autozimu/LanguageClient-neovim'
 endif
-Plug 'https://github.com/ervandew/supertab'
+" Plug 'https://github.com/ervandew/supertab'
 Plug 'https://github.com/jubnzv/DoxygenToolkit.vim'
 " Plug 'https://github.com/vivien/vim-linux-coding-style'
 Plug 'https://github.com/nacitar/a.vim'
@@ -809,7 +810,7 @@ endfunction
 inoremap <silent><expr> <C-Space> deoplete#mappings#manual_complete()
 
 "Escape: exit autocompletion, go to Normal mode
-" inoremap <silent><expr> <Esc> pumvisible() ? "<C-o><Esc>" : "<Esc>"
+inoremap <silent><expr> <Esc> pumvisible() ? "<C-d>" : "<Esc>"
 endif
 " }}} 
 
