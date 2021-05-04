@@ -110,7 +110,8 @@ alias v 'nvim'
 alias vim 'nvim'
 alias vimdiff='nvim -d'
 alias vim-='nvim -R -'
-alias jmake='make -j(nproc)'
+set -a NPROC (nproc)
+abbr jmake "make -j$NPROC"
 abbr -- - 'cd -'
 # }}}
 

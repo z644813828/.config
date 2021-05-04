@@ -1,0 +1,9 @@
+authtoken: AUTHTOKEN
+
+tunnels:
+    asus_router:
+        proto: http
+        addr: https://192.168.2.1:8443
+    server_ssh:
+        proto: tcp
+        addr: 22
