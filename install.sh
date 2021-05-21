@@ -5,12 +5,12 @@ USER="dmitriy"
 client_ip=()
 server_ip=()
 
-client_ip+=(10.211.55.3 Debian)
-client_ip+=(10.211.55.4 Debian_2)
-client_ip+=(10.211.55.5 Debian_3)
-client_ip+=(10.211.55.6 Debian_VPN)
-client_ip+=(10.211.55.9 Debian_Clean)
-client_ip+=(192.168.2.131 Laptop_2)
+client_ip+=(10.211.55.3 Debian VM)
+client_ip+=(10.211.55.4 Debian_2 VM)
+client_ip+=(10.211.55.5 Debian_3 VM)
+client_ip+=(10.211.55.6 Debian_VPN VM)
+client_ip+=(10.211.55.9 Debian_Clean PC)
+client_ip+=(192.168.2.131 Laptop_2 PC)
 
 server_ip+=(192.168.2.251 Rasbperry_PI)
 server_ip+=(192.168.2.254 Server_OMV)
@@ -21,21 +21,11 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 NC='\033[0m' # No Color
 
-MKDIR="mkdir -p /home/$USER/.config/{fish,ranger,scripts,nvim};"
-MKDIR2="mkdir -p /root/.config/{fish,ranger,scripts,nvim};"
+EXEC_USER="bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"
+EXEC_SERV="sudo bash -c -- ' bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"
 
-EXEC_USER="$MKDIR \
-        bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"
-EXEC_ROOT="$MKDIR2 \
-        cp /home/$USER/{.vimrc,.vimrc_,.bashrc,.tmux.conf} /root/; \
-        cp /home/$USER/.config/fish/config.fish /root/.config/fish/; \
-        cp /home/$USER/.config/nvim/init.vim /root/.config/nvim"
-EXEC_SERV="$MKDIR \
-        sudo bash -c -- '$MKDIR2 \
-        cp /home/$USER/{.vimrc,.vimrc_,.bashrc,.tmux.conf} /root/; \
-        cp /home/$USER/.config/fish/config.fish /root/.config/fish/; \
-        cp -r /home/$USER/.config/nvim /root/.config/'; \
-        bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"
+LNS_FILE_LIST=(.bashrc .gvimrc .tmux.conf .vimrc .vimrc_ .config/fish/config.fish .config/nvim .config/ranger .config/scripts)
+
 
 SCP(){
     scp .vimrc $USER@$1:/home/$USER/
@@ -43,9 +33,26 @@ SCP(){
     scp .bashrc $USER@$1:/home/$USER/
     scp .tmux.conf $USER@$1:/home/$USER/
     scp -r fish/{config.fish,fishfile} $USER@$1:/home/$USER/.config/fish/
-    scp -r nvim/* $USER@$1:/home/$USER/.config/nvim/
-    scp ranger/* $USER@$1:/home/$USER/.config/ranger/
-    scp -r scripts $USER@$1:/home/$USER/.config
+    scp -r nvim $USER@$1:/home/$USER/.config/
+    scp -r ranger $USER@$1:/home/$USER/.config/
+    scp -r scripts $USER@$1:/home/$USER/.config/
+}
+
+
+LNS_BUILD_CMD_VM(){
+    LNS_CMD="echo"
+    for file in ${LNS_FILE_LIST[*]}
+    do
+        LNS_CMD="${LNS_CMD} && ln -sf /Users/$USER/$file /home/$USER/$file"
+    done
+}
+
+LNS_BUILD_CMD_ROOT(){
+    LNS_CMD="echo"
+    for file in ${LNS_FILE_LIST[*]}
+    do
+        LNS_CMD="${LNS_CMD} && ln -sf /home/$USER/$file /root/$file"
+    done
 }
 
 EXEC_C(){
@@ -53,9 +60,17 @@ EXEC_C(){
     if ping -c 1 -W 1 $hostname &> /dev/null
     then
         printf "\n${GREEN}Connecting to ${YELLOW}$2 [$1]${GREEN} (client) ${NC}\n"
-        SCP $1
-        ssh -t $USER@$1 $EXEC_USER
-        ssh -t root@$1 $EXEC_ROOT
+        if [[ "$3" == "VM" ]]; then
+            LNS_BUILD_CMD_VM
+            ssh -t $USER@$1 "rm -rf ${LNS_FILE_LIST[@]}; $LNS_CMD; $EXEC_USER"
+            LNS_BUILD_CMD_ROOT
+            ssh -t root@$1 "rm -rf ${LNS_FILE_LIST[@]}; $LNS_CMD"
+        else
+            SCP $1
+            ssh -t $USER@$1 $EXEC_USER
+            LNS_BUILD_CMD_ROOT
+            ssh -t root@$1 "rm -rf ${LNS_FILE_LIST[@]}; $LNS_CMD"
+        fi
     else
         printf "\n${RED}Host ${YELLOW}$2 [$1]${RED} (client) is unreachable!${NC}\n"
     fi
@@ -67,7 +82,8 @@ EXEC_S(){
     then
         printf "\n${GREEN}Connecting to ${YELLOW}$2 [$1]${GREEN} (server) ${NC}\n"
         SCP $1
-        ssh -t $USER@$1 $EXEC_SERV
+        LNS_BUILD_CMD_ROOT
+        ssh -t $USER@$1 "sudo bash -c 'rm -rf ${LNS_FILE_LIST[@]}; $LNS_CMD; $EXEC_SERV'; $EXEC_USER"
     else
         printf "\n${RED}Host ${YELLOW}$2 [$1]${RED} (server) is unreachable!${NC}\n"
     fi
@@ -75,15 +91,19 @@ EXEC_S(){
 
 if [[ "$1" == "0" ]]; then
     printf "\n${GREEN}Installing on localhost${NC}\n"
-    cp -r .vimrc .gvimrc .bashrc .tmux.conf ../
-    cp -r .bashrc .tmux.conf ../.sshrc.d
-    cp .vimrc_ ../.sshrc.d/.vimrc
-    cp .vimrc_ ../
+    ln -sf ~/.config/.vimrc ~
+    ln -sf ~/.config/.vimrc_ ~
+    ln -sf ~/.config/.gvimrc ~
+    ln -sf ~/.config/.bashrc ~
+    ln -sf ~/.config/.tmux.conf ~
+    mkdir -p ~/.sshrc.d
+    ln -sf ~/.bashrc ~/.sshrc.d/
+    ln -sf ~/.tmux.conf ~/.sshrc.d/
     vim +PlugInstall +qall
     nvim +PlugInstall +qall
 elif [[ "$1" == "" ]]; then
-    for (( i = 0; i < "${#client_ip[@]}"; i+=2 )); do
-        EXEC_C ${client_ip[$i]} ${client_ip[$i+1]}
+    for (( i = 0; i < "${#client_ip[@]}"; i+=3 )); do
+        EXEC_C ${client_ip[$i]} ${client_ip[$i+1]} ${client_ip[$i+2]}
     done
     for (( i = 0; i < "${#server_ip[@]}"; i+=2 )); do
         EXEC_S ${server_ip[$i]} ${server_ip[$i+1]}
@@ -92,7 +112,9 @@ else
     printf "Enter [c/s] [client/server]: "
     read S
     if [[ "$S" == "c" ]]; then
-        EXEC_C $1
+        printf "Enter [VM/PC] [parallels/real pc]: "
+        read P
+        EXEC_C $1 0 $P
     elif [[ "$S" == "s" ]]; then
         EXEC_S $1
     else

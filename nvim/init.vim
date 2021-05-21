@@ -284,7 +284,7 @@ function! CustomFoldText()
     let line = substitute(getline(fs), '\t', repeat(' ', &tabstop), 'g')
   endif
 
-  let sub = line . repeat(" ", 200)
+  let sub = line . repeat(" ", 400)
   let foldSize = 1 + v:foldend - v:foldstart
   let lineCount = line("$")
   let info = printf("[%4dL|%4.1f%%]", foldSize, (foldSize*1.0)/lineCount*100)
@@ -810,7 +810,7 @@ endfunction
 inoremap <silent><expr> <C-Space> deoplete#mappings#manual_complete()
 
 "Escape: exit autocompletion, go to Normal mode
-inoremap <silent><expr> <Esc> pumvisible() ? "<C-d>" : "<Esc>"
+inoremap <silent><expr> <Esc> pumvisible() ? "<C-e>" : "<Esc>"
 endif
 " }}} 
 

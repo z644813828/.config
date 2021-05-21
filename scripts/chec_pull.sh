@@ -21,7 +21,7 @@ for (( i = 0; i < "${#dirs[@]}"; i+=2 )); do
     cd ~/Documents/$dir
     # git clean -Xf > /dev/null 2>&1
     git remote update > /dev/null 2>&1
-    ret=$(git status)
+    ret=$(LANG=en_US git status)
     if [[ $ret != *"On branch $branch"* ]]; then
         printf "${RED}%-60s%s${NC}\n" "$dir" "ERR Not $branch branch"
         error+=($dir)

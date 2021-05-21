@@ -117,15 +117,25 @@ abbr -- - 'cd -'
 
 # {{{ Toolchain
 function toolchain
-    if test -e $TOOLCHAINS_PATH/$argv
+    if test "$argv" = "auto"
+        switch (basename $PWD)
+        case "path1" , "path2"
+            toolchain TOOLCHAIN_NAME_HERE
+        end
+        return
+    end
+    if test -e $TOOLCHAINS_PATH/$argv && count $argv > /dev/null
+        export TOOLCHAIN=$argv
         set -a L_PATH "$TOOLCHAINS_PATH/$argv/lib"
         set -a H_PATH "$TOOLCHAINS_PATH/$argv/include/"
         printf "\033[0;32m Include path: \033[0m $H_PATH \n"
         printf "\033[0;32m Library path: \033[0m $L_PATH \n"
     else
+        export TOOLCHAIN=""
         set -a L_PATH ""
         set -a H_PATH ""
-        printf "\033[0;31m Error!\033[0m Toolchain no found\n"
+        printf "\033[0;31m Error!\033[0m Toolchain not found: "
+        ls $TOOLCHAINS_PATH/
     end
         export CPATH=$H_PATH
         export C_FLAGS=$H_PATH
@@ -363,6 +373,11 @@ case 0
     # export TERM="dumb" # hmm... that's not working (functions/fish_prompt.fish:1048)
     function fish_prompt -d 'simple fish_prompt'
         echo "▶ "
+    end
+case toolchain
+    # export TERM="dumb" # hmm... that's not working (functions/fish_prompt.fish:1048)
+    function fish_prompt -d 'simple fish_prompt'
+        printf "\033[0;32m $TOOLCHAIN\033[0m ▶ "
     end
 case 1
     set -g theme_powerline_fonts no
