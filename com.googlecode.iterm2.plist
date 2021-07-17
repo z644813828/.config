@@ -2055,6 +2055,10 @@ Split Vertically…</string>
 	<true/>
 	<key>NeverWarnAboutMeta_selection</key>
 	<integer>0</integer>
+	<key>NeverWarnAboutShortLivedSessions_3AE3B3BB-3043-4192-A1F8-5D4731E914C8</key>
+	<true/>
+	<key>NeverWarnAboutShortLivedSessions_3AE3B3BB-3043-4192-A1F8-5D4731E914C8_selection</key>
+	<integer>0</integer>
 	<key>NeverWarnAboutShortLivedSessions_62DEE73F-AA00-4100-8E94-BE38A02D8FEA</key>
 	<true/>
 	<key>NeverWarnAboutShortLivedSessions_62DEE73F-AA00-4100-8E94-BE38A02D8FEA_selection</key>

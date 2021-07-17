@@ -957,6 +957,7 @@ au BufReadPre,BufRead,BufNewFile *.bashrc set filetype=sh
 au BufReadPre,BufRead,BufNewFile *.conf set filetype=conf
 au BufReadPre,BufRead,BufNewFile *.cnf set filetype=conf
 au BufReadPre,BufRead,BufNewFile monitrc set filetype=conf
+au BufReadPre,BufRead,BufNewFile known_hosts set nowrap
 
 " buildbot configuration files
 au BufNewFile,BufRead   master.cfg      set ft=python foldmethod=marker foldenable tw=120

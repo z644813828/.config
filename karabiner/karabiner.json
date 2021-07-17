@@ -79,7 +79,7 @@
                         {"mandatory" : [ "right_option", "right_shift" ]}
                   },
                   "to" :
-                      [ {"shell_command" : "open -a '/Applications/Qt Creator_L'"} ],
+                      [ {"shell_command" : "open -a '/Applications/Qt Creator L'"} ],
 
                   "type" : "basic"
                 },
@@ -505,17 +505,32 @@
             },
             {
               "description" : "Microsoft Remote Desktop",
-              "manipulators" : [ {
-                "conditions" : [ {
-                  "bundle_identifiers" : ["com.microsoft.rdc.macos REMOVE"],
-                  "type" : "frontmost_application_if"
-                } ],
-                "from" : {
-                  "key_code" : "right_command"
-                },
-                "to" : [],
-                "type" : "basic"
-              } ]
+              "manipulators" : [ 
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.microsoft.rdc.macos REMOVE"],
+                    "type" : "frontmost_application_if"
+                  } ],
+                  "from" : {
+                    "key_code" : "right_command"
+                  },
+                  "to" : [],
+                  "type" : "basic"
+                }, 
+                {
+                  "conditions" : [ {
+                    "bundle_identifiers" : ["com.microsoft.rdc.macos"],
+                    "type" : "frontmost_application_if"
+                  } ],
+                  "from" : {
+                    "key_code" : "q",
+                    "modifiers" : {"mandatory" : ["left_control"]}
+                  },
+                  "to" : 
+                    [ {"key_code" : "f4", "modifiers" : ["left_option"]} ],
+                  "type" : "basic"
+                } 
+              ]
             },
             {
               "description" : "Transmission",

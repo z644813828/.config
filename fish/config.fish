@@ -1,4 +1,5 @@
 # {{{ Shell environment variables
+set -U _USER "dmitriy"
 # Default editor in system
 set -x EDITOR nvim
 # Don't save history if leading space 
@@ -15,7 +16,12 @@ set -x VM_DEBIAN_2 "10.211.55.4"
 set -x VM_DEBIAN_3 "10.211.55.5"
 set -x VM_DEBIAN_4 "10.211.55.6"
 
-set -x TOOLCHAINS_PATH "$HOME/Documents/Libs/_Toolchain"
+switch (uname)
+case Linux
+    set -x TOOLCHAINS_PATH "/home/$_USER/Documents/Libs/_Toolchain"
+case Darwin
+    set -x TOOLCHAINS_PATH "/Users/$_USER/Documents/Libs/_Toolchain"
+end
 
 # }}} 
 
@@ -23,9 +29,9 @@ set -x TOOLCHAINS_PATH "$HOME/Documents/Libs/_Toolchain"
 # Not to dublicate extentions for root and main user
 switch (uname)
 case Linux
-    set fish_function_path /home/dmitriy/.config/fish/functions $fish_function_path
+    set fish_function_path /home/$_USER/.config/fish/functions $fish_function_path
 case Darwin
-    set fish_function_path /Users/dmitriy/.config/fish/functions $fish_function_path
+    set fish_function_path /Users/$_USER/.config/fish/functions $fish_function_path
 end
 # }}} 
 
@@ -65,11 +71,11 @@ set -U fish_key_bindings fish_default_key_bindings
 # {{{ Linked Linux VM to MacOS /Users/dmitriy directory
 # ln -s /media/psf/Home/{Documents,Desktop,Downloads,Pictures} ~
 # ln -s /media/psf/Home/ /Users/dmitriy
-abbr cdp 'cd ~/Documents/Projects/'
-abbr cdb 'cd ~/Documents/Beremiz/'
-abbr cdl 'cd ~/Documents/Libs/'
-abbr cdd 'cd ~/Documents/Documents/'
-abbr cdz 'cd ~/Downloads/'
+abbr cdp ' cd ~/Documents/Projects/'
+abbr cdb ' cd ~/Documents/Beremiz/'
+abbr cdl ' cd ~/Documents/Libs/'
+abbr cdd ' cd ~/Documents/Documents/'
+abbr cdz ' cd ~/Downloads/'
 # }}}
 
 # {{{ SUDO wrapper
@@ -96,13 +102,14 @@ function fish_reload
     end
 end
 
-abbr R fish_reload
+abbr R " fish_reload"
 
 # }}}
 
 # {{{ Generic
 alias r='ranger'
-abbr r 'ranger'
+abbr q ' exit'
+abbr r ' ranger'
 abbr g 'git'
 alias rm='rm -i'
 alias vi="bash -c 'vim -u ~/.vimrc_'"
@@ -135,7 +142,7 @@ function toolchain
         set -a L_PATH ""
         set -a H_PATH ""
         printf "\033[0;31m Error!\033[0m Toolchain not found: "
-        ls $TOOLCHAINS_PATH/
+        ls $TOOLCHAINS_PATH/ --ignore="*tags"
     end
         export CPATH=$H_PATH
         export C_FLAGS=$H_PATH
@@ -257,9 +264,9 @@ case Darwin
     function s
         set -U path (string replace -a ' ' '\\ ' $PWD)
         if count $argv > /dev/null
-            command ssh -Xo LogLevel=QUIET -t dmitriy@$VM_DEBIAN_1 "cd $path; $argv"
+            command ssh -Xo LogLevel=QUIET -t $_USER@$VM_DEBIAN_1 "cd $path; $argv"
         else
-            command ssh -Xt dmitriy@$VM_DEBIAN_1 "cd $path; echo "Connected to $VM_DEBIAN_1"; fish"
+            command ssh -Xt $_USER@$VM_DEBIAN_1 "cd $path; echo "Connected to $VM_DEBIAN_1"; fish"
         end
     end
     # }}}
@@ -287,9 +294,9 @@ case Darwin
     # }}}
 
     # {{{ SSH to extra VM
-    alias s2='ssh -Xt dmitriy@$VM_DEBIAN_2 "cd $PWD; echo "Connected to $VM_DEBIAN_2"; fish"'
-    alias s3='ssh -Xt dmitriy@$VM_DEBIAN_3 "cd $PWD; echo "Connected to $VM_DEBIAN_3"; fish"'
-    alias s4='ssh -Xt dmitriy@$VM_DEBIAN_4 "cd $PWD; echo "Connected to $VM_DEBIAN_4"; fish"'
+    alias s2='ssh -Xt $_USER@$VM_DEBIAN_2 "cd $PWD; echo "Connected to $VM_DEBIAN_2"; fish"'
+    alias s3='ssh -Xt $_USER@$VM_DEBIAN_3 "cd $PWD; echo "Connected to $VM_DEBIAN_3"; fish"'
+    alias s4='ssh -Xt $_USER@$VM_DEBIAN_4 "cd $PWD; echo "Connected to $VM_DEBIAN_4"; fish"'
     # }}}
 
     # {{{ JS minify
@@ -340,6 +347,16 @@ case Darwin
     alias config='/Applications/MacVim.app/Contents/bin/mvim ~/.config/{.bashrc, fish/config.fish, .vimrc, nvim/init.vim, karabiner/karabiner.json, install.sh, .tmux.conf}'
     alias cat='bat'
     abbr S '$SCRIPTS/'
+    # }}}
+
+    # {{{ Fork
+    function fork
+        if count $argv > /dev/null
+            open $argv -a /Applications/Fork.app
+        else
+            open . -a /Applications/Fork.app
+        end
+    end
     # }}}
 
 # }}}

@@ -45,7 +45,34 @@ $PASSWORD = "password";
 ini_set('error_reporting', E_ALL);
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+
+ini_set('upload_max_size' , '500M');
+ini_set('post_max_size', '500M');
+// ini_set('max_execution_time', '900';
 ?>
+
+
+<?php
+if ($_FILES && $_FILES["filename"]["error"]== UPLOAD_ERR_OK)
+{
+    $name = $_FILES["filename"]["name"];
+    move_uploaded_file($_FILES["filename"]["tmp_name"], "/sharedfolders/temp_folder/shared/".$name);
+    header('location:shared.php');
+}
+
+if (isset($_GET['delete'])) {
+    $filename = $_GET['delete'];
+    $cmd = "rm /sharedfolders/temp_folder/shared/". $filename;
+    header('location:shared.php');
+    shell_exec($cmd);
+}
+?>
+
+
+<form method="post" enctype="multipart/form-data">
+    <input type="file" name="filename" size="10" />
+    <input type="submit" name="uploadBtn" value="Upload" />
+</form>
 
 <?php
 function getFileList($dir)
@@ -61,14 +88,14 @@ function getFileList($dir)
         if($entry{0} == ".") continue;
         if(is_dir("{$dir}{$entry}")) {
             $retval[] = [
-                'name' => "{$dir}{$entry}/",
+                'name' => "{$entry}/",
                 'type' => filetype("{$dir}{$entry}"),
                 'size' => 0,
                 'lastmod' => filemtime("{$dir}{$entry}")
             ];
         } elseif(is_readable("{$dir}{$entry}")) {
             $retval[] = [
-                'name' => "{$dir}{$entry}",
+                'name' => "{$entry}",
                 'type' => mime_content_type("{$dir}{$entry}"),
                 'size' => filesize("{$dir}{$entry}"),
                 'lastmod' => filemtime("{$dir}{$entry}")
@@ -76,6 +103,9 @@ function getFileList($dir)
         }
     }
     $d->close();
+    function compare_name($a, $b) { return strnatcmp($a['name'], $b['name']); }
+    usort($retval, 'compare_name');
+
     return $retval;
 }
 
@@ -130,21 +160,31 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
         $dirlist = getFileList(".");
         echo "<table class=\"table\" border=\"1\">\n";
         echo "<thead>\n";
-        echo "<tr><th>Name</th><th>Type</th><th>Size</th><th>Last Modified</th></tr>\n";
+        echo "<tr><th>Name</th><th>Type</th><th>Size</th><th>Last Modified</th><th>&#x2717</th></tr>\n";
         echo "</thead>\n";
         echo "<tbody>\n";
         foreach($dirlist as $file) {
             echo "<tr>\n";
-            echo "<td>", "<a href='shared/{$file['name']}'>{$file['name']}</a>","</td>\n";
+            echo "<td>", "<a
+                href='shared/{$file['name']}'
+                download='{$file['name']}'
+                >{$file['name']}
+            </a>","</td>\n";
             echo "<td>{$file['type']}</td>\n";
             echo "<td>", FileSizeConvert($file['size']), "</td>\n";
             echo "<td>",date('r', $file['lastmod']),"</td>\n";
+            if ($file['name'] != "_README.md") {
+            echo "<td>
+                <a href='shared.php?delete={$file['name']}'>&#x2717</a>
+            </td>\n";
+            } else {
+            echo "<td> </td>\n";
+            }
             echo "</tr>\n";
         }
         echo "</tbody>\n";
         echo "</table>\n\n";
-    }
-    else{
+    } else{
         header('WWW-Authenticate: Basic realm="My Realm"');
         header('HTTP/1.0 401 Unauthorized');
         exit;
