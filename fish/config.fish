@@ -45,6 +45,7 @@ function PlugInstall
     set -a plugins_list "oh-my-fish/plugin-grc"             # Code highlighting
     set -a plugins_list "jethrokuan/z"                      # Z port for fish
     set -a plugins_list "jorgebucaran/getopts.fish"         # Parse CLI options
+    set -a plugins_list "edc/bass"                          # bash commands compatibility
     # set -a plugins_list "oh-my-fish/plugin-brew"          # Integrate Homebrew paths into shell 
     # set -a plugins_list "aughedelic/brew-completions"     # Homebrew completions
     # set -a plugins_list "oh-my-fish/plugin-local-config"  # Support different config files
@@ -112,7 +113,7 @@ abbr q ' exit'
 abbr r ' ranger'
 abbr g 'git'
 alias rm='rm -i'
-alias vi="bash -c 'vim -u ~/.vimrc_'"
+alias vi="/usr/bin/vim"
 alias v 'nvim'
 alias vim 'nvim'
 alias vimdiff='nvim -d'
@@ -120,6 +121,8 @@ alias vim-='nvim -R -'
 set -a NPROC (nproc)
 abbr jmake "make -j$NPROC"
 abbr -- - 'cd -'
+abbr fg ' fg'
+bind \cx 'fg; commandline -f repaint'
 # }}}
 
 # {{{ Toolchain
@@ -191,7 +194,7 @@ case Darwin
     # {{{ Wakeonlan 
     function wakeonlan
         # set -a MAC_ADDR FA:EB:DC:CD:BE:AF # example
-        set -a MAC_ADDR 1C:1B:0D:F7:2D:9B # Z-home
+        set -a MAC_ADDR 50:EB:F6:2C:44:63 # Z-home
         set -a MAC_ADDR 84:16:F9:05:75:85 # Server
         set -a MAC_ADDR 70:8B:CD:7F:25:A9 # Work
         if not string match --quiet --regex '\D' $argv
@@ -290,7 +293,7 @@ case Darwin
     # }}}
 
     # {{{ Minicom wrapper
-    abbr mminicom 'env LC_ALL=ru_RU.CP1251 sudo minicom -C ~/temp/minicom_log/(date +%Y.%m.%d-%H:%M:%S) -8 -m --device'
+    abbr mminicom 'env LC_ALL=ru_RU.CP1251 sudo minicom -C ~/temp/minicom_log/(date +%Y.%m.%d-%H:%M:%S).log -8 -m --device'
     # }}}
 
     # {{{ SSH to extra VM

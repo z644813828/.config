@@ -79,7 +79,7 @@
                         {"mandatory" : [ "right_option", "right_shift" ]}
                   },
                   "to" :
-                      [ {"shell_command" : "open -a '/Applications/Qt Creator L'"} ],
+                      [ {"shell_command" : "open -a '/Applications/Qt Creator'"} ],
 
                   "type" : "basic"
                 },
@@ -190,7 +190,7 @@
                     "modifiers" : {"mandatory" : ["right_option"]}
                   },
                   "to" :
-                      [ {"shell_command" : "open '/Applications/Microsoft Remote Desktop.app'"} ],
+                      [ {"shell_command" : "open '/Applications/Parallels desktop.app'"} ],
                   "type" : "basic"
                 },
                 {
@@ -211,7 +211,7 @@
                         {"mandatory" : [ "right_option", "right_shift" ]}
                   },
                   "to" : [
-                    {"shell_command" : "open '/Applications/Parallels desktop.app'"}
+                    {"shell_command" : "open '/Applications/Microsoft Remote Desktop.app'"}
                   ],
                   "type" : "basic"
                 },
@@ -463,26 +463,8 @@
                     "bundle_identifiers" : ["com.browserosaurus"],
                     "type" : "frontmost_application_if"
                   } ],
-                  "from" : {"key_code" : "1"},
-                  "to" : [ {"key_code" : "s"} ],
-                  "type" : "basic"
-                },
-                {
-                  "conditions" : [ {
-                    "bundle_identifiers" : ["com.browserosaurus"],
-                    "type" : "frontmost_application_if"
-                  } ],
-                  "from" : {"key_code" : "2"},
-                  "to" : [ {"key_code" : "g"} ],
-                  "type" : "basic"
-                },
-                {
-                  "conditions" : [ {
-                    "bundle_identifiers" : ["com.browserosaurus"],
-                    "type" : "frontmost_application_if"
-                  } ],
                   "from" : {"key_code" : "left_option"},
-                  "to" : [ {"key_code" : "g"} ],
+                  "to" : [ {"key_code" : "2"} ],
                   "type" : "basic"
                 }
               ]

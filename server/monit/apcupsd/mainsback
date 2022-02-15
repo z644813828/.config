@@ -1,0 +1,5 @@
+#!/bin/bash
+file="/var/log/apcupsd.log"
+
+echo "⚡⚡ The power's back!" >> $file
+

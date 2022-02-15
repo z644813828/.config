@@ -1,0 +1,17 @@
+#!/bin/bash
+file="/var/log/apcupsd.log"
+
+echo "😪 Father, I failed you.. Turning off all PCs in network " >> $file
+monit # force read this file
+
+# send command to main pc, routers etc
+
+login="apcupsd"
+password="apcupsd"
+win_ip="192.168.2.2"
+net rpc shutdown -f -t 0 -C 'APCUPSD' -U $login%$password -I $win_ip
+
+login="root"
+password="pass"
+ssh -t $login@$password 'shutdown -r 0'
+

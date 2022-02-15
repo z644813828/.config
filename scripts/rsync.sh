@@ -206,4 +206,3 @@ D2
 echo -e "\n\n\n# ---------------Finished--------------"  $($DATE) | $LOG
 echo "Finished"  $($DATE) >> /var/log/backup.log
 # }}}
-

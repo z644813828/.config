@@ -24,12 +24,11 @@ NC='\033[0m' # No Color
 EXEC_USER="bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"
 EXEC_SERV="sudo bash -c -- ' bash -c -- 'vim +PlugInstall +qall; nvim +PlugInstall +qall'"
 
-LNS_FILE_LIST=(.bashrc .gvimrc .tmux.conf .vimrc .vimrc_ .config/fish/config.fish .config/nvim .config/ranger .config/scripts)
+LNS_FILE_LIST=(.bashrc .gvimrc .tmux.conf .vimrc .config/fish/config.fish .config/nvim .config/ranger .config/scripts)
 
 
 SCP(){
     scp .vimrc $USER@$1:/home/$USER/
-    scp .vimrc_ $USER@$1:/home/$USER/
     scp .bashrc $USER@$1:/home/$USER/
     scp .tmux.conf $USER@$1:/home/$USER/
     scp -r fish/{config.fish,fishfile} $USER@$1:/home/$USER/.config/fish/
@@ -92,7 +91,6 @@ EXEC_S(){
 if [[ "$1" == "0" ]]; then
     printf "\n${GREEN}Installing on localhost${NC}\n"
     ln -sf ~/.config/.vimrc ~
-    ln -sf ~/.config/.vimrc_ ~
     ln -sf ~/.config/.gvimrc ~
     ln -sf ~/.config/.bashrc ~
     ln -sf ~/.config/.tmux.conf ~
