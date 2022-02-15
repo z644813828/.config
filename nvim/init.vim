@@ -85,6 +85,7 @@ Plug 'https://github.com/scrooloose/nerdcommenter'
 Plug 'https://github.com/Shougo/neosnippet.vim'
 Plug 'https://github.com/Shougo/neosnippet-snippets'
 Plug 'https://github.com/Shougo/neoinclude.vim'
+Plug 'sheerun/vim-polyglot'
 if python_min_version 
     Plug 'https://github.com/Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 endif
@@ -206,7 +207,7 @@ highlight htmlItalic gui=italic guifg=#af8700 ctermfg=214
 let g:indentLine_concealcursor = ''
 let g:indentLine_conceallevel = 0
 
-let g:indentLine_char = '⎸'
+" let g:indentLine_char = ''
 
 
 let g:indentLine_enabled = 1
@@ -248,7 +249,7 @@ let g:lightline = {
   \ }
 " }}}
 
-" {{{Chromatica
+" {{{ Chromatica
 " let g:chromatica#enable_at_startup=1
 " let g:chromatica#libclang_path='/usr/local/opt/llvm/lib'
 " let g:chromatica#responsive_mode=1
@@ -327,13 +328,17 @@ nnoremap zk O<Esc>j
 nnoremap яо o<Esc>k
 nnoremap ял O<Esc>j
 
+" find word under cursor
+nnoremap # *
+nnoremap * #
+
 " Reload vimrc
 nnoremap <leader>R :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 nnoremap <leader>К :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 
 " Open config files
-nnoremap <silent><leader>C :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf .zshrc<CR>
-nnoremap <silent><leader>С :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf .zshrc<CR>
+nnoremap <silent><leader>C :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf<CR>:bp<CR>:bd<CR>
+nnoremap <silent><leader>С :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf<CR>:bp<CR>:bd<CR>
 
 " Insert current time
 nnoremap <silent><leader>td "=strftime("%x %X")<CR>P
@@ -358,6 +363,7 @@ vnoremap // y/<C-R>"<CR>
 " emacs binds)
 inoremap <M-BS> <C-o>b<C-o>de
 
+" Reload buffer
 nnoremap <silent><leader>e :e<CR>
 nnoremap <silent><leader>у :e<CR>
 nnoremap <silent><leader>E :e!<CR>
@@ -946,6 +952,7 @@ let g:vim_markdown_folding_style_pythonic = 1
 let g:vim_markdown_folding_level = 0
 let g:vim_markdown_initial_foldlevel=0
 let g:vim_markdown_folding_disabled=1
+au FileType sshconfig set foldmethod=marker foldlevel=0 foldenable
 au FileType conf set foldmethod=marker foldenable
 au FileType sh set foldmethod=marker foldenable
 au FileType fish setlocal foldmethod=marker foldlevel=0 foldenable

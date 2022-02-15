@@ -295,13 +295,15 @@ Here's list of used software, hardware and utilities that helped me setup all th
 
 ##  Network:
   - ASUS RT-AC88U
-  - ASUS DDNS - for connecting via Internet
+  - ASUS DDNS - default DDNS, build in
+  - Ngrok - redundancy DDNS, Used when provider, without public white IP activated
 
 ##  Hosts:
   - Linux 
   - Windows 
   - Android 
   - MacOS 
+  - iOS
 
 ##  Server software:  
   -  **OS**  [Linux Debian 9](https://www.debian.org/)  
@@ -323,6 +325,66 @@ Here's list of used software, hardware and utilities that helped me setup all th
   -  Backup  
      Using [script](https://github.com/z644813828/.config/blob/master/scripts/rsync.sh) started every month on external HDD  
 
+### Configuration
+
+#### Installation
+
+Script [install.sh](https://github.com/z644813828/.config/blob/master/server/install.sh) must be executed on server. Furthermore it needs to be changed according to server credentials.
+
+#### Monit - system monitoring and error recovery.
+
+- Configuration file [monitrc](https://github.com/z644813828/.config/blob/master/server/monit/monitrc)
+
+- Trusted domains list [whitelist_ips.regex](https://github.com/z644813828/.config/blob/master/server/whitelist_ips.regex)
+
+- Scripts (bash scripts, executed by monit):
+
+    | Script name             | Description  |
+    |-------------------------|--------------|
+    | check_ngrok.sh          | Check ngrok (DDNS rdc) status with restarting and sending new  credentials by mail |
+    | check_pubic_IP.sh       | Check that server can be accessed from global web |
+    | check_router.sh         | Check router ports are open (bugs in firmware) |
+    | check_shared_folder.sh  | Check shared files md5 and create symlink in web interface |
+    | etckeeper.sh            | EtcKeeper binary, returning status and diff |
+    | ip_location.sh          | Try to find connected user or ssh brute-force atacker location |
+    | letsencrypt.sh          | Check certificate expiration time and create new one if needed |
+    | switch_provider.sh      | Switch from main router to redundancy mobile network |
+
+- Configuration [conf.d](https://github.com/z644813828/.config/blob/master/server/monit/conf.d)
+
+    There're a lot of build in configurations by openmediavault, list of self-written:
+
+    | Config name             | Description  |
+    |-------------------------|--------------|
+    | auth_log.conf | Handle changes in /var/log/auth.log, sending IP and location |
+    | backup.conf | omvbackup utility execution status |
+    | check_ngrok.conf | * |
+    | check_shared_folder.conf | * |
+    | etckeeper.conf | * |
+    | letsencrypt.conf | * |
+    | network-manager.conf | Restart service when ping to router failes |
+    | proxy_checker.conf | Check own proxy status |
+    | check_router.conf | * |
+    | switch_provider.conf | * |
+    | apcupsd.conf | Get status of connected ups and send info about warnings, written in apcupsd.log |
+
+    \* - run script with same name as .conf file and send return status and output to user
+
+#### Fail2ban
+
+[jail.conf](https://github.com/z644813828/.config/blob/master/server/jail.conf) -- instance configuration
+
+[jail.local](https://github.com/z644813828/.config/blob/master/server/jail.local) -- jails:
+
+    - sshd
+    - sshd-ddis
+    - omv-webgui
+    - nginx-404
+
+#### Ngrok
+
+Ngrok is install from sources. Using default configuration for ssh redirection and main router web page [ngrok.yml](https://github.com/z644813828/.config/blob/master/server/ngrok.yml)
+
 ##  Client software:  
   -  **PC:**  
      - Transmission remote GUI  
@@ -331,9 +393,9 @@ Here's list of used software, hardware and utilities that helped me setup all th
      - SSH client  
 
   -  **Phone:**     
-     - Tonido    
      - Asus Router    
-     - Transmission remote GUI  
+     - OpenVPN Client
+     - SambaExplorer (for Android, iOS build in file manager)
 
 # Windows configuration
 ## Dependencies

@@ -1,0 +1,8 @@
+#!/bin/bash
+file="/var/log/apcupsd.log"
+
+echo "😱 It appears the power has gone out! " >> $file
+echo "I will be dead in around 10 minutes unless power is restored before then." >> $file
+echo "I will also send a message when power's restored." >> $file
+
+monit # force read this file
