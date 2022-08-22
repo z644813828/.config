@@ -17,7 +17,7 @@ if ($_GET) {
 
 
 <script type="text/javascript">
-function load_data() {
+(function load_data() {
     $.ajax({
         type: 'get',
         data: {
@@ -28,6 +28,5 @@ function load_data() {
             setTimeout(load_data, 1000);
         }
     });
-}
-load_data();
+})()
 </script>

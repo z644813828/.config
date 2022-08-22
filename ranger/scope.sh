@@ -40,6 +40,7 @@ FILE_EXTENSION_LOWER="$(printf "%s" "${FILE_EXTENSION}" | tr '[:upper:]' '[:lowe
 
 ## Settings
 HIGHLIGHT_SIZE_MAX=256  # 256KiB
+ARRAY_PREVIEW_SIZE_MAX=64*1024  # 64MB
 HIGHLIGHT_TABWIDTH=${HIGHLIGHT_TABWIDTH:-8}
 HIGHLIGHT_STYLE=${HIGHLIGHT_STYLE:-pablo}
 HIGHLIGHT_OPTIONS="--replace-tabs=${HIGHLIGHT_TABWIDTH} --style=${HIGHLIGHT_STYLE} ${HIGHLIGHT_OPTIONS:-}"
@@ -343,6 +344,11 @@ MIMETYPE="$( file --dereference --brief --mime-type -- "${FILE_PATH}" )"
 if [[ "${PV_IMAGE_ENABLED}" == 'True' ]]; then
     handle_image "${MIMETYPE}"
 fi
+
+if [[ `du -k "${FILE_PATH}" | cut -f1` -gt ${ARRAY_PREVIEW_SIZE_MAX} ]]; then
+    exit 3
+fi
+
 handle_extension
 handle_mime "${MIMETYPE}"
 handle_fallback
