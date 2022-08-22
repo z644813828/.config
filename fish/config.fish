@@ -84,6 +84,7 @@ abbr cdz ' cd ~/Downloads/'
 function sudo 
     command sudo -sE $argv 
 end
+abbr sf " sudo fish"
 # }}}
 
 # {{{ Reload

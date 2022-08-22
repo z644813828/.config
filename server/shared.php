@@ -62,7 +62,7 @@ if ($_FILES && $_FILES["filename"]["error"]== UPLOAD_ERR_OK)
 
 if (isset($_GET['delete'])) {
     $filename = $_GET['delete'];
-    $cmd = "rm /sharedfolders/temp_folder/shared/". $filename;
+    $cmd = "rm \"/sharedfolders/temp_folder/shared/". $filename ."\"";
     header('location:shared.php');
     shell_exec($cmd);
 }
@@ -160,16 +160,16 @@ if (!isset($_SERVER['PHP_AUTH_USER'])) {
         $dirlist = getFileList(".");
         echo "<table class=\"table\" border=\"1\">\n";
         echo "<thead>\n";
-        echo "<tr><th>Name</th><th>Type</th><th>Size</th><th>Last Modified</th><th>&#x2717</th></tr>\n";
+        echo "<tr><th>Name (open)</th><th>Download</th><th>Type</th><th>Size</th><th>Last Modified</th><th>&#x2717</th></tr>\n";
         echo "</thead>\n";
         echo "<tbody>\n";
         foreach($dirlist as $file) {
             echo "<tr>\n";
+            echo "<td>", "<a href='shared/{$file['name']}' >{$file['name']} </a>","</td>\n";
             echo "<td>", "<a
                 href='shared/{$file['name']}'
                 download='{$file['name']}'
-                >{$file['name']}
-            </a>","</td>\n";
+                >&#x21E9</a>","</td>\n";
             echo "<td>{$file['type']}</td>\n";
             echo "<td>", FileSizeConvert($file['size']), "</td>\n";
             echo "<td>",date('r', $file['lastmod']),"</td>\n";
