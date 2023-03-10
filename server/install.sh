@@ -1,11 +1,11 @@
 #!/bin/bash
 # {{{ monit jails & conf
-sed -i'' -e 's/my_gmail/my_gmail/g' *
+sed -i'' -e 's/my_gmail/my_gmail/g' monit/conf.d/*
 sed -i'' -e 's/server_gmail/server_gmail/g' *
 sed -i'' -e 's/monit_pass/monit_pass/g' *
 
-cp -r monitrc whitelist_ips.regex *.sh /etc/monit/
-cp -r *.conf /etc/monit/conf.d/
+cp -r monit/monitrc whitelist_ips.regex monit/scripts /etc/monit/
+cp -r monit/conf.d/* /etc/monit/conf.d/
 cp jail.conf /etc/fail2ban/
 
 echo > /var/log/server2.log
