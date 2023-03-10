@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# limit of 50k requests per month. handled by configuration [every 3 cycles] (30s daemon * 3)
+sleep 30 # limit of 50k requests per month (30s daemon + 30s sleep)
 
 DATA=$(curl -s ipinfo.io?token=MY_TOKEN)
 IP_ADDR=$(echo $DATA | jq -r '.ip')
@@ -10,7 +10,6 @@ file="/var/log/public_IP.log"
 
 if [[ -z "$IP_ADDR" ]]; then
     echo "Can't get public IP"
-    echo $DATA
     exit 1
 fi
 

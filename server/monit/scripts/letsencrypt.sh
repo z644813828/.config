@@ -14,7 +14,7 @@ else
     cat fullchain.pem privkey.pem > monit.pem
     chmod 700 monit.pem
     mv -f monit.pem /var/certs/
-    cp {fullchain.pem,privkey.pem} /sharedfolders/Software/_Software/_RT-AC68U/certs/
+    cp {cert.pem,privkey.pem} /sharedfolders/Software/_Software/_RT-AC68U/certs/
 
     systemctl start nginx.service
     systemctl restart monit.service
