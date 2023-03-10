@@ -2,6 +2,8 @@
 
 ret=0
 
+DDNS=""
+
 echo "_"
 echo " "
 

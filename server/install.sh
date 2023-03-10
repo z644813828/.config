@@ -1,8 +1,10 @@
 #!/bin/bash
 # {{{ monit jails & conf
 sed -i'' -e 's/my_gmail/my_gmail/g' monit/conf.d/*
-sed -i'' -e 's/server_gmail/server_gmail/g' *
-sed -i'' -e 's/monit_pass/monit_pass/g' *
+sed -i'' -e 's/ddns_hostname/ddns_hostname/g' /monit/confd./*
+sed -i'' -e 's/ddns_hostname/ddns_hostname/g' /monit/scripts/*
+sed -i'' -e 's/server_gmail/server_gmail/g' /monit/monitrc
+sed -i'' -e 's/monit_pass/monit_pass/g'/monit/monitrc 
 
 cp -r monit/monitrc whitelist_ips.regex monit/scripts /etc/monit/
 cp -r monit/conf.d/* /etc/monit/conf.d/
