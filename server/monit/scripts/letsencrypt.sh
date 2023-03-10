@@ -10,7 +10,7 @@ else
     systemctl stop nginx.service
 
     certbot renew --force-renewal
-    cd /etc/letsencrypt/live/PATH_TO_DDNS
+    cd /etc/letsencrypt/live/ddns_hostname
     cat fullchain.pem privkey.pem > monit.pem
     chmod 700 monit.pem
     mv -f monit.pem /var/certs/
