@@ -1,6 +1,6 @@
 #!/bin/bash
-switch=$1
-file="/var/log/server2.log"
+switch=$2
+file="/var/log/"$1".log"
 state=$(tail -n 1 $file)
 if [[ $switch != $state ]]; then
   echo $switch >> $file
