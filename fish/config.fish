@@ -155,6 +155,11 @@ function toolchain
 end
 # }}}
 
+# {{{ Other
+    alias cat='bat'
+    abbr S '$SCRIPTS/'
+# }}} 
+
 # }}} 
 
 # OS depending 
@@ -349,8 +354,6 @@ case Darwin
     alias ll='gls -N -lh -G --color -h --group-directories-first'
     alias ctr='ctags -R --languages=c,c++'
     alias config='/Applications/MacVim.app/Contents/bin/mvim ~/.config/{.bashrc, fish/config.fish, .vimrc, nvim/init.vim, karabiner/karabiner.json, install.sh, .tmux.conf}'
-    alias cat='bat'
-    abbr S '$SCRIPTS/'
     # }}}
 
     # {{{ Fork

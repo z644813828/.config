@@ -1,4 +1,5 @@
 #!/bin/bash
+
 IFS=$'\n'
 stat=$(etckeeper vcs status --short)
 diff=$(etckeeper vcs diff)
@@ -17,3 +18,4 @@ for d in "${diff[@]}"; do
     echo "$d"
 done
 exit -1;
+

@@ -1,6 +1,6 @@
 <?php
 if ($_GET) {
-    echo shell_exec($_GET["cmd"]);
+    echo shell_exec("apcaccess status");
     return;
 }
 ?>
@@ -20,9 +20,7 @@ if ($_GET) {
 (function load_data() {
     $.ajax({
         type: 'get',
-        data: {
-            cmd: "apcaccess status"
-        },
+        data: { cmd: "" },
         success: function(result) {
             $("#data").text(result);
             setTimeout(load_data, 1000);
