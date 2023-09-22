@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dt1=$(tail -7 /sharedfolders/TimeMachine/MacBook\ Pro\ —\ Dmitriy.sparsebundle/com.apple.TimeMachine.SnapshotHistory.plist | head -1)
+dt1=$(tail -7 /sharedfolders/TimeMachine/MacBook\ Pro.sparsebundle/com.apple.TimeMachine.SnapshotHistory.plist | head -1)
 dt1=$(echo $dt1 | awk '{ print substr ( $0, 7 ) }')
 dt1=$(echo $dt1 | awk '{ print substr( $0, 1, length($0)-7 ) }')
 
@@ -15,7 +15,7 @@ let "sDiff=$tDiff%60"
 
 echo "$hDiff:$mDiff:$sDiff wihout backups!!!"
 
-if (( $hDiff > 24 )); then
+if (( $hDiff > 48 )); then
     exit 1
 fi
 

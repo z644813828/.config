@@ -9,8 +9,16 @@ else
     echo "Renewing certificates"
     systemctl stop nginx.service
 
-    certbot renew --force-renewal
-    cd /etc/letsencrypt/live/ddns_hostname
+    cert_log=$(certbot renew --force-renewal)
+    
+    if [ $? -ne 0 ]; then
+        systemctl start nginx.service
+        echo $cert_log
+        sleep 1000 # limit of 5 failures per account, per hostname, per hour
+        exit 2
+    fi
+
+    cd /etc/letsencrypt/live/z644813828.asuscomm.com/
     cat fullchain.pem privkey.pem > monit.pem
     chmod 700 monit.pem
     mv -f monit.pem /var/certs/
