@@ -9,7 +9,7 @@ MONIT_IGNORE_REGEX="Monit|Service Name|Status ok|Running|Accessible|Online with 
 main_pc=$?
 mosquitto_pub -h localhost -t "led/enabled" -m "$main_pc"
 
-! ping -c 5 $ARDUINO_IP &> /dev/null
+! ping -c 1 $ARDUINO_IP &> /dev/null
 arduino=$?
 
 monit=$(monit summary | grep -v -E "$MONIT_IGNORE_REGEX" | awk '{ print $1 }')
@@ -25,7 +25,7 @@ echo "
 }" > /var/log/arduino.log
 
 if [ $arduino ]; then
-    exit 0
+    exit 1
 fi
 
-exit 1
+exit 0

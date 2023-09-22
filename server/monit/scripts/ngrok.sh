@@ -11,9 +11,7 @@ if [[ "$?" -ne 0 ]]; then
     echo "Restarting ngrok service"
     echo " "
     eval $NGROK_RESTART_CMD
-    sleep 2
-else
-    exit 0
+    exit 1;
 fi
 
 CMD="curl -s $NGROK_STATUS_FILE | $PARSE_CMD_SSH"
@@ -25,4 +23,6 @@ CMD="curl -s $NGROK_STATUS_FILE | $PARSE_CMD_WEB"
 DATA=$(eval $CMD)
 echo $DATA
 
-exit 1;
+exit 0;
+
+
