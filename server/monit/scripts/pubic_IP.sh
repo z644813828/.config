@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sleep 30 # limit of 50k requests per month (30s daemon + 30s sleep)
+sleep 60 # limit of 50k requests per month (30s daemon + 60s sleep)
 
 DATA=$(curl -s ipinfo.io?token=MY_TOKEN)
 IP_ADDR=$(echo $DATA | jq -r '.ip')
@@ -10,6 +10,7 @@ file="/var/log/public_IP.log"
 
 if [[ -z "$IP_ADDR" ]]; then
     echo "Can't get public IP"
+    echo $DATA
     exit 1
 fi
 
