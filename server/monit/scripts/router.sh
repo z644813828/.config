@@ -7,7 +7,7 @@ DDNS=""
 echo "_"
 echo " "
 
-ports=(128 8443)
+ports=(8443)
 for i in "${ports[@]}"
 do
     nc -z -v -w5 192.168.2.1 $i 2>&1
@@ -15,7 +15,8 @@ do
 done
 
 ports=()
-ports+=(443)	#OMV main page
+ports+=(22)	    #SSH
+ports+=(4430)	#OMV main page
 ports+=(9091)	#Transmission
 ports+=(199)	#NetData
 ports+=(4000)	#Moniit

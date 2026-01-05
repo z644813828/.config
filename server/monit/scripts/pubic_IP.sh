@@ -1,6 +1,6 @@
 #!/bin/bash
 
-sleep 60 # limit of 50k requests per month (30s daemon + 60s sleep)
+# limit of 50k requests per month. handled by configuration [every 3 cycles] (30s daemon * 3)
 
 DATA=$(curl -s ipinfo.io?token=MY_TOKEN)
 IP_ADDR=$(echo $DATA | jq -r '.ip')

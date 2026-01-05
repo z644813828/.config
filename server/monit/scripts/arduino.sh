@@ -25,7 +25,7 @@ echo "
 }" > /var/log/arduino.log
 
 if [ $arduino ]; then
-    exit 1
+    exit 0
 fi
 
-exit 0
+exit 1

@@ -29,7 +29,7 @@ $DESCRIPTION
 
 ©️ Monit }
 
-set alert my_gmail but not on { icmp } with reminder on 1 cycle
+set alert my_gmail but not on { icmp }
 set mailserver smtp.gmail.com port 587
     username "server_gmail" password "monit_pass"
     using tls
