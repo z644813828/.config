@@ -62,7 +62,6 @@ end
 # end
 # }}} 
 
-
 # {{{ Aliases and functions
 
 # {{{ All systems
@@ -73,10 +72,10 @@ set -U fish_key_bindings fish_default_key_bindings
 # ln -s /media/psf/Home/{Documents,Desktop,Downloads,Pictures} ~
 # ln -s /media/psf/Home/ /Users/dmitriy
 abbr cdp ' cd ~/Documents/Projects/'
-abbr cdb ' cd ~/Documents/Beremiz/'
 abbr cdl ' cd ~/Documents/Libs/'
 abbr cdd ' cd ~/Documents/Documents/'
 abbr cdz ' cd ~/Downloads/'
+abbr cdc ' cd ~/.config/'
 # }}}
 
 # {{{ SUDO wrapper
@@ -103,6 +102,13 @@ function fish_reload
         fish; kill -9 $fish_pid
     end
 end
+function __fish_complete_fish_reload 
+    echo "0 echo ▶ "
+    echo "toolchain"
+    echo "1 theme_powerline_fonts no"
+    echo "2 theme_powerline_fonts yes"
+end
+complete -c fish_reload --no-files -a "(__fish_complete_fish_reload)"
 
 abbr R " fish_reload"
 
@@ -130,8 +136,12 @@ bind \cx 'fg; commandline -f repaint'
 function toolchain
     if test "$argv" = "auto"
         switch (basename $PWD)
-        case "path1" , "path2"
-            toolchain TOOLCHAIN_NAME_HERE
+        # case "path1" , "path2"
+            # toolchain TOOLCHAIN_NAME_HERE
+        case "mp17_test" , "libelplc" , "elplc_daemon"
+            toolchain e2k
+        case "*"
+            toolchain amd64
         end
         return
     end
@@ -139,20 +149,27 @@ function toolchain
         export TOOLCHAIN=$argv
         set -a L_PATH "$TOOLCHAINS_PATH/$argv/lib"
         set -a H_PATH "$TOOLCHAINS_PATH/$argv/include/"
-        printf "\033[0;32m Include path: \033[0m $H_PATH \n"
-        printf "\033[0;32m Library path: \033[0m $L_PATH \n"
     else
         export TOOLCHAIN=""
         set -a L_PATH ""
         set -a H_PATH ""
-        printf "\033[0;31m Error!\033[0m Toolchain not found: "
-        ls $TOOLCHAINS_PATH/ --ignore="*tags"
+        printf "\033[0;31m Error!\033[0m Toolchain not found: \n"
+        __fish_complete_toolchain 
     end
-        export CPATH=$H_PATH
-        export C_FLAGS=$H_PATH
+        export CPATH=$H_PATH:$H_PATH/third_party
+        export C_FLAGS=$H_PATH:$H_PATH/third_party
         export LIBRARY_PATH=$L_PATH
         export LD_LIBRARY_PATH=$L_PATH
+
+        printf "\033[0;32m Include path (CPATH, C_FLAGS):   \033[0m $CPATH \n"
+        printf "\033[0;32m Library path: ([LD_]LIBRARY_PATH)\033[0m $LIBRARY_PATH \n"
 end
+
+function __fish_complete_toolchain 
+    bash -c "ls -p1 $TOOLCHAINS_PATH/ | grep '/' | sed 's/\///g'"
+end
+complete -c toolchain --no-files -a "(__fish_complete_toolchain)"
+
 # }}}
 
 # {{{ Other
@@ -186,6 +203,10 @@ end
 
 # {{{ | MacOS
 case Darwin
+    # {{{ Qt
+        abbr qmake '~/Qt/6.2.4/macos/bin/qmake'
+    # }}}
+
     # {{{ Atom
     function _atom
         if count $argv > /dev/null
@@ -198,22 +219,13 @@ case Darwin
     # }}}
 
     # {{{ Wakeonlan 
-    function wakeonlan
-        # set -a MAC_ADDR FA:EB:DC:CD:BE:AF # example
-        set -a MAC_ADDR 50:EB:F6:2C:44:63 # Z-home
-        set -a MAC_ADDR 84:16:F9:05:75:85 # Server
-        set -a MAC_ADDR 70:8B:CD:7F:25:A9 # Work
-        if not string match --quiet --regex '\D' $argv
-            if [ $argv -gt (count $MAC_ADDR) ]
-                printf "\033[0;31m Error! $argv not in list:\033[0m \n"
-                echo -e $MAC_ADDR | tr ' ' '\n'
-            else
-                eval command wakeonlan $MAC_ADDR[$argv]
-            end
-        else 
-            command wakeonlan $argv
-        end
+    function __fish_complete_wakeonlan 
+        echo "50:EB:F6:2C:44:63 #Home1"
+        echo "50:EB:F6:2C:44:63 #Home2"
+        echo "84:16:F9:05:75:85 #Server"
+        echo "70:8B:CD:7F:25:A9 #Work"
     end
+    complete -c wakeonlan --no-files -a "(__fish_complete_wakeonlan)"
     # }}} 
 
     # {{{ Get program identifier
@@ -275,7 +287,7 @@ case Darwin
         if count $argv > /dev/null
             command ssh -Xo LogLevel=QUIET -t $_USER@$VM_DEBIAN_1 "cd $path; $argv"
         else
-            command ssh -Xt $_USER@$VM_DEBIAN_1 "cd $path; echo "Connected to $VM_DEBIAN_1"; fish"
+            command ssh -Xt $_USER@$VM_DEBIAN_1 "cd $path; echo "Connected to $VM_DEBIAN_1"; trash-list; fish"
         end
     end
     # }}}
@@ -399,9 +411,8 @@ case 0
         echo "▶ "
     end
 case toolchain
-    # export TERM="dumb" # hmm... that's not working (functions/fish_prompt.fish:1048)
-    function fish_prompt -d 'simple fish_prompt'
-        printf "\033[0;32m $TOOLCHAIN\033[0m ▶ "
+    function prompt_hostname
+        echo (hostname) ["$TOOLCHAIN"]
     end
 case 1
     set -g theme_powerline_fonts no
@@ -421,6 +432,7 @@ switch (uname)
 case Linux
     set -g theme_display_git no
     set -g path_color white
+    set -g theme_color_scheme base16
 # }}}
 
 # {{{ | MacOS
@@ -434,6 +446,7 @@ case Darwin
     set -g theme_display_git_master_branch no
     set -g theme_git_worktree_support no
     set -g path_color black
+    set -g theme_color_scheme dark
 # }}}
 end
 
@@ -446,7 +459,6 @@ set -g theme_avoid_ambiguous_glyphs yes
 set -g theme_display_jobs_verbose yes
 set -g theme_display_sudo_user no
 set -g theme_display_hostname ssh
-set -g theme_color_scheme dark
 function bobthefish_colors -S -d 'Define a custom bobthefish color scheme'
     set -x color_path                  $path_color
     set -x color_path_basename         $path_color

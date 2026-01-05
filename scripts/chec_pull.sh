@@ -18,7 +18,7 @@ error=()
 for (( i = 0; i < "${#dirs[@]}"; i+=2 )); do
     dir=${dirs[$i]}
     branch=${dirs[$i+1]}
-    cd ~/Documents/$dir
+    cd ~/Documents/Projects/_Gitlab/$dir
     # git clean -Xf > /dev/null 2>&1
     git remote update > /dev/null 2>&1
     ret=$(LANG=en_US git status)

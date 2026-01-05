@@ -6,7 +6,7 @@ password=`awk "/#Password/ && inhost { print \\\$2 } /Host/ { inhost=0 } /Host $
 if [[ -z "$password" ]]; then
   /usr/bin/ssh $*
 else
-  echo sshpass -p $password /usr/bin/ssh $*
+  # echo sshpass -p $password /usr/bin/ssh $*
   sshpass -p $password /usr/bin/ssh $*
 fi
 

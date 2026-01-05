@@ -28,15 +28,15 @@ $file      = "${grub_path}/grubenv"
 $file_0    = "${grub_path}/grubenv_0"
 
 $nt = new-object -comobject wscript.shell 
-$ret = $nt.popup("Launch Debian GNU/Linux from Drive ${drive}:/ ?", 0,"Linux Debian 9",4+32) 
+$ret = $nt.popup("Launch Debian GNU/Linux from Drive ${drive}:/ ?", 0, "Linux Debian 11", 4+32) 
 If ($ret -eq 6) { 
     If(!(Test-Path "$file") ) {
-        $ret = $nt.popup("$file doesn't exist",   0,"File not found",0+16)
+        $ret = $nt.popup("$file doesn't exist",   0, "File not found", 0+16)
     } elseif(!(Test-Path "$file_0") ) {
-        $ret = $nt.popup("$file_0 doesn't exist", 0,"File not found",0+16)
+        $ret = $nt.popup("$file_0 doesn't exist", 0, "File not found", 0+16)
     } else {
         Copy-Item $file_0 -Destination $file
-        $ret = $nt.popup("GRUBENV patched. Reboot in Linux?", 0,"shutdown -r -t 00",1+32)
+        $ret = $nt.popup("GRUBENV patched. Reboot in Linux?", 0, "shutdown -r -t 00", 1+32)
         If ($ret -eq 1) {
             shutdown -r -t 00
         }
