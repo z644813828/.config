@@ -85,7 +85,7 @@ Plug 'https://github.com/scrooloose/nerdcommenter'
 Plug 'https://github.com/Shougo/neosnippet.vim'
 Plug 'https://github.com/Shougo/neosnippet-snippets'
 Plug 'https://github.com/Shougo/neoinclude.vim'
-Plug 'sheerun/vim-polyglot'
+" Plug 'sheerun/vim-polyglot'
 if python_min_version 
     Plug 'https://github.com/Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 endif
@@ -94,7 +94,7 @@ if languageClient_enable
     Plug 'autozimu/LanguageClient-neovim'
 endif
 " Plug 'https://github.com/ervandew/supertab'
-Plug 'https://github.com/jubnzv/DoxygenToolkit.vim'
+" Plug 'https://github.com/jubnzv/DoxygenToolkit.vim'
 " Plug 'https://github.com/vivien/vim-linux-coding-style'
 Plug 'https://github.com/nacitar/a.vim'
 Plug 'terryma/vim-multiple-cursors'
@@ -169,6 +169,7 @@ set shortmess+=Ic                           " Don't display the intro message on
 set noshowmode
 set relativenumber
 set cursorline
+set linebreak
 set laststatus=2                            " Always show status line
 set signcolumn=yes
 set background=dark
@@ -260,7 +261,7 @@ let g:lightline = {
 au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
 
 " Insert fold block
-let g:surround_102 = split(&commentstring, '%s')[0] . " {{{ \r " . split(&commentstring, '%s')[0] . " }}}"
+" let g:surround_102 = split(&commentstring, '%s')[0] . " {{{ \r " . split(&commentstring, '%s')[0] . " }}}"
 " }}}
 
 " {{{ Folding settings
@@ -337,8 +338,9 @@ nnoremap <leader>R :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 nnoremap <leader>К :so $MYVIMRC<CR>:echo "Config reloaded"<CR>
 
 " Open config files
-nnoremap <silent><leader>C :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf<CR>:bp<CR>:bd<CR>
-nnoremap <silent><leader>С :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf<CR>:bp<CR>:bd<CR>
+nnoremap <silent><leader>C :cd ~/.ssh<CR>:next config<CR> :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf<CR>:bp<CR>:bp<CR>:bd<CR>
+nnoremap <silent><leader>С :cd ~/.ssh<CR>:next config<CR> :cd ~/.config<CR>:next .bashrc fish/config.fish .vimrc nvim/init.vim karabiner/karabiner.json install.sh .tmux.conf<CR>:bp<CR>:bp<CR>:bd<CR>
+" :bp<CR>:bd<CR>
 
 " Insert current time
 nnoremap <silent><leader>td "=strftime("%x %X")<CR>P
@@ -720,7 +722,7 @@ nmap <A-a> :A<CR>
 " imap <expr><TAB> neosnippet#jumpable() ?
 imap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 \ "\<Plug>(neosnippet_expand_or_jump)"
-\: pumvisible() ? "\<C-w>" : "\<TAB>"
+\: pumvisible() ? "\<C-n>" : "\<TAB>"
 " \: pumvisible() ? "\<ENTER>" : "\<TAB>"
  
 " smap <expr><TAB> neosnippet#jumpable() ?
@@ -730,7 +732,7 @@ smap <expr><TAB> neosnippet#expandable_or_jumpable() ?
 
 " For snippet_complete marker.
 if has('conceal')
-  set conceallevel=2 concealcursor=niv
+  set conceallevel=0 concealcursor=niv
 endif
 " }}}
 
@@ -999,31 +1001,31 @@ augroup end
 
 " {{{ deoplete
 if python_min_version 
-let g:deoplete#enable_at_startup = 1 
-let g:deoplete#sources#syntax#min_keyword_length = 1
-call deoplete#custom#option({
-\   'min_pattern_length': 1,
-\   'enable_smart_case': 1,
-\   'ignore_sources._': ['buffer'],
-\   'ignore_sources.c': ['buffer', 'around'],
-\})
-call deoplete#custom#var('around', {
-\   'range_above': 100,
-\   'range_below': 100,
-\   'mark_above': '[↑]',
-\   'mark_below': '[↓]',
-\   'mark_changes': '[]',
-\})
-call deoplete#custom#source('_',
- \ 'matchers', ['matcher_full_fuzzy'])
+    let g:deoplete#enable_at_startup = 1 
+    let g:deoplete#sources#syntax#min_keyword_length = 1
+    call deoplete#custom#option({
+    \   'min_pattern_length': 1,
+    \   'enable_smart_case': 1,
+    \   'ignore_sources._': ['buffer'],
+    \   'ignore_sources.c': ['buffer', 'around'],
+    \})
+    call deoplete#custom#var('around', {
+    \   'range_above': 100,
+    \   'range_below': 100,
+    \   'mark_above': '[↑]',
+    \   'mark_below': '[↓]',
+    \   'mark_changes': '[]',
+    \})
+    call deoplete#custom#source('_',
+     \ 'matchers', ['matcher_full_fuzzy'])
 
-call deoplete#custom#source('LanguageClient',
-  \ 'min_pattern_length',
-  \ 2)
-" 
-set completeopt+=menu,noinsert
-" set completeopt+=noinsert
-" set completeopt+=preview
+    call deoplete#custom#source('LanguageClient',
+      \ 'min_pattern_length',
+      \ 2)
+    " 
+    set completeopt+=menu,noinsert
+    " set completeopt+=noinsert
+    " set completeopt+=preview
 else
     autocmd VimEnter * echo "Deoplete disabled!"
 endif
@@ -1036,7 +1038,7 @@ let g:neosnippet#disable_runtime_snippets = {
 let g:neosnippet#enable_completed_snippet = 1
 let g:neosnippet#enable_auto_clear_markers = 1
 let g:neosnippet#enable_complete_done = 1
-let g:neosnippet#enable_conceal_marker = 1
+let g:neosnippet#enable_conceal_marker = 0
 
 " If your snippets trigger are same with builtin snippets, your snippets overwrite them.
 let g:neosnippet#snippets_directory='~/.config/nvim/snippets'

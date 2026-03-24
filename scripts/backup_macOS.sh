@@ -38,7 +38,7 @@ process_folder() {
   fi
 
   # Transfer the archive via SCP
-  scp "$zip_file" "server:~/Документы/backup/"
+  rsync -P "$zip_file" "server:~/Документы/backup/"
 
   # Check if the transfer was successful
   if [ $? -ne 0 ]; then
@@ -58,6 +58,7 @@ cp -r "$HOME/Documents/VPN" "$ICLOUD_PATH/Backup/"
 # copy all listed folders to server
 for folder in "${SOURCE_FOLDERS[@]}"; do
   echo "Processing folder: $folder"
+  du -hs "$folder"
   process_folder "$folder"
 
   if [ $? -ne 0 ]; then

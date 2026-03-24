@@ -85,7 +85,7 @@
                     "modifiers" : {"mandatory" : ["right_option"]}
                   },
                   "to" :
-                      [ {"shell_command" : "open '/Applications/Atom.app'"} ],
+                      [ {"shell_command" : "open '/Applications/Visual Studio Code.app'"} ],
                   "type" : "basic"
                 },
                 {
@@ -126,7 +126,7 @@
                     "modifiers" : {"mandatory" : ["right_option"]}
                   },
                   "to" : [ {
-                    "shell_command" : "open '/Applications/VK Messenger.app'"
+                    "shell_command" : "open '/Users/dmitriy/Applications/WebCatalog Apps/ChatGPT.app'"
                   } ],
                   "type" : "basic"
                 },
@@ -216,7 +216,18 @@
                         {"mandatory" : [ "right_option", "right_shift" ]}
                   },
                   "to" : [
-                    {"shell_command" : "open '/Applications/Microsoft Remote Desktop.app'"}
+                    {"shell_command" : "open '/Applications/Windows App.app'"}
+                  ],
+                  "type" : "basic"
+                },
+                {
+                  "from" : {
+                    "key_code" : "p",
+                    "modifiers" :
+                        {"mandatory" : [ "right_option"]}
+                  },
+                  "to" : [
+                    {"shell_command" : "open '/Applications/Firefox.app'"}
                   ],
                   "type" : "basic"
                 },
@@ -278,7 +289,7 @@
               "manipulators" : [
                 {
                   "conditions" : [ {
-                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.github.atom", "com.microsoft.rdc.macos"],
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.github.atom", "com.microsoft.VSCode", "com.microsoft.rdc.macos"],
                     "type" : "frontmost_application_unless"
                   } ],
                   "from" : {
@@ -292,7 +303,7 @@
                 },
                 {
                   "conditions" : [ {
-                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.github.atom", "com.microsoft.rdc.macos"],
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.github.atom", "com.microsoft.VSCode", "com.microsoft.rdc.macos"],
                     "type" : "frontmost_application_unless"
                   } ],
                   "from" : {
@@ -306,7 +317,7 @@
                 },
                 {
                   "conditions" : [ {
-                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.rdc.macos"],
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.VSCode", "com.microsoft.rdc.macos"],
                     "type" : "frontmost_application_unless"
                   } ],
                   "from" : {
@@ -318,7 +329,7 @@
                 },
                 {
                   "conditions" : [ {
-                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.rdc.macos"],
+                    "bundle_identifiers" : ["com.googlecode.iterm2", "com.microsoft.VSCode", "com.microsoft.rdc.macos"],
                     "type" : "frontmost_application_unless"
                   } ],
                   "from" : {

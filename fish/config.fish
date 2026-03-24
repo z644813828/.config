@@ -125,7 +125,7 @@ alias v 'nvim'
 alias vim 'nvim'
 alias vimdiff='nvim -d'
 alias vim-='nvim -R -'
-set -a NPROC (nproc)
+set -g NPROC (nproc)
 abbr jmake "make -j$NPROC"
 abbr -- - 'cd -'
 abbr fg ' fg'
@@ -147,12 +147,12 @@ function toolchain
     end
     if test -e $TOOLCHAINS_PATH/$argv && count $argv > /dev/null
         export TOOLCHAIN=$argv
-        set -a L_PATH "$TOOLCHAINS_PATH/$argv/lib"
-        set -a H_PATH "$TOOLCHAINS_PATH/$argv/include/"
+        set -g L_PATH "$TOOLCHAINS_PATH/$argv/lib"
+        set -g H_PATH "$TOOLCHAINS_PATH/$argv/include/"
     else
         export TOOLCHAIN=""
-        set -a L_PATH ""
-        set -a H_PATH ""
+        set -g L_PATH ""
+        set -g H_PATH ""
         printf "\033[0;31m Error!\033[0m Toolchain not found: \n"
         __fish_complete_toolchain 
     end
@@ -203,6 +203,11 @@ end
 
 # {{{ | MacOS
 case Darwin
+
+if test "$TERM_PROGRAM" = "vscode" 
+    ssh -t dmitriy@10.211.55.3 "export PROMPT=toolchain; cd '$PWD'; toolchain auto; clear; fish"
+end
+
     # {{{ Qt
         abbr qmake '~/Qt/6.2.4/macos/bin/qmake'
     # }}}
@@ -216,6 +221,17 @@ case Darwin
         end
     end
     alias a='_atom'
+    # }}}
+
+    # {{{ VSCode
+    function _code
+        if count $argv > /dev/null
+            code $argv
+        else
+            code .
+        end
+    end
+    alias c='_code'
     # }}}
 
     # {{{ Wakeonlan 
@@ -243,10 +259,10 @@ case Darwin
     # {{{ Check new updates in project
     function check_pull
         if count $argv > /dev/null
+            command $SCRIPTS/check_pull.sh $argv
+        else
             git remote update
             git status
-        else
-            command $SCRIPTS/chec_pull.sh $argv
         end
     end
     # }}}
@@ -283,11 +299,11 @@ case Darwin
 
     # {{{ SSH wrapper to connect to VM or run a command
     function s
-        set -U path (string replace -a ' ' '\\ ' $PWD)
+        set -l remote_pwd (string replace -a ' ' '\\ ' $PWD)
         if count $argv > /dev/null
-            command ssh -Xo LogLevel=QUIET -t $_USER@$VM_DEBIAN_1 "cd $path; $argv"
+            command ssh -Xo LogLevel=QUIET -t $_USER@$VM_DEBIAN_1 "cd $remote_pwd; $argv"
         else
-            command ssh -Xt $_USER@$VM_DEBIAN_1 "cd $path; echo "Connected to $VM_DEBIAN_1"; trash-list; fish"
+            command ssh -Xt $_USER@$VM_DEBIAN_1 "cd $remote_pwd; echo 'Connected to $VM_DEBIAN_1'; trash-list; fish"
         end
     end
     # }}}
@@ -315,9 +331,15 @@ case Darwin
     # }}}
 
     # {{{ SSH to extra VM
-    alias s2='ssh -Xt $_USER@$VM_DEBIAN_2 "cd $PWD; echo "Connected to $VM_DEBIAN_2"; fish"'
-    alias s3='ssh -Xt $_USER@$VM_DEBIAN_3 "cd $PWD; echo "Connected to $VM_DEBIAN_3"; fish"'
-    alias s4='ssh -Xt $_USER@$VM_DEBIAN_4 "cd $PWD; echo "Connected to $VM_DEBIAN_4"; fish"'
+    function s2
+        command ssh -Xt $_USER@$VM_DEBIAN_2 "cd $PWD; echo 'Connected to $VM_DEBIAN_2'; fish"
+    end
+    function s3
+        command ssh -Xt $_USER@$VM_DEBIAN_3 "cd $PWD; echo 'Connected to $VM_DEBIAN_3'; fish"
+    end
+    function s4
+        command ssh -Xt $_USER@$VM_DEBIAN_4 "cd $PWD; echo 'Connected to $VM_DEBIAN_4'; fish"
+    end
     # }}}
 
     # {{{ JS minify
@@ -501,5 +523,4 @@ end
 test -e {$HOME}/.iterm2_shell_integration.fish ; or curl -L https://iterm2.com/shell_integration/fish -o ~/.iterm2_shell_integration.fish
 source {$HOME}/.iterm2_shell_integration.fish
 # }}}
-
 

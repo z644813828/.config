@@ -1,0 +1,30 @@
+{
+  "name": "open-in-parallels",
+  "displayName": "Open In Parallels",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "activationEvents": [
+    "onCommand:openInParallels.open"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "openInParallels.open",
+        "title": "Открыть в Parallels",
+        "category": "Parallels"
+      }
+    ],
+    "menus": {
+      "statusBar/remoteIndicator": [
+        {
+          "command": "openInParallels.open",
+          "when": "!remoteName",
+          "group": "remote_10_ssh_9-parallels@1"
+        }
+      ]
+    }
+  }
+}
