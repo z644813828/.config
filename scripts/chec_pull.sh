@@ -13,7 +13,15 @@ uptodate=()
 updated=()
 notupdated=()
 error=()
-# dirs+=(Projects/my_project                    master)
+
+CONFIG_FILE="${CHECK_PULL_CONFIG:-$(dirname "$0")/chec_pull.local.sh}"
+if [[ ! -r "$CONFIG_FILE" ]]; then
+    echo "Config file not found: $CONFIG_FILE"
+    exit 1
+fi
+
+# shellcheck source=/dev/null
+source "$CONFIG_FILE"
 
 for (( i = 0; i < "${#dirs[@]}"; i+=2 )); do
     dir=${dirs[$i]}
@@ -103,4 +111,3 @@ for (( i=0; i<$len; i++ )); do
     printf "${RED}%s${NC}\n" "${error[$i]}" ;
 done
 echo
-

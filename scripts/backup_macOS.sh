@@ -52,7 +52,7 @@ process_folder() {
 }
 
 # copy relevant folders to iCloud
-cp -r "$HOME/.ssh" "$ICLOUD_PATH/Backup/"
+cp -r "$HOME/.ssh" "$ICLOUD_PATH/Backup/ssh"
 cp -r "$HOME/Documents/VPN" "$ICLOUD_PATH/Backup/"
 
 # copy all listed folders to server

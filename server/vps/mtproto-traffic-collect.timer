@@ -1,0 +1,11 @@
+[Unit]
+Description=Collect MTProto traffic counters every minute
+
+[Timer]
+OnBootSec=1min
+OnUnitActiveSec=1min
+Unit=mtproto-traffic-collect.service
+Persistent=true
+
+[Install]
+WantedBy=timers.target

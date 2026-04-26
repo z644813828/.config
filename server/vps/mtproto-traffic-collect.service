@@ -1,0 +1,8 @@
+[Unit]
+Description=Collect MTProto traffic counters
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/mtproto-traffic collect

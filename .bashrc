@@ -1,4 +1,5 @@
 export EDITOR='nvim'
+
 # Don't save history if leading space 
 export HISTCONTROL='ignorespace'
 alias r='ranger'
@@ -18,6 +19,10 @@ then
     alias cdl='cd /media/psf/Home/Documents/Libs/'
     alias cdd='cd /media/psf/Home/Documents/Documents/'
     alias cdz='cd /media/psf/Home/Downloads/'
+
+    if [[ -r "$HOME/.bashrc.linux.local" ]]; then
+        source "$HOME/.bashrc.linux.local"
+    fi
 else
     alias s="echo 'Connected to 10.211.55.3';ssh -X -t dmitriy@10.211.55.3 fish"
     alias m='open -a /Applications/MacVim.app'
@@ -32,4 +37,3 @@ else
     alias ctr='ctags -R --languages=c,c++'
     alias config='open -a /Applications/MacVim.app ~/.config/.bashrc ~/.config/fish/config.fish ~/.config/.vimrc ~/.config/nvim/init.vim ~/.config/karabiner/karabiner.json'
 fi
-

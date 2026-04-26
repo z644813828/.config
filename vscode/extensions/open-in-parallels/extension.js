@@ -1,4 +1,5 @@
 const vscode = require('vscode');
+const fs = require('fs');
 
 function activate(context) {
 
@@ -14,7 +15,12 @@ function activate(context) {
       }
 
       const host = "S";
-      const path = folder.uri.fsPath;
+      let path = folder.uri.fsPath;
+
+      const localBase = '/Users/dmitriy';
+      const parallelsBase = '/media/psf/Home';
+
+      path = path.replace(localBase, parallelsBase);
 
       const remoteUri = vscode.Uri.parse(
         `vscode-remote://ssh-remote+${host}${path}`

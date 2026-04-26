@@ -1,0 +1,13 @@
+[Unit]
+Description=Watch MTProto Admin TLS certificate files
+
+[Path]
+PathChanged=/root/cert/ip/fullchain.pem
+PathChanged=/root/cert/ip/privkey.pem
+PathModified=/root/cert/ip/fullchain.pem
+PathModified=/root/cert/ip/privkey.pem
+Unit=mtproto-web-tls-reload.service
+
+[Install]
+WantedBy=paths.target
+

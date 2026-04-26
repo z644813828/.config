@@ -1,4 +1,6 @@
 .DS_Store
+.bashrc.linux.local
+scripts/chec_pull.local.sh
 Transmission Remote GUI/*
 nvim/.netrwhist
 wireshark
@@ -22,3 +24,5 @@ lnav
 Autodesk
 expressvpn
 clangd/config.yaml
+com.googlecode.iterm2.plist
+Transmission Remote GUI/transgui.ini

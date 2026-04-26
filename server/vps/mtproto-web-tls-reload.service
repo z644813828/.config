@@ -1,0 +1,7 @@
+[Unit]
+Description=Restart MTProto Admin Web TLS when certificate files change
+
+[Service]
+Type=oneshot
+ExecStart=/bin/systemctl restart mtproto-web-tls.service
+

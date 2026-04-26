@@ -1,0 +1,30 @@
+{
+  "name": "trixie-devcontainer",
+  "displayName": "Trixie Devcontainer",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "activationEvents": [
+    "onCommand:trixieDevcontainer.create"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "trixieDevcontainer.create",
+        "title": "Создать контейнер разработки (trixie)",
+        "category": "Контейнеры разработки"
+      }
+    ],
+    "menus": {
+      "statusBar/remoteIndicator": [
+        {
+          "command": "trixieDevcontainer.create",
+          "when": "!remoteName && workspaceFolderCount > 0",
+          "group": "remote_30_devcontainer_01@1"
+        }
+      ]
+    }
+  }
+}

@@ -6,12 +6,11 @@ monit # force read this file
 
 # send command to main pc, routers etc
 
-login="apcupsd"
-password="apcupsd"
-win_ip="192.168.2.2"
+login="<WINDOWS_SHUTDOWN_USER>"
+password="<WINDOWS_SHUTDOWN_PASSWORD>"
+win_ip="<WINDOWS_HOST_IP>"
 net rpc shutdown -f -t 0 -C 'APCUPSD' -U $login%$password -I $win_ip
 
-login="root"
-password="pass"
-ssh -t $login@$password 'shutdown -r 0'
-
+login="<SSH_SHUTDOWN_USER>"
+host="<SSH_SHUTDOWN_HOST>"
+ssh -t "$login@$host" 'shutdown -r 0'
