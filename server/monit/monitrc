@@ -12,6 +12,7 @@ set httpd port 2812 and
     allow 192.168.2.127    # mac-13"
     allow 192.168.2.128    # mac-16"
     allow 192.168.10.2     # home 2 vpn
+    allow 172.17.0.3       # docker wireguard
 set eventqueue
     basedir /var/lib/monit/events
     slots 100
@@ -29,7 +30,6 @@ $DESCRIPTION
 
 ©️ Monit }
 
-set alert my_gmail but not on { icmp }
-set mailserver smtp.gmail.com port 587
-    username "server_gmail" password "monit_pass"
-    using tls
+
+set mailserver 127.0.0.1  with timeout 5 seconds
+set alert my_gmail but not on { action, instance }

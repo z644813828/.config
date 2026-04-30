@@ -26,3 +26,4 @@ expressvpn
 clangd/config.yaml
 com.googlecode.iterm2.plist
 Transmission Remote GUI/transgui.ini
+cagent/.cagent_first_run

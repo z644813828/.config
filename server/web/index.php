@@ -32,7 +32,7 @@
     width: 100%;
     margin-top: 18px;
     text-align: left;
-    padding: 0;
+    padding: 0 14px;
     background: transparent;
     box-shadow: none;
     max-height: 0;
@@ -96,14 +96,15 @@
     color: #54A9EB !important;
    }
    .panel-flag {
-    display: inline-block;
-    width: 22px;
-    height: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 18px;
     margin-right: 10px;
-    vertical-align: -2px;
-    border-radius: 2px;
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
-    object-fit: cover;
+    font-size: 18px;
+    line-height: 1;
+    vertical-align: -3px;
    }
    .panel-menu a:hover {
     color: #fff;
@@ -123,6 +124,7 @@
     background: #8A94A7;
     box-shadow: 0 0 0 4px rgba(138, 148, 167, 0.1);
     vertical-align: middle;
+    cursor: pointer;
    }
    .status-dot-ok {
     background: #16d19a;
@@ -156,12 +158,48 @@
         opacity: 1;
     }
    }
+   .status-popover {
+    position: fixed;
+    z-index: 1000;
+    max-width: min(320px, calc(100vw - 32px));
+    padding: 12px 14px;
+    border: 1px solid rgba(138, 148, 167, 0.22);
+    border-radius: 12px;
+    color: #d8deea;
+    background: rgba(36, 40, 48, 0.96);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.36);
+    font-size: 13px;
+    line-height: 19px;
+    text-align: left;
+    white-space: pre-line;
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease;
+   }
+   .status-popover.is-open {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+   }
    @media (max-width: 640px) {
+    .hero-title {
+        font-size: 34px;
+        line-height: 42px;
+        overflow-wrap: normal;
+    }
     .panel-menu {
         margin-top: 20px;
+        padding-left: 18px;
+        padding-right: 18px;
     }
     .feature.has-open-panel {
         margin-bottom: 40px;
+    }
+   }
+   @media (min-width: 641px) {
+    .hero-title {
+        white-space: nowrap;
     }
    }
 </style>
@@ -255,6 +293,19 @@ function loadPanels(): array
     );
 }
 
+function countryFlagHtml(string $country): string
+{
+    $country = strtoupper(trim($country));
+    if (strlen($country) !== 2 || !ctype_alpha($country)) {
+        return '';
+    }
+
+    $first = 0x1F1E6 + ord($country[0]) - ord('A');
+    $second = 0x1F1E6 + ord($country[1]) - ord('A');
+
+    return '&#x' . strtoupper(dechex($first)) . ';&#x' . strtoupper(dechex($second)) . ';';
+}
+
 function normalizedHttpHost(): string
 {
     $httpHost = trim((string) ($_SERVER['HTTP_HOST'] ?? ''));
@@ -302,6 +353,25 @@ function loadServiceStatus(string $path): array
     return $decoded['services'];
 }
 
+function loadServiceStatusGeneratedAt(string $path): string
+{
+    if (!is_file($path) || !is_readable($path)) {
+        return '';
+    }
+
+    $raw = file_get_contents($path);
+    if ($raw === false || $raw === '') {
+        return '';
+    }
+
+    $decoded = json_decode($raw, true);
+    if (!is_array($decoded) || !isset($decoded['generated_at'])) {
+        return '';
+    }
+
+    return (string) $decoded['generated_at'];
+}
+
 function serviceStatus(array $statuses, string $key): array
 {
     if (!isset($statuses[$key]) || !is_array($statuses[$key])) {
@@ -309,6 +379,8 @@ function serviceStatus(array $statuses, string $key): array
             'status' => 'unknown',
             'label' => '?',
             'message' => 'status not collected yet',
+            'details' => '',
+            'checked_at' => '',
         );
     }
 
@@ -329,15 +401,19 @@ function serviceStatus(array $statuses, string $key): array
         'status' => $status,
         'label' => $labels[$status],
         'message' => isset($item['message']) ? (string) $item['message'] : '',
+        'details' => isset($item['details']) ? (string) $item['details'] : '',
+        'checked_at' => isset($item['checked_at']) ? (string) $item['checked_at'] : '',
     );
 }
 
-function overallServiceStatus(array $statuses): array
+function overallServiceStatus(array $statuses, string $generatedAt = ''): array
 {
     if (empty($statuses)) {
         return array(
             'status' => 'unknown',
             'message' => 'service status file not collected yet',
+            'details' => '',
+            'checked_at' => $generatedAt,
         );
     }
 
@@ -374,7 +450,26 @@ function overallServiceStatus(array $statuses): array
     return array(
         'status' => $worst,
         'message' => 'ok: ' . $counts['ok'] . ', warn: ' . $counts['warn'] . ', down: ' . $counts['down'] . ', unknown: ' . $counts['unknown'],
+        'details' => 'service-status.json',
+        'checked_at' => $generatedAt,
     );
+}
+
+function statusPopupText(array $status): string
+{
+    $lines = array('Status: ' . strtoupper((string) ($status['status'] ?? 'unknown')));
+
+    if (!empty($status['message'])) {
+        $lines[] = 'Message: ' . (string) $status['message'];
+    }
+    if (!empty($status['details'])) {
+        $lines[] = 'Details: ' . (string) $status['details'];
+    }
+    if (!empty($status['checked_at'])) {
+        $lines[] = 'Date: ' . (string) $status['checked_at'];
+    }
+
+    return implode("\n", $lines);
 }
 
 loadEnvFile(__DIR__ . '/.env');
@@ -390,13 +485,16 @@ $publicHost = detectPublicHost();
 $publicHttpUrl = preg_match('~^https?://~', $publicHost) ? $publicHost : 'https://' . $publicHost;
 $githubConfigUrl = envValue('OMV_GITHUB_CONFIG_URL', 'https://github.com/example/repo');
 $asusRouterRemoteUrl = envValue('OMV_ASUS_REMOTE_URL', '#');
-$asusRouterLocalUrl = 'https://192.168.2.1:8443/Main_Login.asp';
+$asusRouterLocalHost = $localIpHostForLinks === '10.80.0.10' ? '10.80.0.10' : '192.168.2.1';
+$asusRouterLocalUrl = 'https://' . $asusRouterLocalHost . ':8443/Main_Login.asp';
 $keeneticRemoteUrl = envValue('OMV_KEENETIC_REMOTE_URL', '#');
 $keeneticLocalUrl = 'http://192.168.1.1';
 $panels = loadPanels();
 $serviceStatusFile = envValue('OMV_SERVICE_STATUS_FILE', __DIR__ . '/service-status.json');
 $serviceStatuses = loadServiceStatus($serviceStatusFile);
-$overallStatus = overallServiceStatus($serviceStatuses);
+$serviceStatusGeneratedAt = loadServiceStatusGeneratedAt($serviceStatusFile);
+$overallStatus = overallServiceStatus($serviceStatuses, $serviceStatusGeneratedAt);
+$overallStatusText = statusPopupText($overallStatus);
 ?>
 
 <head>
@@ -431,12 +529,15 @@ $overallStatus = overallServiceStatus($serviceStatuses);
 				<div class="container">
 					<div class="hero-inner">
 						<div class="hero-copy">
-							<h1 class="hero-title mt-0">OpenMediaVault&nbspServer</h1>
+							<h1 class="hero-title mt-0">OpenMediaVault Server</h1>
 								<p class="hero-paragraph">
-                                    <span
-                                        class="status-dot status-dot-<?php echo htmlspecialchars($overallStatus['status'], ENT_QUOTES, "UTF-8"); ?> status-dot-pulse hero-status-dot"
-                                        title="<?php echo htmlspecialchars($overallStatus['message'], ENT_QUOTES, "UTF-8"); ?>"
-                                    ></span>
+	                                    <span
+	                                        class="status-dot status-dot-<?php echo htmlspecialchars($overallStatus['status'], ENT_QUOTES, "UTF-8"); ?> status-dot-pulse hero-status-dot"
+	                                        title="<?php echo htmlspecialchars($overallStatusText, ENT_QUOTES, "UTF-8"); ?>"
+                                            data-status-popover="<?php echo htmlspecialchars($overallStatusText, ENT_QUOTES, "UTF-8"); ?>"
+                                            role="button"
+                                            tabindex="0"
+	                                    ></span>
                                     Running services redirect page.
                                 </p>
 							<div class="hero-cta">
@@ -590,7 +691,8 @@ $overallStatus = overallServiceStatus($serviceStatuses);
 					<div class="features-inner section-inner has-bottom-divider">
 						<div class="features-wrap">
 								 <?php foreach ($data as $elem): ?>
-                                    <?php $currentStatus = serviceStatus($serviceStatuses, $elem[IDX_STATUS_KEY]); ?>
+	                                    <?php $currentStatus = serviceStatus($serviceStatuses, $elem[IDX_STATUS_KEY]); ?>
+                                        <?php $currentStatusText = statusPopupText($currentStatus); ?>
 									<div class="feature text-center is-revealing scale">
 									<div class="feature-inner">
 										<div class="feature-icon">
@@ -606,25 +708,23 @@ $overallStatus = overallServiceStatus($serviceStatuses);
 										</div>
 											<h4 class="feature-title feature-title-with-status mt-24">
                                                 <?php echo $elem[IDX_NAME]?>
-                                                <span
-                                                    class="status-dot status-dot-<?php echo htmlspecialchars($currentStatus['status'], ENT_QUOTES, "UTF-8"); ?> status-dot-pulse"
-                                                    title="<?php echo htmlspecialchars($currentStatus['message'], ENT_QUOTES, "UTF-8"); ?>"
-                                                ></span>
+	                                                <span
+	                                                    class="status-dot status-dot-<?php echo htmlspecialchars($currentStatus['status'], ENT_QUOTES, "UTF-8"); ?> status-dot-pulse"
+	                                                    title="<?php echo htmlspecialchars($currentStatusText, ENT_QUOTES, "UTF-8"); ?>"
+                                                        data-status-popover="<?php echo htmlspecialchars($currentStatusText, ENT_QUOTES, "UTF-8"); ?>"
+                                                        role="button"
+                                                        tabindex="0"
+	                                                ></span>
                                             </h4>
 										<p class="text-sm mb-0"><?php echo $elem[IDX_DESCRIPTION]?></p>
                                         <?php if ($elem[IDX_NAME] === "3x-ui"): ?>
                                             <div class="panel-menu" id="main-3x-ui">
                                                 <?php foreach ($panels as $panel): ?>
                                                     <div class="panel-entry">
-                                                        <a class="panel-main-link" href="<?php echo htmlspecialchars($panel["url"], ENT_QUOTES, "UTF-8"); ?>" target="_blank" rel="noopener noreferrer">
-                                                            <?php if (!empty($panel["country"])): ?>
-                                                                <img
-                                                                    class="panel-flag"
-                                                                    src="https://flagcdn.com/<?php echo htmlspecialchars(strtolower($panel["country"]), ENT_QUOTES, "UTF-8"); ?>.svg"
-                                                                    alt=""
-                                                                    decoding="async"
-                                                                >
-                                                            <?php endif; ?>
+	                                                        <a class="panel-main-link" href="<?php echo htmlspecialchars($panel["url"], ENT_QUOTES, "UTF-8"); ?>" target="_blank" rel="noopener noreferrer">
+	                                                            <?php if (!empty($panel["country"])): ?>
+	                                                                <span class="panel-flag" aria-hidden="true"><?php echo countryFlagHtml($panel["country"]); ?></span>
+	                                                            <?php endif; ?>
                                                             <?php echo htmlspecialchars($panel["name"], ENT_QUOTES, "UTF-8"); ?>
                                                         </a>
                                                         <?php if (!empty($panel["tg_url"])): ?>
@@ -705,9 +805,9 @@ $overallStatus = overallServiceStatus($serviceStatuses);
 
 	<script src="dist/js/main.min.js"></script>
     <script>
-        (function() {
-            var toggles = document.querySelectorAll("[data-panel-toggle]");
-            toggles.forEach(function(toggle) {
+	        (function() {
+	            var toggles = document.querySelectorAll("[data-panel-toggle]");
+	            toggles.forEach(function(toggle) {
                 toggle.addEventListener("click", function() {
                     var menuId = toggle.getAttribute("data-panel-toggle");
                     var menu = document.getElementById(menuId);
@@ -720,10 +820,72 @@ $overallStatus = overallServiceStatus($serviceStatuses);
                         feature.classList.toggle("has-open-panel", isOpen);
                     }
                     toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+	                });
+	            });
+	        })();
+        (function() {
+            var popover = document.createElement("div");
+            popover.className = "status-popover";
+            popover.setAttribute("role", "tooltip");
+            document.body.appendChild(popover);
+
+            function closePopover() {
+                popover.classList.remove("is-open");
+                popover.textContent = "";
+            }
+
+            function openPopover(dot) {
+                var text = dot.getAttribute("data-status-popover");
+                if (!text) {
+                    return;
+                }
+
+                popover.textContent = text;
+                popover.classList.add("is-open");
+
+                var rect = dot.getBoundingClientRect();
+                var popoverRect = popover.getBoundingClientRect();
+                var left = rect.left + rect.width / 2 - popoverRect.width / 2;
+                var top = rect.bottom + 12;
+                var padding = 16;
+
+                left = Math.max(padding, Math.min(left, window.innerWidth - popoverRect.width - padding));
+                if (top + popoverRect.height + padding > window.innerHeight) {
+                    top = Math.max(padding, rect.top - popoverRect.height - 12);
+                }
+
+                popover.style.left = left + "px";
+                popover.style.top = top + "px";
+            }
+
+            document.querySelectorAll("[data-status-popover]").forEach(function(dot) {
+                dot.addEventListener("click", function(event) {
+                    event.stopPropagation();
+                    if (popover.classList.contains("is-open") && popover.textContent === dot.getAttribute("data-status-popover")) {
+                        closePopover();
+                        return;
+                    }
+                    openPopover(dot);
+                });
+
+                dot.addEventListener("keydown", function(event) {
+                    if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openPopover(dot);
+                    }
                 });
             });
+
+            document.addEventListener("click", closePopover);
+            document.addEventListener("keydown", function(event) {
+                if (event.key === "Escape") {
+                    closePopover();
+                }
+            });
+            window.addEventListener("resize", closePopover);
+            window.addEventListener("scroll", closePopover, true);
         })();
-    </script>
+	    </script>
 </body>
 
 </html>

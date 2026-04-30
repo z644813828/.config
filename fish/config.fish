@@ -193,7 +193,6 @@ end
 # {{{ Other 
     alias ls='ls --color -h --group-directories-first'
     alias ll='ls -lh -G --color -h --group-directories-first'
-    alias config='cd /etc/monit; nvim -p /etc/monit/{monitrc,conf.d/auth_log.conf,conf.d/daemon_log.conf,conf.d/messages.conf,conf.d/syslog.conf,ip_location.sh,whitelist_ips.regex}'
     function pvs 
         eval $SCRIPTS/pvs.sh $argv
     end
@@ -387,7 +386,6 @@ end
     alias ls='gls -N --color -h --group-directories-first'
     alias ll='gls -N -lh -G --color -h --group-directories-first'
     alias ctr='ctags -R --languages=c,c++'
-    alias config='/Applications/MacVim.app/Contents/bin/mvim ~/.config/{.bashrc, fish/config.fish, .vimrc, nvim/init.vim, karabiner/karabiner.json, install.sh, .tmux.conf}'
     # }}}
 
     # {{{ Fork

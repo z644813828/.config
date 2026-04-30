@@ -31,7 +31,7 @@ remote_cert=$(
 
 if [ -z "$remote_cert" ]; then
     echo "Failed to read router certificate from ${ROUTER_HOST}:${ROUTER_PORT}"
-    exit 2
+    exit 3
 fi
 
 echo "Local certificate:"
