@@ -14,7 +14,7 @@ PANEL_USER="same-as-3x-ui-login"
 PANEL_PASS="same-as-3x-ui-password"
 THREEXUI_PORT="29710"
 THREEXUI_PATH="/your-panel-path/"
-MTPROTO_WEB_PORT="8448"
+MTPROTO_WEB_PORT="8440"
 FIRST_MTPROTO_PORT="8443"
 ```
 
@@ -30,8 +30,8 @@ apt install -y curl wget git ca-certificates unzip tar jq iptables iproute2 php-
 
 - SSH: `22/tcp`
 - 3x-ui panel port, например `29710/tcp`
-- MTProto web UI HTTPS, например `8448/tcp`
-- MTProto proxy ports, например `8443-8499/tcp`
+- MTProto web UI HTTPS, например `8440/tcp`
+- MTProto proxy ports: `8443-9000/tcp`
 
 Сразу после первичной настройки сервера рекомендуется:
 
@@ -134,7 +134,7 @@ systemctl enable --now mtg-Dmitriy.service
 /usr/local/bin/mtg access /etc/mtg-Dmitriy.toml
 ```
 
-Для следующих пользователей использовать соседние порты: `8444`, `8445`, `8446` и т.д. Каждый пользователь - отдельный файл `/etc/mtg-<User>.toml` и отдельный сервис `mtg-<User>.service`.
+Для следующих пользователей использовать соседние порты в диапазоне `8443-9000`: `8444`, `8445`, `8446` и т.д. Каждый пользователь - отдельный файл `/etc/mtg-<User>.toml` и отдельный сервис `mtg-<User>.service`.
 
 ## 5. Поставить мониторинг трафика
 
@@ -274,7 +274,7 @@ systemctl list-units 'mtg-*' --no-pager
 /usr/local/bin/mtproto-traffic sync
 /usr/local/bin/mtproto-traffic report
 /usr/local/bin/mtproto-traffic report-month
-ss -ltnp | grep -E '8443|8448|29710'
+ss -ltnp | grep -E '8443|8440|29710'
 ```
 
 Открыть:

@@ -45,6 +45,9 @@ $authUser = envValue('MTPROTO_WEB_USER', 'admin');
 $authPass = envValue('MTPROTO_WEB_PASS', 'change-me');
 $serverHost = envValue('MTPROTO_SERVER_HOST', '127.0.0.1');
 
+const MTPROTO_PROXY_PORT_MIN = 8443;
+const MTPROTO_PROXY_PORT_MAX = 9000;
+
 if (isset($_GET['logout'])) {
     $_SESSION = [];
     session_destroy();
@@ -282,6 +285,75 @@ function getUserConfig(string $userName): ?array
     ];
 }
 
+function portValidationError(string $port, string $currentUser = ''): ?string
+{
+    if (!preg_match('/^\d+$/', $port)) {
+        return 'Порт должен быть числом.';
+    }
+
+    $portNumber = (int) $port;
+    $currentConfig = $currentUser !== '' ? getUserConfig($currentUser) : null;
+    $currentPort = $currentConfig['port'] ?? '';
+
+    if ($currentUser !== '' && $currentPort === $port) {
+        return null;
+    }
+
+    if ($portNumber < MTPROTO_PROXY_PORT_MIN || $portNumber > MTPROTO_PROXY_PORT_MAX) {
+        return 'Порт прокси должен быть в диапазоне ' . MTPROTO_PROXY_PORT_MIN . '-' . MTPROTO_PROXY_PORT_MAX . '.';
+    }
+
+    foreach (glob('/etc/mtg-*.toml') ?: [] as $configPath) {
+        $configUser = basename($configPath, '.toml');
+        $configUser = preg_replace('/^mtg-/', '', $configUser) ?? $configUser;
+        $content = (string) file_get_contents($configPath);
+
+        if (preg_match('/bind-to\s*=\s*"0\.0\.0\.0:(\d+)"/', $content, $match) && $match[1] === $port && $configUser !== $currentUser) {
+            return 'Порт ' . $port . ' уже используется клиентом ' . $configUser . '.';
+        }
+    }
+
+    $listener = trim(shell_exec('ss -H -ltnp 2>/dev/null | awk ' . escapeshellarg('$4 ~ /:' . $port . '$/ {print; exit}') . ' || true') ?? '');
+    if ($listener !== '') {
+        return 'Порт ' . $port . ' уже занят процессом ОС: ' . $listener;
+    }
+
+    return null;
+}
+
+function getListeningPorts(): array
+{
+    $ports = [];
+    $raw = shell_exec('ss -H -ltn 2>/dev/null || true') ?? '';
+    foreach (preg_split('/\r\n|\r|\n/', trim($raw)) as $line) {
+        $parts = preg_split('/\s+/', trim($line));
+        $localAddress = $parts[3] ?? '';
+        if (preg_match('/:(\d+)$/', $localAddress, $match)) {
+            $ports[(int) $match[1]] = true;
+        }
+    }
+
+    return $ports;
+}
+
+function getNextProxyPort(array $users): ?int
+{
+    $usedPorts = getListeningPorts();
+    foreach ($users as $user) {
+        if (is_numeric($user['port'])) {
+            $usedPorts[(int) $user['port']] = true;
+        }
+    }
+
+    for ($port = MTPROTO_PROXY_PORT_MIN; $port <= MTPROTO_PROXY_PORT_MAX; $port++) {
+        if (!isset($usedPorts[$port])) {
+            return $port;
+        }
+    }
+
+    return null;
+}
+
 function serviceState(string $service): array
 {
     $active = trim(shell_exec('systemctl is-active ' . escapeshellarg($service) . ' 2>/dev/null || true') ?? '');
@@ -397,7 +469,16 @@ function listUsers(string $serverHost): array
             'online_connections' => $onlineConnections,
         ];
     }
-    usort($rows, static fn(array $a, array $b): int => strcmp($a['user'], $b['user']));
+    usort($rows, static function (array $a, array $b): int {
+        $portA = is_numeric($a['port']) ? (int) $a['port'] : PHP_INT_MAX;
+        $portB = is_numeric($b['port']) ? (int) $b['port'] : PHP_INT_MAX;
+
+        if ($portA === $portB) {
+            return strcmp($a['user'], $b['user']);
+        }
+
+        return $portA <=> $portB;
+    });
     return $rows;
 }
 
@@ -423,8 +504,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($userName === '' || $port === '') {
             $flash = ['type' => 'error', 'text' => 'Имя пользователя и порт обязательны.'];
-        } elseif (!preg_match('/^\d+$/', $port)) {
-            $flash = ['type' => 'error', 'text' => 'Порт должен быть числом.'];
+        } elseif (($portError = portValidationError($port)) !== null) {
+            $flash = ['type' => 'error', 'text' => $portError];
         } else {
             if ($hostname === '') {
                 $hostname = trim(shell_exec('hostname -f') ?? '');
@@ -580,8 +661,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($originalUser === '' || $newUserName === '' || $port === '') {
             $flash = ['type' => 'error', 'text' => 'Для редактирования нужны имя и порт.'];
-        } elseif (!preg_match('/^\d+$/', $port)) {
-            $flash = ['type' => 'error', 'text' => 'Порт должен быть числом.'];
+        } elseif (($portError = portValidationError($port, $originalUser)) !== null) {
+            $flash = ['type' => 'error', 'text' => $portError];
         } else {
             $current = getUserConfig($originalUser);
             if ($current === null) {
@@ -677,12 +758,7 @@ $healthSummaryStatus = $healthErrors > 0 ? 'error' : ($healthWarnings > 0 ? 'war
 $healthSummaryText = $healthErrors > 0
     ? 'Есть ошибки'
     : ($healthWarnings > 0 ? 'Есть предупреждения' : 'Все в порядке');
-$nextPort = 8443;
-foreach ($users as $user) {
-    if (is_numeric($user['port'])) {
-        $nextPort = max($nextPort, ((int) $user['port']) + 1);
-    }
-}
+$nextPort = getNextProxyPort($users);
 
 if ($editTarget !== null && $editValues['original_user'] === '') {
     foreach ($users as $user) {
@@ -1788,7 +1864,7 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
                     <path d="M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
                     <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.8"/>
                 </svg>
-                <span><?php echo $nextPort; ?></span>
+                <span><?php echo $nextPort === null ? 'нет' : $nextPort; ?></span>
             </div>
         </article>
     </section>
@@ -2048,7 +2124,7 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
                 </div>
                 <div class="field">
                     <label>Порт</label>
-                    <input name="port" value="<?php echo htmlspecialchars($isEditModal ? $editValues['port'] : (string) $nextPort, ENT_QUOTES, 'UTF-8'); ?>" required>
+                    <input name="port" value="<?php echo htmlspecialchars($isEditModal ? $editValues['port'] : (string) ($nextPort ?? ''), ENT_QUOTES, 'UTF-8'); ?>" required>
                 </div>
                 <div class="field">
                     <label>Hostname FQDN</label>
