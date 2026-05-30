@@ -1,0 +1,8 @@
+[Unit]
+Description=Alert when FTP config backup is stale
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/vps-backup-age-alert

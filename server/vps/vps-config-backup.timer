@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily VPS configuration backup to FTP storage
+
+[Timer]
+OnCalendar=*-*-* 03:17:00 UTC
+RandomizedDelaySec=30m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

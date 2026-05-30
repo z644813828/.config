@@ -26,4 +26,26 @@ expressvpn
 clangd/config.yaml
 com.googlecode.iterm2.plist
 Transmission Remote GUI/transgui.ini
+Thunar/
+autostart/
+dconf/
+enchant/
+evolution/
+fish/fishfile
+gedit/
+gtk-3.0/
+lazygit/
+libreoffice/
+pulse/
+ranger/bookmarks
+ranger/history
+ranger/scope.sh_back
+ranger/tagged
+scripts/browserosaurus.sh
+scripts/create_file-browser_user.sh
+teamviewer/
+user-dirs.dirs
+user-dirs.locale
+xfce4/
 cagent/.cagent_first_run
+server/vps/.vps-config-backup.env

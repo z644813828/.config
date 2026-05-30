@@ -9,12 +9,12 @@ SF="/sharedfolders"
 
 # CMD1="echo"
 # CMD2="echo"
-# DIFF="echo"
+DIFF="echo"
 # echo "DEBUG_MODE"
 
 CMD1="rsync -azvhl --delete --stats"
-CMD2="rsync -rpvhl --delete --no-perms --stats"
-DIFF="diff -rq --no-dereference"
+CMD2="rsync -rpvhlt --delete --no-perms --stats"
+# DIFF="diff -rq --no-dereference"
 
 DATE="date +%Y.%m.%d-%H:%M:%S"
 mkdir -p /var/log/rsync_backup
@@ -65,17 +65,20 @@ S=0
 # /sharedfolders/Software/OS/           d1
 # /sharedfolders/Software/omvbackup/    d1
 # /sharedfolders/UserData/              d1
+# /srv/dev-disk-by-label-UserData/__backups/  d1
 S1=0
-S=$(du -s /sharedfolders/Software/_Software/     | cut -f1); S1=$((S1 + $S))
-echo "/sharedfolders/Software/_Software:    " $(($S / GB))  "GB"    | $LOG
-S=$(du -s /sharedfolders/Software/OS/            | cut -f1); S1=$((S1 + $S))
-echo "/sharedfolders/Software/OS:           " $(($S / GB))  "GB"    | $LOG
+S=$(du -s /sharedfolders/Software/_Software/       | cut -f1); S1=$((S1 + $S))
+echo "/sharedfolders/Software/_Software:        " $(($S / GB))  "GB"    | $LOG
+S=$(du -s /sharedfolders/Software/OS/              | cut -f1); S1=$((S1 + $S))
+echo "/sharedfolders/Software/OS:               " $(($S / GB))  "GB"    | $LOG
 S=0; for user in "${users[@]}"; do
-    S=$((S + $(du -s /sharedfolders/$user/       | cut -f1)))
+    S=$((S + $(du -s /sharedfolders/$user/           | cut -f1)))
 done; S1=$((S1 + $S))
-echo "/sharedfolders/UserData:              " $(($S / GB))  "GB"    | $LOG
-S=$(du -s /sharedfolders/Software/omvbackup/     | cut -f1); S1=$((S1 + $S))
-echo "/sharedfolders/Software/omvbackup:    " $(($S / GB))  "GB"    | $LOG
+echo "/sharedfolders/UserData:                  " $(($S / GB))  "GB"    | $LOG
+S=$(du -s /sharedfolders/Software/omvbackup/         | cut -f1); S1=$((S1 + $S))
+echo "/sharedfolders/Software/omvbackup:        " $(($S / GB))  "GB"    | $LOG
+S=$(du -s /srv/dev-disk-by-label-Data/backups        | cut -f1); S1=$((S1 + $S))
+echo "/srv/dev-disk-by-label-UserData/__backups:" $(($S / GB))  "GB"    | $LOG
 
 echo "Requred space on drive 1:     " $(($S1 / GB))           "GB"  | $LOG
 echo "Drive 1 size:                 " $(($DISK_SIZE_1 / GB))  "GB"  | $LOG
@@ -98,6 +101,8 @@ $CMD1 $SF/$user/              $D/d1-p1/UserData/$user                 | $LOG
 done
 echo -e "\n\n\n# BACK----------OmvBACKUP--------------"  $($DATE) | $LOG
 $CMD1 $SF/Software/omvbackup/ $D/d1-p1/omvbackup/                     | $LOG
+echo -e "\n\n\n# BACK----------__backups--------------"  $($DATE) | $LOG
+$CMD1 /srv/dev-disk-by-label-UserData/__backups/ $D/d1-p1/            | $LOG
 # }}}
 
 # {{{ Test backup
@@ -111,10 +116,6 @@ echo -e       "## -----------UserData/$user-----------"  $($DATE) | $LOG
 $DIFF $SF/$user               $D/d1-p1/UserData/$user                 | $LOG
 done
 # }}}
-
-# {{{ Umount DISK
-hdparm -Y $D1
-# }}} 
 }
 
 D2(){
@@ -189,13 +190,18 @@ echo -e "\n\n\n# TEST------Software/Acronis-----------"  $($DATE) | $LOG
 $DIFF $SF/Software/Acronis/   $D/d2-p2/Acronis/                       | $LOG
 # }}}
 
-# {{{ Umount DISK
-hdparm -Y $D2
-# }}} 
 }
 
 D1
 D2
+
+# {{{ Umount DISK
+sync
+sleep 5
+hdparm -Y $D1
+sleep 5
+hdparm -Y $D2
+# }}} 
 
 # {{{ Finish
 echo -e "\n\n\n# ---------------Finished--------------"  $($DATE) | $LOG

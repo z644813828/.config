@@ -1,0 +1,12 @@
+[Unit]
+Description=Upload VPS configuration backup to FTP storage
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/root/.vps-config-backup.env
+ExecStart=/usr/local/sbin/vps-config-backup
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

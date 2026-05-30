@@ -9,6 +9,8 @@ LAST_FILE="${STATE_DIR}/last.tsv"
 TOTALS_FILE="${STATE_DIR}/totals.tsv"
 MONTH_FILE="${STATE_DIR}/month.tsv"
 MONTH_MARKER_FILE="${STATE_DIR}/month.marker"
+ACTIVITY_FILE="${STATE_DIR}/activity.tsv"
+ACTIVITY_MIN_BYTES="${MTPROTO_ACTIVITY_MIN_BYTES:-65536}"
 
 usage() {
   cat <<'EOF'
@@ -19,6 +21,7 @@ Usage:
   mtproto-traffic report-tsv [user_name]
   mtproto-traffic report-month [user_name]
   mtproto-traffic report-month-tsv [user_name]
+  mtproto-traffic report-activity-tsv [user_name]
   mtproto-traffic bootstrap-month
   mtproto-traffic forget <user_name>
 EOF
@@ -37,7 +40,7 @@ ensure_dependencies() {
 
 ensure_state_dir() {
   mkdir -p "$STATE_DIR"
-  touch "$LAST_FILE" "$TOTALS_FILE" "$MONTH_FILE"
+  touch "$LAST_FILE" "$TOTALS_FILE" "$MONTH_FILE" "$ACTIVITY_FILE"
   if [[ ! -f "$MONTH_MARKER_FILE" ]]; then
     date +%Y-%m > "$MONTH_MARKER_FILE"
   fi
@@ -73,10 +76,13 @@ save_totals_snapshot() {
   declare -A cur_out=()
   declare -A last_in=()
   declare -A last_out=()
+  declare -A had_last=()
   declare -A total_in=()
   declare -A total_out=()
   declare -A month_in=()
   declare -A month_out=()
+  declare -A activity_at=()
+  declare -A activity_delta=()
   declare -A seen=()
 
   ensure_state_dir
@@ -100,6 +106,7 @@ save_totals_snapshot() {
     [[ -n "$user" ]] || continue
     last_in["$user"]="${in_bytes:-0}"
     last_out["$user"]="${out_bytes:-0}"
+    had_last["$user"]=1
     seen["$user"]=1
   done < "$LAST_FILE"
 
@@ -109,6 +116,12 @@ save_totals_snapshot() {
     month_out["$user"]="${out_bytes:-0}"
     seen["$user"]=1
   done < "$MONTH_FILE"
+
+  while IFS=$'\t' read -r user last_seen; do
+    [[ -n "$user" ]] || continue
+    activity_at["$user"]="${last_seen:-0}"
+    seen["$user"]=1
+  done < "$ACTIVITY_FILE"
 
   while IFS=$'\t' read -r user direction bytes; do
     [[ -n "$user" ]] || continue
@@ -123,7 +136,28 @@ save_totals_snapshot() {
   )
 
   local user cur prev delta
+  local now
+  now="$(date +%s)"
   for user in "${!seen[@]}"; do
+    if [[ ! -v had_last["$user"] ]]; then
+      if [[ -v cur_in["$user"] ]]; then
+        last_in["$user"]="${cur_in[$user]}"
+      else
+        last_in["$user"]=0
+      fi
+      if [[ -v cur_out["$user"] ]]; then
+        last_out["$user"]="${cur_out[$user]}"
+      else
+        last_out["$user"]=0
+      fi
+      total_in["$user"]="${total_in[$user]:-0}"
+      total_out["$user"]="${total_out[$user]:-0}"
+      month_in["$user"]="${month_in[$user]:-0}"
+      month_out["$user"]="${month_out[$user]:-0}"
+      activity_at["$user"]="${activity_at[$user]:-0}"
+      continue
+    fi
+
     if [[ -v cur_in["$user"] ]]; then
       cur="${cur_in[$user]}"
       prev="${last_in[$user]:-0}"
@@ -134,6 +168,7 @@ save_totals_snapshot() {
       fi
       total_in["$user"]=$(( ${total_in[$user]:-0} + delta ))
       month_in["$user"]=$(( ${month_in[$user]:-0} + delta ))
+      activity_delta["$user"]=$(( ${activity_delta[$user]:-0} + delta ))
       last_in["$user"]="$cur"
     else
       last_in["$user"]=0
@@ -151,17 +186,25 @@ save_totals_snapshot() {
       fi
       total_out["$user"]=$(( ${total_out[$user]:-0} + delta ))
       month_out["$user"]=$(( ${month_out[$user]:-0} + delta ))
+      activity_delta["$user"]=$(( ${activity_delta[$user]:-0} + delta ))
       last_out["$user"]="$cur"
     else
       last_out["$user"]=0
       total_out["$user"]="${total_out[$user]:-0}"
       month_out["$user"]="${month_out[$user]:-0}"
     fi
+
+    if (( ${activity_delta[$user]:-0} >= ACTIVITY_MIN_BYTES )); then
+      activity_at["$user"]="$now"
+    else
+      activity_at["$user"]="${activity_at[$user]:-0}"
+    fi
   done
 
   : > "$TOTALS_FILE"
   : > "$LAST_FILE"
   : > "$MONTH_FILE"
+  : > "$ACTIVITY_FILE"
   for user in $(printf '%s\n' "${!seen[@]}" | sort); do
     printf '%s\t%s\t%s\n' \
       "$user" \
@@ -175,6 +218,9 @@ save_totals_snapshot() {
       "$user" \
       "${month_in[$user]:-0}" \
       "${month_out[$user]:-0}" >> "$MONTH_FILE"
+    printf '%s\t%s\n' \
+      "$user" \
+      "${activity_at[$user]:-0}" >> "$ACTIVITY_FILE"
   done
 }
 
@@ -254,6 +300,21 @@ cmd_report_month_tsv() {
   cmd_report_tsv "$filter_user" "$MONTH_FILE"
 }
 
+cmd_report_activity_tsv() {
+  local filter_user="${1:-}"
+  ensure_state_dir
+  cmd_collect
+
+  local user last_seen
+  while IFS=$'\t' read -r user last_seen; do
+    [[ -n "$user" ]] || continue
+    if [[ -n "$filter_user" && "$user" != "$filter_user" ]]; then
+      continue
+    fi
+    printf '%s\t%s\n' "$user" "${last_seen:-0}"
+  done < "$ACTIVITY_FILE"
+}
+
 cmd_report() {
   local filter_user="${1:-}"
   printf '%-16s %-6s %-12s %-12s %-12s\n' "USER" "PORT" "IN" "OUT" "TOTAL"
@@ -305,6 +366,9 @@ cmd_forget() {
 
   awk -F '\t' -v user="$user_name" '$1 != user' "$MONTH_FILE" > "${MONTH_FILE}.tmp"
   mv "${MONTH_FILE}.tmp" "$MONTH_FILE"
+
+  awk -F '\t' -v user="$user_name" '$1 != user' "$ACTIVITY_FILE" > "${ACTIVITY_FILE}.tmp"
+  mv "${ACTIVITY_FILE}.tmp" "$ACTIVITY_FILE"
 }
 
 main() {
@@ -331,6 +395,10 @@ main() {
     report-month-tsv)
       shift || true
       cmd_report_month_tsv "${1:-}"
+      ;;
+    report-activity-tsv)
+      shift || true
+      cmd_report_activity_tsv "${1:-}"
       ;;
     bootstrap-month)
       cmd_bootstrap_month

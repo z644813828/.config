@@ -105,6 +105,7 @@ Container forwards these ports from `10.80.0.10` to the Docker host:
 10.80.0.10:4000  -> 172.17.0.1:4000
 10.80.0.10:9091  -> 172.17.0.1:9091
 10.80.0.10:199   -> 172.17.0.1:199
+10.80.0.10:9443  -> 172.17.0.1:9443
 10.80.0.10:8443  -> 192.168.2.1:8443
 ```
 
@@ -112,10 +113,12 @@ Access examples:
 
 ```text
 ssh -p 2222 <user>@10.80.0.10
+ssh -p 2023 root@<HOME_PUBLIC_OR_LAN_IP>
 http://10.80.0.10
 https://10.80.0.10
 http://10.80.0.10:8880
 https://10.80.0.10:199
+https://10.80.0.10:9443
 https://10.80.0.10:8443
 https://10.80.0.10:2812
 smb://10.80.0.10
@@ -180,12 +183,63 @@ This checks:
 
 ## Autostart
 
-The container was recreated from a committed image with a startup command that runs:
+The container was originally recreated manually from a committed image with a startup command that runs:
 
 ```bash
 service ssh start
 /usr/local/bin/start-vpn-gateway
 tail -f /dev/null
+```
+
+On the Debian 11 Docker host in this setup, `docker-compose 1.8.0` is too old for the required options. Use the run script for future recreates:
+
+```bash
+cd /path/to/server/docker/vpn-gateway
+./docker-run.sh
+```
+
+Important runtime settings in that script:
+
+```text
+--init
+--pids-limit 256
+--sysctl net.ipv4.conf.all.src_valid_mark=1
+--sysctl net.ipv4.ip_forward=1
+-p 2023:22
+```
+
+`init` is required because the container starts `sshd` while the long-running command is `tail -f /dev/null`; without an init process, dead `sshd` children can remain as zombies. `pids-limit` prevents the container from exhausting host PIDs. The shared firewall prevents internet scans from reaching the container SSH port.
+
+The published SSH port is intentionally not open to the internet. Docker-published ports must be restricted through the `DOCKER-USER` chain, so install the shared firewall helper:
+
+```bash
+cd /path/to/server/docker/firewall
+install -m 0755 docker-published-ports-firewall.sh /usr/local/sbin/docker-published-ports-firewall.sh
+install -m 0644 docker-published-ports-firewall.service /etc/systemd/system/docker-published-ports-firewall.service
+systemctl daemon-reload
+systemctl enable --now docker-published-ports-firewall.service
+```
+
+Allowed source networks for restricted Docker-published ports:
+
+```text
+10.80.0.0/24
+192.168.1.0/24
+192.168.2.0/24
+192.168.10.0/24
+172.17.0.3/32
+```
+
+Shared firewall documentation:
+
+```text
+server/docker/firewall/README.md
+```
+
+Verify firewall rules:
+
+```bash
+iptables -S DOCKER-USER | grep -E '2022|2023|18789'
 ```
 
 Verify after reboot:
@@ -208,6 +262,8 @@ This usually survives `docker restart`, but can change after:
 ```bash
 docker rm vpn-gateway
 docker run ...
+docker compose -f /path/to/server/docker/vpn-gateway/docker-compose.yml up -d --force-recreate
+./docker-run.sh
 ```
 
 No need to change anything while the current container works. If the container is recreated later, either update nginx/Monit allow rules with the new Docker IP or move the container to a custom Docker network with a fixed IP.

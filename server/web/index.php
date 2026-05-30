@@ -16,6 +16,24 @@
    .feature-inner {
     position: relative;
    }
+   .feature-icon {
+    min-height: 240px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+    align-items: center;
+   }
+   .feature-icon a,
+   .feature-icon .panel-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+   }
+   .feature-tile-icon {
+    width: auto;
+    height: 200px;
+    max-width: 100%;
+    object-fit: contain;
+   }
    .panel-toggle {
     border: 0;
     background: transparent;
@@ -587,6 +605,14 @@ $overallStatusText = statusPopupText($overallStatus);
                         "3x-ui",
                         "Access server panels from a dropdown opened directly on the tile. Quickly switch between locations and open the needed 3x-ui instance for management, monitoring, and configuration.",
                         "3x-ui"
+                    ],
+                    [
+                        "$ddnsName:9443",
+                        "$localIp:9443",
+                        "Vaultwarden.png",
+                        "Vaultwarden",
+                        "Self-hosted password manager with encrypted vaults, shared collections, and file attachments.",
+                        "vaultwarden"
                     ],
                     [
                         "$ddnsName:8880",

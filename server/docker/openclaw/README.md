@@ -21,6 +21,9 @@
 - Docker ports:
   - host `2022` -> container `22` for SSH;
   - host `18789` -> container `18789` for OpenClaw Gateway HTTP/WebSocket.
+- Runtime safety:
+  - run with `--init`;
+  - run with `--pids-limit 256`.
 - HTTPS снаружи сделан через nginx на хосте:
   - external HTTPS port: `18790`;
   - proxy target: `http://127.0.0.1:18789/`.
@@ -52,6 +55,43 @@ WebSocket URL для Control UI:
 
 ```text
 wss://<DOMAIN>:18790/
+```
+
+## Docker Firewall
+
+Docker-published ports must be restricted on the Docker host through `DOCKER-USER`.
+
+Shared firewall config:
+
+```text
+server/docker/firewall/
+```
+
+Restricted OpenClaw Docker ports:
+
+```text
+2022   SSH
+18789  OpenClaw Gateway direct port
+```
+
+Allowed source networks:
+
+```text
+10.80.0.0/24
+192.168.1.0/24
+192.168.2.0/24
+192.168.10.0/24
+172.17.0.3/32
+```
+
+Install/update on the Docker host:
+
+```bash
+cd /path/to/server/docker/firewall
+sudo install -m 0755 docker-published-ports-firewall.sh /usr/local/sbin/docker-published-ports-firewall.sh
+sudo install -m 0644 docker-published-ports-firewall.service /etc/systemd/system/docker-published-ports-firewall.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now docker-published-ports-firewall.service
 ```
 
 Gateway token брать из контейнера:

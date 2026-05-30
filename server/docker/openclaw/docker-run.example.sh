@@ -13,6 +13,8 @@ GATEWAY_PORT="${GATEWAY_PORT:-18789}"
 
 docker run -d \
   --name "$NAME" \
+  --init \
+  --pids-limit 256 \
   -p "${SSH_PORT}:22" \
   -p "${GATEWAY_PORT}:18789" \
   "$IMAGE" \

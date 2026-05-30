@@ -1,0 +1,12 @@
+[Unit]
+Description=Restrict selected Docker-published ports
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/docker-published-ports-firewall.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

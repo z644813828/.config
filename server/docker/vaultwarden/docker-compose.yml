@@ -1,0 +1,36 @@
+version: "2"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: vaultwarden-postgres
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+    environment:
+      POSTGRES_DB: vaultwarden
+      POSTGRES_USER: vaultwarden
+      POSTGRES_PASSWORD: <POSTGRES_PASSWORD> 
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
+
+  vaultwarden:
+    image: vaultwarden/server:latest
+    container_name: vaultwarden
+    restart: unless-stopped
+    security_opt:
+      - seccomp:unconfined
+    depends_on:
+      - postgres
+    environment:
+      DOMAIN: "<DOMAIN"
+      DATABASE_URL: "postgresql://vaultwarden:<POSTGRES_PASSWORD>@postgres:5432/vaultwarden"
+      SIGNUPS_ALLOWED: "true"
+      INVITATIONS_ALLOWED: "true"
+      ADMIN_TOKEN: "<ADMIN_TOKEN>"
+      WEBSOCKET_ENABLED: "true"
+    volumes:
+      - ./vw-data:/data
+    ports:
+      - "127.0.0.1:8090:80"
+

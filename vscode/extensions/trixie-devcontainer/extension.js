@@ -17,8 +17,7 @@ function activate(context) {
 
         const sourceDir = path.join(
           os.homedir(),
-          'Documents',
-          'Projects',
+          '.config',
           '.devcontainer'
         );
 
@@ -41,7 +40,7 @@ function activate(context) {
 
         let targetExists = false;
         try {
-          await fs.stat(targetDir);
+          await fs.lstat(targetDir);
           targetExists = true;
         } catch {
           targetExists = false;
@@ -62,10 +61,11 @@ function activate(context) {
           await fs.rm(targetDir, { recursive: true, force: true });
         }
 
-        await fs.cp(sourceDir, targetDir, { recursive: true });
+        const symlinkType = process.platform === 'win32' ? 'junction' : 'dir';
+        await fs.symlink(sourceDir, targetDir, symlinkType);
 
         vscode.window.showInformationMessage(
-          'Контейнер разработки (trixie) создан'
+          'Ссылка на контейнер разработки (trixie) создана'
         );
       } catch (err) {
         vscode.window.showErrorMessage(

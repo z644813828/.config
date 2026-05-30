@@ -76,13 +76,13 @@ if (($_SESSION['mtproto_auth'] ?? false) !== true) {
         <title>Вход в MTProto</title>
         <style>
             :root {
-                --bg: #0b1220;
-                --panel: #121b2e;
-                --panel-soft: #18243c;
-                --line: rgba(255,255,255,.1);
-                --text: #eef2ff;
-                --muted: #99a4bd;
-                --accent: #0fa487;
+                --bg: #18191c;
+                --panel: #242529;
+                --panel-soft: #2c2d32;
+                --line: #3b3f4a;
+                --text: #e5e7eb;
+                --muted: #9ca3af;
+                --accent: #1677ff;
                 --danger: #f45b69;
             }
             * { box-sizing: border-box; }
@@ -93,16 +93,16 @@ if (($_SESSION['mtproto_auth'] ?? false) !== true) {
                 place-items: center;
                 font-family: system-ui, -apple-system, BlinkMacSystemFont, "Vazirmatn", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
                 color: var(--text);
-                background:
-                    radial-gradient(circle at top right, rgba(84,210,255,.12), transparent 22%),
-                    linear-gradient(160deg, #09101c, var(--bg));
+                background: var(--bg);
+                overflow: hidden;
             }
             .login-card {
                 width: min(420px, calc(100% - 24px));
-                padding: 28px;
+                padding: 32px;
                 border: 1px solid var(--line);
-                border-radius: 22px;
+                border-radius: 10px;
                 background: var(--panel);
+                box-shadow: 0 8px 24px rgba(0,0,0,.24);
             }
             h1 {
                 margin: 0 0 10px;
@@ -122,13 +122,18 @@ if (($_SESSION['mtproto_auth'] ?? false) !== true) {
                 width: 100%;
                 padding: 12px 14px;
                 border: 1px solid var(--line);
-                border-radius: 14px;
+                border-radius: 6px;
                 background: var(--panel-soft);
                 color: var(--text);
+                outline: none;
+            }
+            input:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.18);
             }
             button {
                 border: 0;
-                border-radius: 14px;
+                border-radius: 6px;
                 padding: 11px 16px;
                 color: #effffc;
                 background: var(--accent);
@@ -198,6 +203,54 @@ function formatBytes(int $bytes): string
     return number_format($value, 2, '.', '') . ' ' . $units[$unit];
 }
 
+function formatLastActivity(int $timestamp): string
+{
+    if ($timestamp <= 0) {
+        return 'нет данных';
+    }
+
+    $age = max(0, time() - $timestamp);
+    if ($age < 60) {
+        return 'только что';
+    }
+    if ($age < 3600) {
+        return (string) floor($age / 60) . ' мин назад';
+    }
+    if ($age < 86400) {
+        return (string) floor($age / 3600) . ' ч назад';
+    }
+
+    return (string) floor($age / 86400) . ' д назад';
+}
+
+function formatLastActivityTitle(int $timestamp): string
+{
+    if ($timestamp <= 0) {
+        return 'Был(а) в сети: нет данных';
+    }
+
+    return 'Был(а) в сети: ' . gmdate('d.m.Y, H:i:s', $timestamp) . ' UTC';
+}
+
+function getQrDataUri(string $text): ?string
+{
+    if ($text === '' || trim(shell_exec('command -v qrencode 2>/dev/null') ?? '') === '') {
+        return null;
+    }
+
+    $svg = shell_exec('qrencode -t SVG -o - ' . escapeshellarg($text) . ' 2>/dev/null');
+    if ($svg === null || trim($svg) === '') {
+        return null;
+    }
+
+    return 'data:image/svg+xml;base64,' . base64_encode($svg);
+}
+
+function isFetchRequest(): bool
+{
+    return strtolower((string) ($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '')) === 'fetch';
+}
+
 function getTrafficStats(): array
 {
     $stats = [];
@@ -241,6 +294,25 @@ function getMonthlyTrafficStats(): array
             'total_bytes' => (int) $totalBytes,
         ];
     }
+    return $stats;
+}
+
+function getActivityStats(): array
+{
+    $stats = [];
+    $raw = shell_exec('/usr/local/bin/mtproto-traffic report-activity-tsv 2>/dev/null') ?? '';
+    foreach (preg_split('/\r\n|\r|\n/', trim($raw)) as $line) {
+        if ($line === '') {
+            continue;
+        }
+        $parts = explode("\t", $line);
+        if (count($parts) < 2) {
+            continue;
+        }
+        [$user, $lastSeen] = $parts;
+        $stats[$user] = (int) $lastSeen;
+    }
+
     return $stats;
 }
 
@@ -354,6 +426,251 @@ function getNextProxyPort(array $users): ?int
     return null;
 }
 
+function buildClientTree(array $users): array
+{
+    $tree = [];
+
+    foreach ($users as $user) {
+        $name = (string) $user['user'];
+        $dashPosition = strpos($name, '-');
+        $groupName = $dashPosition === false ? $name : substr($name, 0, $dashPosition);
+
+        if (!isset($tree[$groupName])) {
+            $tree[$groupName] = [
+                'name' => $groupName,
+                'self' => null,
+                'children' => [],
+                'first_port' => is_numeric($user['port']) ? (int) $user['port'] : PHP_INT_MAX,
+            ];
+        }
+
+        if (is_numeric($user['port'])) {
+            $tree[$groupName]['first_port'] = min($tree[$groupName]['first_port'], (int) $user['port']);
+        }
+
+        if ($dashPosition === false) {
+            $tree[$groupName]['self'] = $user;
+        } else {
+            $tree[$groupName]['children'][] = $user;
+        }
+    }
+
+    uasort($tree, static function (array $a, array $b): int {
+        if ($a['first_port'] === $b['first_port']) {
+            return strcmp($a['name'], $b['name']);
+        }
+
+        return $a['first_port'] <=> $b['first_port'];
+    });
+
+    foreach ($tree as &$group) {
+        usort($group['children'], static function (array $a, array $b): int {
+            $portA = is_numeric($a['port']) ? (int) $a['port'] : PHP_INT_MAX;
+            $portB = is_numeric($b['port']) ? (int) $b['port'] : PHP_INT_MAX;
+
+            if ($portA === $portB) {
+                return strcmp($a['user'], $b['user']);
+            }
+
+            return $portA <=> $portB;
+        });
+    }
+    unset($group);
+
+    return array_values($tree);
+}
+
+function getClientProgress(array $user, int $totalMonthlyTraffic, int $totalTraffic): int
+{
+    return getTrafficProgress(
+        (int) ($user['month_total_bytes'] ?? 0),
+        (int) ($user['total_bytes'] ?? 0),
+        $totalMonthlyTraffic,
+        $totalTraffic
+    );
+}
+
+function getTrafficProgress(int $monthlyTotal, int $lifetimeTotal, int $totalMonthlyTraffic, int $totalTraffic): int
+{
+    $progressSourceTotal = $totalMonthlyTraffic > 0 ? $totalMonthlyTraffic : max($totalTraffic, 0);
+    $progressValue = $totalMonthlyTraffic > 0 ? $monthlyTotal : $lifetimeTotal;
+
+    return $progressSourceTotal > 0 && $progressValue > 0
+        ? max(8, (int) round(($progressValue / $progressSourceTotal) * 100))
+        : 0;
+}
+
+function getGroupSummary(array $group): array
+{
+    $users = array_values(array_filter(array_merge(
+        $group['self'] === null ? [] : [$group['self']],
+        $group['children']
+    )));
+
+    return [
+        'count' => count($users),
+        'online' => array_sum(array_map(static fn(array $user): int => (int) ($user['online_connections'] ?? 0), $users)),
+        'traffic' => array_sum(array_map(static fn(array $user): int => (int) ($user['total_bytes'] ?? 0), $users)),
+        'month_traffic' => array_sum(array_map(static fn(array $user): int => (int) ($user['month_total_bytes'] ?? 0), $users)),
+        'in_bytes' => array_sum(array_map(static fn(array $user): int => (int) ($user['in_bytes'] ?? 0), $users)),
+        'out_bytes' => array_sum(array_map(static fn(array $user): int => (int) ($user['out_bytes'] ?? 0), $users)),
+        'last_activity_at' => array_reduce($users, static fn(int $carry, array $user): int => max($carry, (int) ($user['last_activity_at'] ?? 0)), 0),
+        'tg_urls' => array_values(array_filter(array_map(static fn(array $user): string => (string) ($user['tg_url'] ?? ''), $users))),
+    ];
+}
+
+function renderConnectionCard(array $infoUser, ?string $infoQrDataUri, string $serverHost): string
+{
+    ob_start();
+    ?>
+    <div class="connection-card">
+        <div class="connection-grid">
+            <div class="qr-card">
+                <?php if ($infoQrDataUri !== null): ?>
+                    <img src="<?php echo htmlspecialchars($infoQrDataUri, ENT_QUOTES, 'UTF-8'); ?>" alt="QR-код подключения <?php echo htmlspecialchars($infoUser['user'], ENT_QUOTES, 'UTF-8'); ?>">
+                <?php else: ?>
+                    QR недоступен: на сервере не установлен <code>qrencode</code>
+                <?php endif; ?>
+            </div>
+            <div class="connection-fields">
+                <div class="connection-field">
+                    <span class="connection-label">Клиент</span>
+                    <span class="connection-value"><?php echo htmlspecialchars($infoUser['user'], ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="connection-field">
+                    <span class="connection-label">Server</span>
+                    <span class="connection-value"><?php echo htmlspecialchars($serverHost, ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="connection-field">
+                    <span class="connection-label">Port</span>
+                    <span class="connection-value"><?php echo htmlspecialchars($infoUser['port'], ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="connection-field">
+                    <span class="connection-label">Secret</span>
+                    <span class="connection-value"><?php echo htmlspecialchars($infoUser['secret_base64'], ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="connection-field">
+                    <span class="connection-label">tg://</span>
+                    <span class="connection-value"><?php echo htmlspecialchars($infoUser['tg_url'], ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="connection-field">
+                    <span class="connection-label">Активность</span>
+                    <span class="connection-value" data-last-seen="<?php echo (int) ($infoUser['last_activity_at'] ?? 0); ?>"><?php echo htmlspecialchars(formatLastActivity((int) ($infoUser['last_activity_at'] ?? 0)), ENT_QUOTES, 'UTF-8'); ?></span>
+                </div>
+                <div class="connection-actions">
+                    <?php if ($infoUser['tg_url'] !== ''): ?>
+                        <button class="button-secondary" type="button" data-copy="<?php echo htmlspecialchars($infoUser['tg_url'], ENT_QUOTES, 'UTF-8'); ?>">Скопировать tg://</button>
+                        <a class="button-secondary" href="<?php echo htmlspecialchars($infoUser['tg_url'], ENT_QUOTES, 'UTF-8'); ?>">Открыть в Telegram</a>
+                    <?php endif; ?>
+                    <button class="button-secondary" type="button" data-copy="<?php echo htmlspecialchars("server={$serverHost}\nport={$infoUser['port']}\nsecret={$infoUser['secret_base64']}", ENT_QUOTES, 'UTF-8'); ?>">Скопировать поля</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php
+
+    return (string) ob_get_clean();
+}
+
+function renderClientNode(array $user, int $totalMonthlyTraffic, int $totalTraffic, bool $isChild): void
+{
+    $isChecked = $user['active'] === 'active' || $user['enabled'] === 'enabled';
+    $progress = getClientProgress($user, $totalMonthlyTraffic, $totalTraffic);
+    $displayName = (string) $user['user'];
+    if ($isChild && strpos($displayName, '-') !== false) {
+        $displayName = substr($displayName, strpos($displayName, '-') + 1);
+    }
+    ?>
+    <div class="client-tree-grid client-node <?php echo $isChild ? 'is-child' : 'is-root'; ?>">
+        <div class="tree-cell menu-cell">
+            <div class="menu-actions">
+                <?php if ($user['tg_url'] !== ''): ?>
+                    <button class="icon-button" type="button" title="Скопировать ссылку" data-copy="<?php echo htmlspecialchars($user['tg_url'], ENT_QUOTES, 'UTF-8'); ?>">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M9 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                            <rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.9"/>
+                        </svg>
+                    </button>
+                <?php endif; ?>
+                <form method="post" data-info-form>
+                    <input type="hidden" name="action" value="edit_load">
+                    <input type="hidden" name="user_name" value="<?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <button class="icon-button" type="submit" title="Редактировать">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M12 20h9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                            <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </form>
+                <form method="post">
+                    <input type="hidden" name="action" value="info">
+                    <input type="hidden" name="user_name" value="<?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <button class="icon-button" type="submit" title="Информация">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.9"/>
+                            <path d="M12 10v6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                            <circle cx="12" cy="7" r="1" fill="currentColor"/>
+                        </svg>
+                    </button>
+                </form>
+                <form method="post" onsubmit="return confirm('Удалить клиента <?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>?');">
+                    <input type="hidden" name="action" value="remove">
+                    <input type="hidden" name="user_name" value="<?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>">
+                    <button class="icon-button danger" type="submit" title="Удалить">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M3 6h18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
+                            <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" stroke="currentColor" stroke-width="1.9"/>
+                            <path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                </form>
+            </div>
+        </div>
+        <div class="tree-cell switch-cell">
+            <form class="switch-form" method="post">
+                <input type="hidden" name="action" value="toggle">
+                <input type="hidden" name="user_name" value="<?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>">
+                <label class="switch" title="<?php echo $isChecked ? 'Выключить сервис' : 'Включить сервис'; ?>">
+                    <input type="checkbox" <?php echo $isChecked ? 'checked' : ''; ?> onchange="this.form.submit()">
+                    <span class="slider"></span>
+                </label>
+            </form>
+        </div>
+        <div class="tree-cell online-cell">
+            <span class="badge <?php echo ($user['online_connections'] ?? 0) > 0 ? 'online' : 'offline'; ?>" data-last-seen="<?php echo (int) ($user['last_activity_at'] ?? 0); ?>" title="<?php echo htmlspecialchars(formatLastActivityTitle((int) ($user['last_activity_at'] ?? 0)), ENT_QUOTES, 'UTF-8'); ?>">
+                <?php echo ($user['online_connections'] ?? 0) > 0 ? 'Онлайн' : 'Офлайн'; ?>
+            </span>
+        </div>
+        <div class="tree-cell client-cell">
+            <div class="client-name">
+                <span class="client-dot"></span>
+                <span class="client-name-text" title="<?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($displayName, ENT_QUOTES, 'UTF-8'); ?></span>
+                <span class="chip port-chip">Порт <?php echo htmlspecialchars($user['port'], ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+        </div>
+        <div class="tree-cell traffic-cell">
+            <div class="traffic-row">
+                <div class="traffic-total"><?php echo htmlspecialchars(formatBytes($user['total_bytes']), ENT_QUOTES, 'UTF-8'); ?></div>
+                <div class="traffic-bar">
+                    <span style="width: <?php echo $progress; ?>%;"></span>
+                </div>
+            </div>
+        </div>
+        <div class="tree-cell direction-cell">
+            <div class="direction-row">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M4 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M13 4l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M20 17H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                    <path d="M11 14l-3 3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span><?php echo htmlspecialchars(formatBytes($user['out_bytes']), ENT_QUOTES, 'UTF-8'); ?> / <?php echo htmlspecialchars(formatBytes($user['in_bytes']), ENT_QUOTES, 'UTF-8'); ?></span>
+            </div>
+        </div>
+    </div>
+    <?php
+}
+
 function serviceState(string $service): array
 {
     $active = trim(shell_exec('systemctl is-active ' . escapeshellarg($service) . ' 2>/dev/null || true') ?? '');
@@ -424,6 +741,7 @@ function listUsers(string $serverHost): array
     $rows = [];
     $trafficStats = getTrafficStats();
     $monthlyTrafficStats = getMonthlyTrafficStats();
+    $activityStats = getActivityStats();
     $connectionCounts = getPortConnectionCounts();
     foreach (glob('/etc/mtg-*.toml') as $config) {
         $user = basename($config, '.toml');
@@ -467,6 +785,7 @@ function listUsers(string $serverHost): array
             'month_out_bytes' => $monthlyTraffic['out_bytes'],
             'month_total_bytes' => $monthlyTraffic['total_bytes'],
             'online_connections' => $onlineConnections,
+            'last_activity_at' => $activityStats[$user] ?? 0,
         ];
     }
     usort($rows, static function (array $a, array $b): int {
@@ -484,6 +803,7 @@ function listUsers(string $serverHost): array
 
 $flash = null;
 $details = null;
+$infoUserName = null;
 $editTarget = null;
 $modalMode = null;
 $editValues = [
@@ -492,9 +812,10 @@ $editValues = [
     'port' => '',
     'hostname_fqdn' => '',
 ];
+$requestAction = $_SERVER['REQUEST_METHOD'] === 'POST' ? (string) ($_POST['action'] ?? '') : '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
+    $action = $requestAction;
     $userName = trim((string) ($_POST['user_name'] ?? ''));
 
     if ($action === 'add') {
@@ -616,6 +937,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($userName === '') {
             $flash = ['type' => 'error', 'text' => 'Имя пользователя обязательно.'];
         } else {
+            $infoUserName = $userName;
             $details = runShell(
                 '/usr/local/bin/mtg access ' . escapeshellarg('/etc/mtg-' . $userName . '.toml') .
                 ' && printf "\n\n--- systemctl ---\n\n" && systemctl status ' . escapeshellarg('mtg-' . $userName) . ' --no-pager -l'
@@ -739,6 +1061,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $users = listUsers($serverHost);
+$clientTree = buildClientTree($users);
+$infoUser = null;
+if ($infoUserName !== null) {
+    foreach ($users as $user) {
+        if ($user['user'] === $infoUserName) {
+            $infoUser = $user;
+            break;
+        }
+    }
+}
+$infoQrDataUri = ($infoUser !== null && $infoUser['tg_url'] !== '') ? getQrDataUri($infoUser['tg_url']) : null;
+if (isFetchRequest() && $requestAction === 'info') {
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'ok' => $infoUser !== null && (($details['exit_code'] ?? 1) === 0),
+        'flash' => $flash,
+        'connection_html' => $infoUser !== null ? renderConnectionCard($infoUser, $infoQrDataUri, $serverHost) : '',
+        'output' => $details['output'] ?? 'Не удалось получить информацию.',
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
 $totalUsers = count($users);
 $activeUsers = count(array_filter($users, static fn(array $user): bool => ($user['online_connections'] ?? 0) > 0));
 $activeUserNames = array_values(array_map(
@@ -784,22 +1127,25 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
     <title>MTProto Admin</title>
     <style>
         :root {
-            --bg: #081120;
-            --panel: #111b30;
-            --panel-top: #131f36;
-            --panel-soft: #1a2740;
-            --panel-hover: rgba(255, 255, 255, 0.02);
-            --line: rgba(126, 145, 179, 0.22);
-            --text: #ecf2ff;
-            --muted: #9aabc9;
-            --accent: #08a08a;
-            --accent-strong: #0db39b;
-            --accent-soft: rgba(8, 160, 138, 0.18);
-            --purple: #a34394;
-            --purple-soft: rgba(163, 67, 148, 0.18);
-            --danger: #f36d92;
-            --danger-soft: rgba(243, 109, 146, 0.18);
-            --shadow: 0 20px 50px rgba(0, 0, 0, 0.34);
+            --bg: #18191c;
+            --sidebar: #141519;
+            --panel: #242529;
+            --panel-top: #2b2c31;
+            --panel-soft: #2c2d32;
+            --panel-hover: #2f3036;
+            --line: #3b3f4a;
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --accent: #1677ff;
+            --accent-strong: #0958d9;
+            --accent-soft: rgba(22, 119, 255, 0.18);
+            --purple: #9254de;
+            --purple-soft: rgba(146, 84, 222, 0.18);
+            --danger: #ff4d4f;
+            --danger-soft: rgba(255, 77, 79, 0.18);
+            --success: #52c41a;
+            --warning: #d89614;
+            --shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
         }
         * { box-sizing: border-box; }
         body {
@@ -808,10 +1154,7 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             font-family: system-ui, -apple-system, BlinkMacSystemFont, "Vazirmatn", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
             font-size: 13px;
             color: var(--text);
-            background:
-                radial-gradient(circle at top right, rgba(70, 131, 255, 0.12), transparent 20%),
-                radial-gradient(circle at top left, rgba(8, 160, 138, 0.08), transparent 20%),
-                linear-gradient(180deg, #07101d, var(--bg));
+            background: var(--bg);
         }
         button, input {
             font: inherit;
@@ -823,8 +1166,8 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
         }
         .topbar, .panel {
             border: 1px solid var(--line);
-            border-radius: 24px;
-            background: rgba(17, 27, 48, 0.94);
+            border-radius: 10px;
+            background: var(--panel);
             box-shadow: var(--shadow);
         }
         .topbar {
@@ -845,9 +1188,9 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             height: 44px;
             display: grid;
             place-items: center;
-            border-radius: 14px;
-            background: linear-gradient(135deg, rgba(8, 160, 138, 0.24), rgba(70, 131, 255, 0.18));
-            color: #dbfffa;
+            border-radius: 8px;
+            background: rgba(22, 119, 255, 0.16);
+            color: #69b1ff;
         }
         .brand h1 {
             margin: 0;
@@ -870,8 +1213,8 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             padding: 18px 22px;
             margin-bottom: 18px;
             border: 1px solid var(--line);
-            border-radius: 26px;
-            background: rgba(19, 31, 54, 0.96);
+            border-radius: 10px;
+            background: var(--panel);
             box-shadow: var(--shadow);
         }
         .overview-item {
@@ -893,12 +1236,12 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             font-size: 18px;
             font-weight: 600;
             line-height: 1.2;
-            color: #eff4ff;
+            color: var(--text);
         }
         .overview-value svg {
             width: 18px;
             height: 18px;
-            color: #cfd8ea;
+            color: #c9cdd4;
             flex: 0 0 auto;
         }
         .overview-badges {
@@ -931,13 +1274,17 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
         .overview-hover {
             position: relative;
             display: inline-flex;
+            cursor: default;
+        }
+        .overview-hover .overview-pill.blue {
+            cursor: default;
         }
         .overview-popover {
             position: absolute;
             top: calc(100% + 12px);
             right: -8px;
             min-width: 220px;
-            padding: 0;
+            padding: 8px 0 0;
             border: 1px solid rgba(102, 123, 161, 0.3);
             border-radius: 24px;
             background: #34425d;
@@ -968,15 +1315,17 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             pointer-events: auto;
         }
         .overview-popover-title {
-            padding: 14px 18px 12px;
+            padding: 12px 18px 12px;
+            line-height: 1.35;
             font-size: 15px;
             font-weight: 700;
             border-bottom: 1px solid rgba(102, 123, 161, 0.24);
         }
         .overview-popover-list {
-            padding: 14px 18px 16px;
+            padding: 12px 18px 16px;
             display: grid;
             gap: 10px;
+            line-height: 1.35;
             font-size: 13px;
         }
         .overview-popover-empty {
@@ -1253,6 +1602,10 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             font-weight: 600;
             border: 1px solid transparent;
         }
+        .badge[data-last-seen] {
+            cursor: pointer;
+            user-select: none;
+        }
         .badge.online {
             background: rgba(8, 160, 138, 0.14);
             color: #67ffd8;
@@ -1264,13 +1617,44 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             border-color: rgba(157, 171, 201, 0.28);
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
         }
+        .last-seen-popover {
+            position: fixed;
+            z-index: 3000;
+            max-width: min(320px, calc(100vw - 24px));
+            padding: 10px 12px;
+            border-radius: 12px;
+            color: #d3ddef;
+            background: #26334a;
+            border: 1px solid rgba(157, 171, 201, 0.22);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+            font-size: 13px;
+            line-height: 18px;
+            font-weight: 600;
+            opacity: 0;
+            transform: translateY(6px);
+            pointer-events: none;
+            transition: opacity 0.14s ease, transform 0.14s ease;
+        }
+        .last-seen-popover.is-open {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
         .client-name {
-            display: flex;
+            display: grid;
+            grid-template-columns: 8px minmax(72px, 1fr) auto auto;
             align-items: center;
             gap: 10px;
+            width: 100%;
+            min-width: 0;
             font-size: 14px;
             font-weight: 600;
             white-space: nowrap;
+        }
+        .client-name-text {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
         .client-dot {
             width: 8px;
@@ -1282,12 +1666,23 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
         .chip {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             padding: 4px 9px;
             border-radius: 999px;
             font-size: 14px;
+            line-height: 1;
+            white-space: nowrap;
             color: #bfd1ff;
             background: rgba(70, 131, 255, 0.1);
             border: 1px solid rgba(70, 131, 255, 0.24);
+        }
+        .port-chip {
+            min-width: 82px;
+        }
+        .muted-chip {
+            color: #c8d2e6;
+            background: rgba(157, 171, 201, 0.08);
+            border-color: rgba(157, 171, 201, 0.2);
         }
         .traffic-row {
             display: grid;
@@ -1327,6 +1722,184 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             height: 16px;
             color: #cfd8ea;
             flex: 0 0 auto;
+        }
+        .client-tree {
+            overflow-x: auto;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            background: #0b1527;
+        }
+        .client-tree-grid {
+            display: grid;
+            grid-template-columns: 150px 120px 120px minmax(360px, 1fr) 330px 250px;
+            min-width: 1360px;
+        }
+        .client-tree-head {
+            color: #c4d0e6;
+            font-size: 14px;
+            font-weight: 600;
+            background: rgba(6, 13, 25, 0.7);
+            border-bottom: 1px solid var(--line);
+        }
+        .client-tree-head > div,
+        .tree-cell {
+            padding: 16px 18px;
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            min-height: 64px;
+        }
+        .menu-cell,
+        .switch-cell,
+        .online-cell {
+            justify-content: center;
+        }
+        .menu-actions {
+            justify-content: center;
+        }
+        .tree-group {
+            border-bottom: 1px solid var(--line);
+        }
+        .tree-group:last-child {
+            border-bottom: 0;
+        }
+        .tree-parent {
+            cursor: default;
+            background: rgba(13, 24, 43, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .tree-parent .menu-cell {
+            cursor: pointer;
+            justify-content: flex-start;
+            gap: 6px;
+            padding-left: 8px;
+        }
+        .tree-parent.is-single {
+            display: block;
+            padding: 0;
+            background: transparent;
+            border-bottom: 0;
+        }
+        .tree-parent-main {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .tree-caret {
+            width: 22px;
+            height: 22px;
+            margin-left: -7px;
+            border-radius: 7px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.05);
+            color: #cbd7ec;
+        }
+        .tree-caret svg {
+            width: 14px;
+            height: 14px;
+            transition: transform .18s ease;
+        }
+        .tree-group.is-collapsed .tree-caret svg {
+            transform: rotate(-90deg);
+        }
+        .tree-group.is-collapsed .tree-children {
+            display: none;
+        }
+        .tree-parent .tree-cell {
+            min-height: 58px;
+        }
+        .tree-parent .menu-cell,
+        .tree-parent .switch-cell,
+        .tree-parent .online-cell {
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .badge {
+            cursor: default;
+        }
+        .tree-parent-meta {
+            display: grid;
+            grid-template-columns: 8px minmax(90px, 1fr) auto auto;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            min-width: 0;
+            white-space: nowrap;
+        }
+        .client-counts {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .count-dot {
+            min-width: 28px;
+            height: 28px;
+            padding: 0 8px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1;
+            border: 1px solid rgba(70, 131, 255, 0.72);
+            color: #75a8ff;
+            background: rgba(70, 131, 255, 0.08);
+        }
+        .count-dot.online-count {
+            border-color: rgba(8, 160, 138, 0.72);
+            color: #4ee2c4;
+            background: rgba(8, 160, 138, 0.1);
+        }
+        .tree-children {
+            position: relative;
+        }
+        .tree-children::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 26px;
+            width: 1px;
+            background: rgba(112, 130, 165, 0.28);
+        }
+        .client-node {
+            border-bottom: 1px solid var(--line);
+        }
+        .client-node:hover {
+            background: var(--panel-hover);
+        }
+        .client-node:last-child {
+            border-bottom: 0;
+        }
+        .client-node.is-child {
+            position: relative;
+            padding-left: 22px;
+        }
+        .client-node.is-child::before {
+            content: "";
+            position: absolute;
+            left: 26px;
+            top: 50%;
+            width: 18px;
+            height: 1px;
+            background: rgba(112, 130, 165, 0.34);
+        }
+        .client-node.is-child .client-cell {
+            padding-left: 30px;
+        }
+        .client-node.is-child .client-name {
+            font-weight: 500;
+        }
+        .client-tree-empty {
+            padding: 28px 16px;
+            text-align: center;
+            color: var(--muted);
         }
         .modal-backdrop {
             position: fixed;
@@ -1418,6 +1991,10 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
         }
         .button-primary {
             background: linear-gradient(180deg, var(--accent), var(--accent-strong));
@@ -1428,125 +2005,135 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             color: var(--text);
             border: 1px solid var(--line);
         }
-        .compact-toggle.is-active {
-            background: rgba(8, 160, 138, 0.16);
-            border-color: rgba(8, 160, 138, 0.32);
-            color: #ddfffa;
-        }
         .button-secondary svg {
             width: 15px;
             height: 15px;
             margin-right: 7px;
             vertical-align: -3px;
         }
-        body.compact .page {
+        .page {
             padding: 14px 0 24px;
         }
-        body.compact .topbar {
+        .topbar {
             padding: 13px 16px;
             margin-bottom: 12px;
             border-radius: 20px;
         }
-        body.compact .brand {
+        .brand {
             gap: 10px;
         }
-        body.compact .brand-mark {
+        .brand-mark {
             width: 36px;
             height: 36px;
             border-radius: 12px;
         }
-        body.compact .brand h1 {
+        .brand h1 {
             font-size: 17px;
         }
-        body.compact .brand p {
+        .brand p {
             font-size: 11px;
             margin-top: 2px;
         }
-        body.compact .topbar-actions {
+        .topbar-actions {
             gap: 8px;
         }
-        body.compact .overview-strip {
+        .overview-strip {
             gap: 16px;
             padding: 13px 16px;
             margin-bottom: 12px;
             border-radius: 20px;
         }
-        body.compact .overview-item {
+        .overview-item {
             min-height: 58px;
             gap: 5px;
         }
-        body.compact .overview-label {
+        .overview-label {
             font-size: 11px;
         }
-        body.compact .overview-value {
+        .overview-value {
             font-size: 15px;
         }
-        body.compact .panel-header {
+        .panel-header {
             padding: 13px 16px;
         }
-        body.compact .panel-header h2 {
+        .panel-header h2 {
             font-size: 15px;
         }
-        body.compact .panel-body {
+        .panel-body {
             padding: 12px 16px 16px;
         }
-        body.compact th,
-        body.compact td {
+        th,
+        td {
             padding: 12px 14px;
         }
-        body.compact th {
+        th {
             font-size: 13px;
         }
-        body.compact .menu-cell {
+        .menu-cell {
             width: 142px;
             min-width: 142px;
         }
-        body.compact .icon-button {
+        .icon-button {
             width: 24px;
             height: 24px;
         }
-        body.compact .icon-button svg {
+        .icon-button svg {
             width: 17px;
             height: 17px;
         }
-        body.compact .switch {
+        .switch {
             width: 42px;
             height: 24px;
         }
-        body.compact .slider::before {
+        .slider::before {
             width: 16px;
             height: 16px;
             left: 4px;
             top: 3px;
         }
-        body.compact .switch input:checked + .slider::before {
+        .switch input:checked + .slider::before {
             transform: translateX(17px);
         }
-        body.compact .badge,
-        body.compact .chip,
-        body.compact .client-name,
-        body.compact .traffic-total,
-        body.compact .direction-row {
+        .badge,
+        .chip,
+        .client-name,
+        .tree-parent-main,
+        .traffic-total,
+        .direction-row {
             font-size: 13px;
         }
-        body.compact .traffic-row {
+        .client-tree-head > div,
+        .tree-cell {
+            padding: 12px 14px;
+        }
+        .tree-parent {
+            padding: 11px 14px;
+        }
+        .client-tree-grid {
+            grid-template-columns: 136px 110px 112px minmax(330px, 1fr) 290px 230px;
+            min-width: 1208px;
+        }
+        .client-node.is-child {
+            padding-left: 18px;
+        }
+        .traffic-row {
             grid-template-columns: 84px 190px;
             gap: 8px;
         }
-        body.compact .traffic-bar {
+        .traffic-bar {
             width: 190px;
             height: 9px;
         }
-        body.compact .command-card,
-        body.compact .health-panel {
+        .command-card,
+        .health-panel {
             margin-top: 14px;
             border-radius: 20px;
         }
-        body.compact .command-head,
-        body.compact .health-head {
+        .command-head,
+        .health-head {
             padding: 13px 16px;
         }
-        body.compact pre {
+        pre {
             padding: 14px 16px;
             min-height: 120px;
         }
@@ -1642,7 +2229,7 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
         .refresh-toggle-row .slider::before {
             width: 14px;
             height: 14px;
-            top: 2px;
+            top: 3px;
             left: 3px;
         }
         .refresh-toggle-row .switch input:checked + .slider::before {
@@ -1680,6 +2267,70 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             background: rgba(17, 27, 48, 0.92);
             overflow: hidden;
         }
+        .connection-card {
+            padding: 18px;
+            border-bottom: 1px solid var(--line);
+            background: rgba(8, 16, 29, 0.72);
+        }
+        .connection-grid {
+            display: grid;
+            grid-template-columns: 180px minmax(0, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
+        .qr-card {
+            min-height: 180px;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            color: #1a2435;
+            text-align: center;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .qr-card img {
+            width: 154px;
+            height: 154px;
+            display: block;
+        }
+        .connection-fields {
+            display: grid;
+            gap: 10px;
+        }
+        .connection-field {
+            display: grid;
+            grid-template-columns: 120px minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            font-size: 13px;
+        }
+        .connection-label {
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .connection-value {
+            min-width: 0;
+            padding: 8px 10px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #eaf1ff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+        .connection-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 4px;
+        }
         .command-head {
             padding: 16px 18px;
             border-bottom: 1px solid var(--line);
@@ -1709,6 +2360,121 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             word-break: break-word;
             line-height: 1.45;
             font-size: 12px;
+        }
+        .overview-pill.green,
+        .health-summary.ok,
+        .health-status.ok,
+        .badge.online,
+        .count-dot.online-count {
+            color: #73d13d;
+            background: rgba(82, 196, 26, 0.12);
+            border-color: rgba(82, 196, 26, 0.28);
+        }
+        .overview-pill.blue,
+        .count-dot {
+            color: #69b1ff;
+            background: rgba(22, 119, 255, 0.12);
+            border-color: rgba(22, 119, 255, 0.32);
+        }
+        .overview-popover,
+        .refresh-dropdown,
+        .last-seen-popover {
+            background: #2b2c31;
+            border-color: var(--line);
+            box-shadow: var(--shadow);
+        }
+        .overview-popover::before,
+        .refresh-dropdown::before {
+            background: #2b2c31;
+            border-color: var(--line);
+        }
+        .health-panel,
+        .command-card,
+        .modal-card {
+            background: var(--panel);
+            border-color: var(--line);
+            box-shadow: var(--shadow);
+        }
+        .table-wrap,
+        .client-tree {
+            background: var(--panel);
+            border-color: var(--line);
+        }
+        .health-table th,
+        th,
+        .client-tree-head {
+            background: #2f3036;
+            color: #c9cdd4;
+        }
+        .tree-parent {
+            background: #292a2f;
+        }
+        .tree-parent:hover,
+        .client-node:hover {
+            background: var(--panel-hover);
+        }
+        .brand h1,
+        .panel-header h2,
+        .command-head h3,
+        .health-head h2 {
+            font-weight: 700;
+            letter-spacing: .1px;
+        }
+        .button-primary,
+        .button-secondary,
+        .refresh-group {
+            transition: background-color .15s ease, border-color .15s ease, transform .15s ease, color .15s ease;
+        }
+        .button-primary {
+            background: var(--accent);
+            box-shadow: none;
+        }
+        .button-secondary {
+            background: #2b2c31;
+            border-color: var(--line);
+        }
+        .button-secondary:hover,
+        .icon-button:hover,
+        .refresh-button:hover,
+        .refresh-menu-button:hover {
+            background: #30333a;
+            color: #69b1ff;
+        }
+        .refresh-group {
+            border-color: var(--line);
+            background: #2b2c31;
+        }
+        .refresh-button {
+            border-right-color: var(--line);
+        }
+        .refresh-option:hover,
+        .refresh-option.is-active {
+            background: rgba(22, 119, 255, 0.16);
+            color: #69b1ff;
+        }
+        .switch input:checked + .slider {
+            background: var(--accent);
+        }
+        .field input {
+            background: var(--panel-soft);
+        }
+        .field input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.16);
+        }
+        .traffic-bar {
+            background: rgba(236, 72, 153, 0.18);
+        }
+        .traffic-bar span {
+            background: linear-gradient(90deg, #1677ff, #9254de);
+        }
+        .connection-card {
+            background: #202126;
+        }
+        .connection-value,
+        pre {
+            background: #1f2025;
+            color: #d1d5db;
         }
         @media (max-width: 1160px) {
             .overview-strip {
@@ -1754,6 +2520,12 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             th, td {
                 padding: 14px 12px;
             }
+            .connection-grid {
+                grid-template-columns: 1fr;
+            }
+            .connection-field {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -1772,7 +2544,6 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             </div>
         </div>
         <div class="topbar-actions">
-            <button class="button-secondary compact-toggle" type="button" data-compact-toggle>Компактно</button>
             <form method="get" action="/">
                 <button class="button-secondary" type="submit" name="logout" value="1">Выйти</button>
             </form>
@@ -1922,126 +2693,92 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
                 </div>
             <?php endif; ?>
 
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Меню</th>
-                        <th>Включить</th>
-                        <th>Онлайн</th>
-                        <th>Клиент</th>
-                        <th>Трафик</th>
-                        <th>Отправлено/получено</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <?php if ($users === []): ?>
-                        <tr>
-                            <td colspan="6" style="padding: 28px 16px; text-align: center; color: var(--muted);">Пока нет клиентов. Нажми «Создать клиента».</td>
-                        </tr>
-                    <?php else: ?>
+            <div class="client-tree">
+                <div class="client-tree-grid client-tree-head">
+                    <div>Меню</div>
+                    <div>Включить</div>
+                    <div>Онлайн</div>
+                    <div>Клиент</div>
+                    <div>Трафик</div>
+                    <div>Отправлено/получено</div>
+                </div>
+                <?php if ($clientTree === []): ?>
+                    <div class="client-tree-empty">Пока нет клиентов. Нажми «Создать клиента».</div>
+                <?php else: ?>
+                    <?php foreach ($clientTree as $group): ?>
                         <?php
-                        foreach ($users as $user):
-                            $isChecked = $user['active'] === 'active' || $user['enabled'] === 'enabled';
-                            $monthlyTotal = (int) ($user['month_total_bytes'] ?? 0);
-                            $lifetimeTotal = (int) ($user['total_bytes'] ?? 0);
-                            $progressSourceTotal = $totalMonthlyTraffic > 0 ? $totalMonthlyTraffic : max($totalTraffic, 0);
-                            $progressValue = $totalMonthlyTraffic > 0 ? $monthlyTotal : $lifetimeTotal;
-                            $progress = $progressSourceTotal > 0 && $progressValue > 0
-                                ? max(8, (int) round(($progressValue / $progressSourceTotal) * 100))
-                                : 0;
+                        $summary = getGroupSummary($group);
+                        $hasChildren = $group['children'] !== [];
+                        $isSingle = !$hasChildren && $group['self'] !== null;
                         ?>
-                            <tr>
-                                <td class="menu-cell">
-                                    <div class="menu-actions">
-                                        <?php if ($user['tg_url'] !== ''): ?>
-                                            <button class="icon-button" type="button" title="Скопировать ссылку" data-copy="<?php echo htmlspecialchars($user['tg_url'], ENT_QUOTES, 'UTF-8'); ?>">
+                        <div class="tree-group" data-tree-group="<?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?>">
+                            <?php if ($isSingle): ?>
+                                <div class="tree-parent is-single">
+                                    <?php renderClientNode($group['self'], $totalMonthlyTraffic, $totalTraffic, false); ?>
+                                </div>
+                            <?php else: ?>
+                                <?php $groupProgress = getTrafficProgress((int) $summary['month_traffic'], (int) $summary['traffic'], $totalMonthlyTraffic, $totalTraffic); ?>
+                                <div class="client-tree-grid tree-parent" data-tree-toggle>
+                                    <div class="tree-cell menu-cell">
+                                        <span class="tree-caret" aria-hidden="true">
+                                            <svg viewBox="0 0 24 24" fill="none">
+                                                <path d="M8 10l4 4 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </span>
+                                        <span>Группа</span>
+                                        <?php if ($summary['tg_urls'] !== []): ?>
+                                            <button class="icon-button" type="button" title="Скопировать все ссылки" data-copy="<?php echo htmlspecialchars(implode("\n", $summary['tg_urls']), ENT_QUOTES, 'UTF-8'); ?>">
                                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                                                     <path d="M9 15H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
                                                     <rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.9"/>
                                                 </svg>
                                             </button>
                                         <?php endif; ?>
-                                        <form method="post">
-                                            <input type="hidden" name="action" value="edit_load">
-                                            <input type="hidden" name="user_name" value="<?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>">
-                                            <button class="icon-button" type="submit" title="Редактировать">
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                    <path d="M12 20h9" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-                                                    <path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
-                                                </svg>
-                                            </button>
-                                        </form>
-                                        <form method="post">
-                                            <input type="hidden" name="action" value="info">
-                                            <input type="hidden" name="user_name" value="<?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>">
-                                            <button class="icon-button" type="submit" title="Информация">
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                    <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.9"/>
-                                                    <path d="M12 10v6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-                                                    <circle cx="12" cy="7" r="1" fill="currentColor"/>
-                                                </svg>
-                                            </button>
-                                        </form>
-                                        <form method="post" onsubmit="return confirm('Удалить клиента <?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>?');">
-                                            <input type="hidden" name="action" value="remove">
-                                            <input type="hidden" name="user_name" value="<?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>">
-                                            <button class="icon-button danger" type="submit" title="Удалить">
-                                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                    <path d="M3 6h18" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/>
-                                                    <path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2" stroke="currentColor" stroke-width="1.9"/>
-                                                    <path d="M19 6l-1 14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1L5 6" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/>
-                                                </svg>
-                                            </button>
-                                        </form>
                                     </div>
-                                </td>
-                                <td class="switch-cell">
-                                    <form class="switch-form" method="post">
-                                        <input type="hidden" name="action" value="toggle">
-                                        <input type="hidden" name="user_name" value="<?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?>">
-                                        <label class="switch" title="<?php echo $isChecked ? 'Выключить сервис' : 'Включить сервис'; ?>">
-                                            <input type="checkbox" <?php echo $isChecked ? 'checked' : ''; ?> onchange="this.form.submit()">
-                                            <span class="slider"></span>
-                                        </label>
-                                    </form>
-                                </td>
-                                <td class="online-cell">
-                                    <span class="badge <?php echo ($user['online_connections'] ?? 0) > 0 ? 'online' : 'offline'; ?>">
-                                        <?php echo ($user['online_connections'] ?? 0) > 0 ? 'Онлайн' : 'Офлайн'; ?>
-                                    </span>
-                                </td>
-                                <td class="client-cell">
-                                    <div class="client-name">
-                                        <span class="client-dot"></span>
-                                        <span><?php echo htmlspecialchars($user['user'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                        <span class="chip">Порт <?php echo htmlspecialchars($user['port'], ENT_QUOTES, 'UTF-8'); ?></span>
-                                    </div>
-                                </td>
-                                <td class="traffic-cell">
-                                    <div class="traffic-row">
-                                        <div class="traffic-total"><?php echo htmlspecialchars(formatBytes($user['total_bytes']), ENT_QUOTES, 'UTF-8'); ?></div>
-                                        <div class="traffic-bar">
-                                            <span style="width: <?php echo $progress; ?>%;"></span>
+                                    <div class="tree-cell switch-cell">-</div>
+                                    <div class="tree-cell online-cell"></div>
+                                    <div class="tree-cell client-cell">
+                                        <div class="tree-parent-meta">
+                                            <span class="client-dot"></span>
+                                            <span class="tree-parent-main client-name-text" title="<?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?>"><?php echo htmlspecialchars($group['name'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                            <span class="client-counts" aria-label="Клиентов: <?php echo $summary['count']; ?>, онлайн: <?php echo $summary['online']; ?>">
+                                                <span class="count-dot total-count"><?php echo $summary['count']; ?></span>
+                                                <span class="count-dot online-count"><?php echo $summary['online']; ?></span>
+                                            </span>
                                         </div>
                                     </div>
-                                </td>
-                                <td class="direction-cell">
-                                    <div class="direction-row">
-                                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M4 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                            <path d="M13 4l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                            <path d="M20 17H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                                            <path d="M11 14l-3 3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                                        </svg>
-                                        <span><?php echo htmlspecialchars(formatBytes($user['out_bytes']), ENT_QUOTES, 'UTF-8'); ?> / <?php echo htmlspecialchars(formatBytes($user['in_bytes']), ENT_QUOTES, 'UTF-8'); ?></span>
+                                    <div class="tree-cell traffic-cell">
+                                        <div class="traffic-row">
+                                            <div class="traffic-total"><?php echo htmlspecialchars(formatBytes($summary['traffic']), ENT_QUOTES, 'UTF-8'); ?></div>
+                                            <div class="traffic-bar">
+                                                <span style="width: <?php echo $groupProgress; ?>%;"></span>
+                                            </div>
+                                        </div>
                                     </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                    </tbody>
-                </table>
+                                    <div class="tree-cell direction-cell">
+                                        <div class="direction-row">
+                                            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                                                <path d="M4 7h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                <path d="M13 4l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                                <path d="M20 17H8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                                                <path d="M11 14l-3 3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                            <span><?php echo htmlspecialchars(formatBytes($summary['out_bytes']), ENT_QUOTES, 'UTF-8'); ?> / <?php echo htmlspecialchars(formatBytes($summary['in_bytes']), ENT_QUOTES, 'UTF-8'); ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tree-children">
+                                    <?php if ($group['self'] !== null): ?>
+                                        <?php renderClientNode($group['self'], $totalMonthlyTraffic, $totalTraffic, true); ?>
+                                    <?php endif; ?>
+                                    <?php foreach ($group['children'] as $child): ?>
+                                        <?php renderClientNode($child, $totalMonthlyTraffic, $totalTraffic, true); ?>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
             </div>
 
         </div>
@@ -2054,7 +2791,10 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
                 <p>Последний результат действия: информация, редактирование, включение или удаление.</p>
             </div>
         </div>
-        <pre><?php echo htmlspecialchars($details['output'] ?? 'Команда еще не выполнялась.', ENT_QUOTES, 'UTF-8'); ?></pre>
+        <div data-connection-card>
+            <?php echo $infoUser !== null ? renderConnectionCard($infoUser, $infoQrDataUri, $serverHost) : ''; ?>
+        </div>
+        <pre data-command-output><?php echo htmlspecialchars($details['output'] ?? 'Команда еще не выполнялась.', ENT_QUOTES, 'UTF-8'); ?></pre>
     </section>
 
     <section class="health-panel">
@@ -2163,6 +2903,211 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
     }
 
     bindCopyButtons();
+    function showInlineFlash(type, text) {
+        let flash = document.querySelector('[data-inline-flash]');
+        const panelBody = document.querySelector('.panel-body');
+        if (!flash && panelBody) {
+            flash = document.createElement('div');
+            flash.setAttribute('data-inline-flash', '1');
+            panelBody.prepend(flash);
+        }
+        if (!flash) {
+            return;
+        }
+        flash.className = 'flash ' + (type || 'success');
+        flash.textContent = text || '';
+    }
+    function bindInfoForms(root = document) {
+        root.querySelectorAll('[data-info-form]').forEach(function(form) {
+            if (form.dataset.infoBound === '1') {
+                return;
+            }
+            form.dataset.infoBound = '1';
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+                try {
+                    const response = await window.fetch(window.location.href, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-Requested-With': 'fetch'
+                        }
+                    });
+                    const contentType = response.headers.get('content-type') || '';
+                    if (!contentType.includes('application/json')) {
+                        throw new Error('Non-JSON response');
+                    }
+                    const payload = await response.json();
+                    if (!response.ok) {
+                        throw new Error(payload && payload.flash ? payload.flash.text : 'Request failed');
+                    }
+                    const connectionTarget = document.querySelector('[data-connection-card]');
+                    const outputTarget = document.querySelector('[data-command-output]');
+                    if (connectionTarget) {
+                        connectionTarget.innerHTML = payload.connection_html || '';
+                        bindCopyButtons(connectionTarget);
+                        enhanceLastSeenTimestamps(connectionTarget);
+                    }
+                    if (outputTarget) {
+                        outputTarget.textContent = payload.output || '';
+                    }
+                    if (payload.flash) {
+                        showInlineFlash(payload.flash.type, payload.flash.text);
+                    }
+                    const commandCard = document.querySelector('.command-card');
+                    if (commandCard) {
+                        commandCard.scrollIntoView({behavior: 'smooth', block: 'start'});
+                    }
+                } catch (error) {
+                    console.warn('Info request failed', error);
+                    HTMLFormElement.prototype.submit.call(form);
+                    return;
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                }
+            });
+        });
+    }
+    bindInfoForms();
+    function formatLocalLastSeen(timestamp) {
+        if (!timestamp || timestamp <= 0) {
+            return 'Был(а) в сети: нет данных';
+        }
+        const date = new Date(timestamp * 1000);
+        return 'Был(а) в сети: ' + date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+    function enhanceLastSeenTimestamps(root = document) {
+        root.querySelectorAll('[data-last-seen]').forEach(function(element) {
+            const timestamp = Number(element.getAttribute('data-last-seen') || '0');
+            const localText = formatLocalLastSeen(timestamp);
+            element.setAttribute('title', localText);
+            element.setAttribute('aria-label', localText);
+            if (element.classList.contains('connection-value')) {
+                element.textContent = timestamp > 0 ? localText.replace('Был(а) в сети: ', '') : 'нет данных';
+            }
+        });
+    }
+    let lastSeenPopover = null;
+    function getLastSeenPopover() {
+        if (!lastSeenPopover) {
+            lastSeenPopover = document.createElement('div');
+            lastSeenPopover.className = 'last-seen-popover';
+            lastSeenPopover.setAttribute('role', 'tooltip');
+            document.body.appendChild(lastSeenPopover);
+        }
+        return lastSeenPopover;
+    }
+    function hideLastSeenPopover() {
+        if (lastSeenPopover) {
+            lastSeenPopover.classList.remove('is-open');
+        }
+    }
+    function showLastSeenPopover(trigger) {
+        const timestamp = Number(trigger.getAttribute('data-last-seen') || '0');
+        const popover = getLastSeenPopover();
+        popover.textContent = formatLocalLastSeen(timestamp);
+        popover.classList.add('is-open');
+
+        const rect = trigger.getBoundingClientRect();
+        const popoverRect = popover.getBoundingClientRect();
+        const margin = 12;
+        let left = rect.left + rect.width / 2 - popoverRect.width / 2;
+        let top = rect.bottom + 8;
+
+        left = Math.max(margin, Math.min(left, window.innerWidth - popoverRect.width - margin));
+        if (top + popoverRect.height + margin > window.innerHeight) {
+            top = Math.max(margin, rect.top - popoverRect.height - 8);
+        }
+
+        popover.style.left = left + 'px';
+        popover.style.top = top + 'px';
+    }
+    function bindLastSeenBadges(root = document) {
+        root.querySelectorAll('.badge[data-last-seen]').forEach(function(badge) {
+            if (badge.dataset.lastSeenBound === '1') {
+                return;
+            }
+            badge.dataset.lastSeenBound = '1';
+            badge.setAttribute('role', 'button');
+            badge.setAttribute('tabindex', '0');
+            badge.addEventListener('click', function(event) {
+                event.stopPropagation();
+                showLastSeenPopover(badge);
+            });
+            badge.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    showLastSeenPopover(badge);
+                }
+                if (event.key === 'Escape') {
+                    hideLastSeenPopover();
+                }
+            });
+        });
+    }
+    enhanceLastSeenTimestamps();
+    bindLastSeenBadges();
+    document.addEventListener('click', hideLastSeenPopover);
+    window.addEventListener('resize', hideLastSeenPopover);
+    window.addEventListener('scroll', hideLastSeenPopover, true);
+    function getCollapsedGroups() {
+        try {
+            return JSON.parse(window.localStorage.getItem('mtproto_collapsed_groups') || '[]');
+        } catch (error) {
+            return [];
+        }
+    }
+    function saveCollapsedGroups(groups) {
+        window.localStorage.setItem('mtproto_collapsed_groups', JSON.stringify(groups));
+    }
+    function applyTreeCollapsedState(root = document) {
+        const collapsedGroups = getCollapsedGroups();
+        root.querySelectorAll('[data-tree-group]').forEach(function(group) {
+            const name = group.getAttribute('data-tree-group') || '';
+            group.classList.toggle('is-collapsed', collapsedGroups.includes(name));
+        });
+    }
+    function bindTreeToggles(root = document) {
+        root.querySelectorAll('[data-tree-toggle]').forEach(function(toggle) {
+            if (toggle.dataset.treeToggleBound === '1') {
+                return;
+            }
+            toggle.dataset.treeToggleBound = '1';
+            toggle.addEventListener('click', function(event) {
+                if (event.target.closest('button, a, input, label, form')) {
+                    return;
+                }
+                const group = toggle.closest('[data-tree-group]');
+                if (!group) {
+                    return;
+                }
+                const name = group.getAttribute('data-tree-group') || '';
+                const collapsedGroups = getCollapsedGroups();
+                const nextCollapsed = !group.classList.contains('is-collapsed');
+                const nextGroups = nextCollapsed
+                    ? Array.from(new Set(collapsedGroups.concat(name)))
+                    : collapsedGroups.filter(function(item) { return item !== name; });
+                saveCollapsedGroups(nextGroups);
+                group.classList.toggle('is-collapsed', nextCollapsed);
+            });
+        });
+    }
+    bindTreeToggles();
+    applyTreeCollapsedState();
     const modal = document.getElementById('editor-modal');
     const openCreateButton = document.querySelector('[data-open-create]');
     const closeButtons = document.querySelectorAll('[data-close-modal]');
@@ -2188,10 +3133,8 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
     const refreshNowButton = document.querySelector('[data-refresh-now]');
     const autoRefreshToggle = document.querySelector('[data-auto-refresh-toggle]');
     const refreshIntervalButtons = document.querySelectorAll('[data-refresh-interval]');
-    const compactToggleButton = document.querySelector('[data-compact-toggle]');
     const refreshStorageKey = 'mtproto_auto_refresh';
     const intervalStorageKey = 'mtproto_refresh_interval';
-    const compactStorageKey = 'mtproto_compact_mode';
     let refreshTimer = null;
 
     function getRefreshInterval() {
@@ -2232,8 +3175,8 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             const nextDocument = new DOMParser().parseFromString(html, 'text/html');
             const currentOverview = document.querySelector('.overview-strip');
             const nextOverview = nextDocument.querySelector('.overview-strip');
-            const currentTableBody = document.querySelector('.table-wrap tbody');
-            const nextTableBody = nextDocument.querySelector('.table-wrap tbody');
+            const currentClientTree = document.querySelector('.client-tree');
+            const nextClientTree = nextDocument.querySelector('.client-tree');
             const currentHealthTableBody = document.querySelector('.health-table tbody');
             const nextHealthTableBody = nextDocument.querySelector('.health-table tbody');
             const currentHealthSummary = document.querySelector('.health-summary');
@@ -2241,10 +3184,17 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
 
             if (currentOverview && nextOverview) {
                 currentOverview.innerHTML = nextOverview.innerHTML;
+                enhanceLastSeenTimestamps(currentOverview);
+                bindLastSeenBadges(currentOverview);
             }
-            if (currentTableBody && nextTableBody) {
-                currentTableBody.innerHTML = nextTableBody.innerHTML;
-                bindCopyButtons(currentTableBody);
+            if (currentClientTree && nextClientTree) {
+                currentClientTree.innerHTML = nextClientTree.innerHTML;
+                bindCopyButtons(currentClientTree);
+                bindInfoForms(currentClientTree);
+                bindTreeToggles(currentClientTree);
+                applyTreeCollapsedState(currentClientTree);
+                enhanceLastSeenTimestamps(currentClientTree);
+                bindLastSeenBadges(currentClientTree);
             }
             if (currentHealthTableBody && nextHealthTableBody) {
                 currentHealthTableBody.innerHTML = nextHealthTableBody.innerHTML;
@@ -2275,15 +3225,6 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             startAutoRefresh();
         } else {
             stopAutoRefresh();
-        }
-    }
-
-    function applyCompactModeState() {
-        const enabled = window.localStorage.getItem(compactStorageKey) === '1';
-        document.body.classList.toggle('compact', enabled);
-        if (compactToggleButton) {
-            compactToggleButton.classList.toggle('is-active', enabled);
-            compactToggleButton.textContent = enabled ? 'Обычно' : 'Компактно';
         }
     }
 
@@ -2320,14 +3261,6 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
             }
         });
     });
-    if (compactToggleButton) {
-        compactToggleButton.addEventListener('click', function() {
-            const enabled = window.localStorage.getItem(compactStorageKey) === '1';
-            window.localStorage.setItem(compactStorageKey, enabled ? '0' : '1');
-            applyCompactModeState();
-        });
-    }
-    applyCompactModeState();
     applyAutoRefreshState();
 </script>
 </body>
