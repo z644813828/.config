@@ -1,0 +1,64 @@
+server {
+    server_name openmediavault-webgui;
+    root /var/www/openmediavault;
+    index index.php;
+    autoindex off;
+    server_tokens off;
+    sendfile on;
+    large_client_header_buffers 4 32k;
+    client_max_body_size 25M;
+    error_log /var/log/nginx/openmediavault-webgui_error.log error;
+    access_log /var/log/nginx/openmediavault-webgui_access.log combined;
+    error_page 404 = /404.php;
+    location /404.html {
+        internal;
+    }
+    location /extjs6/ {
+        alias /usr/share/javascript/extjs6/;
+        expires 2d;
+    }
+    location ~ ^/(css|fonts|js|images)/ {
+        expires 2d;
+    }
+    location ^~ /dist/ {
+        expires 2d;
+        try_files $uri =404;
+    }
+    location /favicon {
+        expires 14d;
+    }
+    location = / {
+        fastcgi_pass unix:/var/run/php-fpm-openmediavault-webgui.sock;
+        fastcgi_index index.php;
+        fastcgi_read_timeout 60s;
+        include fastcgi.conf;
+        fastcgi_param SCRIPT_FILENAME $document_root/index.php;
+        fastcgi_param SCRIPT_NAME /index.php;
+    }
+    location ~ \.php$ {
+        allow 127.0.0.1;
+        allow 192.168.1.0/24;
+        allow 192.168.2.0/24;
+        allow 192.168.10.2;
+        allow 172.17.0.3;      # old docker wireguard bridge
+        allow 172.30.0.3;      # docker vpn-gateway
+        deny all;              # Deny all other IPs
+
+        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php-fpm-openmediavault-webgui.sock;
+        fastcgi_index index.php;
+        fastcgi_read_timeout 60s;
+        include fastcgi.conf;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+    listen [::]:80 ipv6only=off;
+    if ($scheme = http) {
+        # Force redirection to HTTPS.
+        return 301 https://$host:443$request_uri;
+    }
+    listen [::]:443 ipv6only=off ssl deferred;
+    ssl_certificate     /etc/letsencrypt/live/<DDNS_NAME>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<DDNS_NAME>/privkey.pem;
+    include /etc/nginx/openmediavault-webgui.d/*.conf;
+}

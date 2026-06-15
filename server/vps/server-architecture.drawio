@@ -1,0 +1,330 @@
+<mxfile host="Electron" modified="2026-06-12T16:34:27.022Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.6.8 Chrome/114.0.5735.289 Electron/25.5.0 Safari/537.36" etag="t9dG5O1dsgOEszeNBFpD" version="21.6.8" type="device">
+  <diagram id="server-architecture" name="Server architecture">
+    <mxGraphModel dx="1866" dy="1277" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1650" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" value="Server/VPN architecture" style="text;html=1;strokeColor=none;fillColor=none;fontSize=24;fontStyle=1;align=left;verticalAlign=middle;" parent="1" vertex="1">
+          <mxGeometry x="40" y="20" width="520" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="clients_group" value="Clients" style="swimlane;html=1;rounded=1;whiteSpace=wrap;fillColor=#f8f9fa;strokeColor=#6c757d;fontStyle=1;startSize=28;" parent="1" vertex="1">
+          <mxGeometry x="40" y="90" width="260" height="300" as="geometry" />
+        </mxCell>
+        <mxCell id="client_macos" value="macOS&lt;br&gt;Xray local SOCKS&lt;br&gt;127.0.0.1:1080&lt;br&gt;VLESS Reality client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f5ff;strokeColor=#228be6;" parent="clients_group" vertex="1">
+          <mxGeometry x="30" y="55" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="client_ios" value="iOS&lt;br&gt;VLESS client&lt;br&gt;HTTP proxy client" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f5ff;strokeColor=#228be6;" parent="clients_group" vertex="1">
+          <mxGeometry x="30" y="155" width="200" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="client_ssh" value="Admin SSH&lt;br&gt;server_* aliases&lt;br&gt;ProxyJump via vpn-gateway" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f5ff;strokeColor=#228be6;" parent="clients_group" vertex="1">
+          <mxGeometry x="30" y="235" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="vps2_group" value="VPS2 / front node" style="swimlane;html=1;rounded=1;whiteSpace=wrap;fillColor=#fff4e6;strokeColor=#f08c00;fontStyle=1;startSize=28;" parent="1" vertex="1">
+          <mxGeometry x="380" y="90" width="360" height="470" as="geometry" />
+        </mxCell>
+        <mxCell id="vps2_public" value="Public entrypoints&lt;br&gt;TCP 443 - VLESS relay&lt;br&gt;TCP 13128 - HTTP proxy relay TCP 13129 - HTTP proxy relay" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe8cc;strokeColor=#f08c00;" parent="vps2_group" vertex="1">
+          <mxGeometry x="35" y="55" width="290" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="vps2_relay_vless" value="systemd: vps2-vless-relay&lt;br&gt;socat 0.0.0.0:443&lt;br&gt;-&gt; 10.90.0.1:39456" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3bf;strokeColor=#fab005;" parent="vps2_group" vertex="1">
+          <mxGeometry x="35" y="150" width="290" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="vps2_relay_http" value="systemd: vps2-http-proxy-relay&lt;br&gt;socat 0.0.0.0:13128&lt;br&gt;-&gt; 10.90.0.1:3128&lt;br&gt;socat 0.0.0.0:13129&lt;br&gt;-&gt; 10.90.0.1:3129" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3bf;strokeColor=#fab005;" parent="vps2_group" vertex="1">
+          <mxGeometry x="35" y="240" width="290" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="vps2_openvpn" value="OpenVPN client&lt;br&gt;tun-vps12: 10.90.0.2&lt;br&gt;remote VPS1 UDP 2443" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d3f9d8;strokeColor=#37b24d;" parent="vps2_group" vertex="1">
+          <mxGeometry x="35" y="325" width="290" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="wYTNOpFgG0pgaerfViRb-1" value="WireGuard" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d3f9d8;strokeColor=#37b24d;" parent="vps2_group" vertex="1">
+          <mxGeometry x="35" y="400" width="290" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vps1_group" value="VPS1 / exit node" style="swimlane;html=1;rounded=1;whiteSpace=wrap;fillColor=#f3f0ff;strokeColor=#7950f2;fontStyle=1;startSize=28;" parent="1" vertex="1">
+          <mxGeometry x="830" y="90" width="420" height="450" as="geometry" />
+        </mxCell>
+        <mxCell id="vps1_xray" value="3x-ui / Xray&lt;br&gt;VLESS vision: 39456&lt;br&gt;VLESS noflow: 39457&lt;br&gt;HTTP proxy: 3128, 3129&lt;br&gt;removed tests: 443, 39458, 39459" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e5dbff;strokeColor=#7950f2;" parent="vps1_group" vertex="1">
+          <mxGeometry x="35" y="60" width="350" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="vps1_exit" value="Exit to Internet&lt;br&gt;default source: ip1&lt;br&gt;extra IPv4: ip2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e5dbff;strokeColor=#7950f2;" parent="vps1_group" vertex="1">
+          <mxGeometry x="35" y="190" width="350" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="vps1_mtproto" value="MTProto proxy on extra IP&lt;br&gt;fallback: VPS3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe3e3;strokeColor=#f03e3e;" parent="vps1_group" vertex="1">
+          <mxGeometry x="35" y="275" width="350" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="vps1_openvpn" value="OpenVPN server&lt;br&gt;UDP 2443 allowed from VPS2&lt;br&gt;tun-vps12: 10.90.0.1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d3f9d8;strokeColor=#37b24d;" parent="vps1_group" vertex="1">
+          <mxGeometry x="35" y="360" width="350" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="home_group" value="Home Docker host - &amp;lt;DDNS_NAME&amp;gt;.asuscomm.com / 192.168.2.254" style="swimlane;html=1;rounded=1;whiteSpace=wrap;fillColor=#f1f3f5;strokeColor=#495057;fontStyle=1;startSize=28;" parent="1" vertex="1">
+          <mxGeometry x="380" y="630" width="870" height="440" as="geometry" />
+        </mxCell>
+        <mxCell id="docker_net" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#868e96;dashed=1;" parent="home_group" vertex="1">
+          <mxGeometry x="35" y="55" width="805" height="365" as="geometry" />
+        </mxCell>
+        <mxCell id="vpn_gateway" value="container: vpn-gateway&lt;br&gt;Docker IP: 172.30.0.3&lt;br&gt;WireGuard IP: 10.80.0.10&lt;br&gt;SSH root via 2023 / WG&lt;br&gt;socat host forwards" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0ebff;strokeColor=#1c7ed6;" parent="home_group" vertex="1">
+          <mxGeometry x="75" y="130" width="250" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="openclaw" value="container: openclaw&lt;br&gt;Docker IP: 172.30.0.2&lt;br&gt;SSH root via 2022 / ProxyJump&lt;br&gt;Gateway: 18789&lt;br&gt;HTTPS via host: 18790&lt;br&gt;Telegram + Codex" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0ebff;strokeColor=#1c7ed6;" parent="home_group" vertex="1">
+          <mxGeometry x="380" y="130" width="260" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="host_services" value="Docker host services&lt;br&gt;SSH 22, HTTP 80/443&lt;br&gt;SMB/AFP, OMV, Monit&lt;br&gt;forwards from 10.80.0.10:*" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#495057;" parent="home_group" vertex="1">
+          <mxGeometry x="665" y="140" width="170" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="docker_firewall" value="DOCKER-USER firewall&lt;br&gt;published ports restricted&lt;br&gt;allowed: 10.80.0.0/24, LANs,&lt;br&gt;172.30.0.3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe3e3;strokeColor=#f03e3e;" parent="home_group" vertex="1">
+          <mxGeometry x="260" y="330" width="360" height="75" as="geometry" />
+        </mxCell>
+        <mxCell id="wYTNOpFgG0pgaerfViRb-4" value="Docker network infra_net&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;172.30.0.0/24&lt;br style=&quot;border-color: var(--border-color);&quot;&gt;host from containers: 172.30.0.1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="home_group" vertex="1">
+          <mxGeometry x="35" y="70" width="210" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="wg_group" value="WireGuard access network" style="swimlane;html=1;rounded=1;whiteSpace=wrap;fillColor=#e6fcf5;strokeColor=#12b886;fontStyle=1;startSize=28;" parent="1" vertex="1">
+          <mxGeometry x="40" y="630" width="260" height="250" as="geometry" />
+        </mxCell>
+        <mxCell id="wg_clients" value="Mac / iPhone WG clients&lt;br&gt;10.80.0.2 / 10.80.0.3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c3fae8;strokeColor=#12b886;" parent="wg_group" vertex="1">
+          <mxGeometry x="30" y="42" width="200" height="65" as="geometry" />
+        </mxCell>
+        <mxCell id="wg_vps2" value="VPS2 WireGuard server&lt;br&gt;wg0: 10.80.0.1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c3fae8;strokeColor=#12b886;" parent="wg_group" vertex="1">
+          <mxGeometry x="30" y="162" width="200" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="vps3_group" value="VPS3 / MTProto node" style="swimlane;html=1;rounded=1;whiteSpace=wrap;fillColor=#fff0f6;strokeColor=#c2255c;fontStyle=1;startSize=28;" parent="1" vertex="1">
+          <mxGeometry x="1290" y="90" width="260" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="vps3_mtproto" value="MTProto proxy" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fcc2d7;strokeColor=#c2255c;" parent="vps3_group" vertex="1">
+          <mxGeometry x="25" y="45" width="210" height="85" as="geometry" />
+        </mxCell>
+        <mxCell id="internet" value="Internet services&lt;br&gt;Google / YouTube / Instagram / sites" style="cloud;whiteSpace=wrap;html=1;fillColor=#f8f9fa;strokeColor=#868e96;" parent="1" vertex="1">
+          <mxGeometry x="1325" y="265" width="190" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_client_vless" value="VLESS Reality&lt;br&gt;TCP 443" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1971c2;fontColor=#1971c2;endArrow=block;" parent="1" source="clients_group" target="vps2_public" edge="1">
+          <mxGeometry x="-0.0029" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="240" />
+              <mxPoint x="340" y="183" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_client_http" value="HTTP proxy&lt;br&gt;TCP 13128" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f08c00;fontColor=#f08c00;endArrow=block;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" target="vps2_relay_http" edge="1">
+          <mxGeometry x="-0.2958" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="340" y="278" />
+              <mxPoint x="340" y="368" />
+            </Array>
+            <mxPoint x="300" y="278" as="sourcePoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_client_vps3_mtproto" value="MTProto&lt;br&gt;Telegram proxy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c2255c;fontColor=#c2255c;endArrow=block;" parent="1" source="clients_group" target="vps3_mtproto" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="330" y="150" />
+              <mxPoint x="330" y="60" />
+              <mxPoint x="1420" y="60" />
+              <mxPoint x="1420" y="135" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_vps2_openvpn" value="OpenVPN p2p&lt;br&gt;UDP 2443&lt;br&gt;10.90.0.2 &lt;-&gt; 10.90.0.1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2f9e44;fontColor=#2f9e44;endArrow=block;startArrow=block;" parent="1" source="vps2_openvpn" target="vps1_openvpn" edge="1">
+          <mxGeometry x="-0.2681" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="850" y="445" />
+              <mxPoint x="850" y="490" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_relay_vless_xray" value="inside OpenVPN&lt;br&gt;443 -&gt; 39456" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7950f2;fontColor=#7950f2;endArrow=block;" parent="1" source="vps2_relay_vless" target="vps1_xray" edge="1">
+          <mxGeometry x="0.1462" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="785" y="278" />
+              <mxPoint x="785" y="180" />
+            </Array>
+            <mxPoint y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_relay_http_xray" value="inside OpenVPN&lt;br&gt;13128 -&gt; 3128&lt;br&gt;13129 -&gt; 3129" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#7950f2;fontColor=#7950f2;endArrow=block;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.002;entryY=0.725;entryDx=0;entryDy=0;entryPerimeter=0;" parent="1" source="vps2_relay_http" target="vps1_xray" edge="1">
+          <mxGeometry x="-0.1965" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="785" y="367" />
+              <mxPoint x="785" y="300" />
+              <mxPoint x="810" y="300" />
+              <mxPoint x="810" y="230" />
+            </Array>
+            <mxPoint as="offset" />
+            <mxPoint x="710" y="370" as="sourcePoint" />
+            <mxPoint x="860" y="230.0204081632652" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_vps1_internet" value="egress from VPS1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#495057;fontColor=#495057;endArrow=block;" parent="1" source="vps1_exit" target="internet" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_vps3_internet" value="MTProto egress" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#c2255c;fontColor=#c2255c;endArrow=block;" parent="1" source="vps3_mtproto" target="internet" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_wg_client_vps2" value="WireGuard&lt;br&gt;10.80.0.0/24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0ca678;fontColor=#0ca678;endArrow=block;startArrow=block;" parent="1" source="wg_clients" target="wg_vps2" edge="1">
+          <mxGeometry x="-0.0123" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_wg_vps2_container" value="WireGuard tunnel&lt;br&gt;VPS2 10.80.0.1&lt;br&gt;vpn-gateway 10.80.0.10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0ca678;fontColor=#0ca678;endArrow=block;startArrow=block;" parent="1" source="wg_vps2" target="vpn_gateway" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_vpn_host" value="socat forwards&lt;br&gt;10.80.0.10:* -&gt; host services" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1c7ed6;fontColor=#1c7ed6;endArrow=block;" parent="1" target="host_services" edge="1">
+          <mxGeometry x="-0.2065" relative="1" as="geometry">
+            <mxPoint x="640" y="760" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="640" y="760" />
+              <mxPoint x="640" y="720" />
+              <mxPoint x="1130" y="720" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_openclaw_host" value="Docker published ports&lt;br&gt;2022, 18789/18790" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1c7ed6;fontColor=#1c7ed6;endArrow=block;startArrow=block;exitX=0.75;exitY=0;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" parent="1" source="openclaw" target="host_services" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="955" y="740" />
+              <mxPoint x="1088" y="740" />
+              <mxPoint x="1088" y="770" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_ssh_openclaw" value="SSH ProxyJump&lt;br&gt;server_vpn_gateway -&gt; openclaw:22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1971c2;fontColor=#1971c2;dashed=1;endArrow=block;" parent="1" source="client_ssh" target="openclaw" edge="1">
+          <mxGeometry x="0.2019" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="320" y="353" />
+              <mxPoint x="320" y="600" />
+              <mxPoint x="890" y="600" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_firewall" value="restricts Docker published ports" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f03e3e;fontColor=#f03e3e;dashed=1;endArrow=block;exitX=0.694;exitY=0.023;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="docker_firewall" target="openclaw" edge="1">
+          <mxGeometry x="-0.2654" relative="1" as="geometry">
+            <mxPoint y="-3" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_firewall_vpn" value="allow source 172.30.0.3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#f03e3e;fontColor=#f03e3e;dashed=1;endArrow=block;exitX=0.25;exitY=0;exitDx=0;exitDy=0;" parent="1" source="docker_firewall" target="vpn_gateway" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="730" y="840" />
+              <mxPoint x="580" y="840" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend" value="Legend&lt;br&gt;Blue: client/admin access&lt;br&gt;Green: VPN tunnel&lt;br&gt;Yellow/orange: relay/fronting&lt;br&gt;Purple: VPS1 exit services&lt;br&gt;Pink: VPS3 MTProto&lt;br&gt;Red: broken/tested path or firewall controls" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#adb5bd;align=left;spacing=10;" parent="1" vertex="1">
+          <mxGeometry x="1290" y="560" width="260" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="wYTNOpFgG0pgaerfViRb-3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#0ca678;fontColor=#0ca678;endArrow=block;startArrow=block;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="wg_group" target="wYTNOpFgG0pgaerfViRb-1" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="230" y="517" as="sourcePoint" />
+            <mxPoint x="415" y="584" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="backup_group" value="Storage and backup synchronization" style="swimlane;html=1;rounded=1;whiteSpace=wrap;fillColor=#f8f0fc;strokeColor=#9c36b5;fontStyle=1;startSize=28;" parent="1" vertex="1">
+          <mxGeometry x="40" y="1130" width="1510" height="470" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_vps_sources" value="vps1&lt;br&gt;vps2&lt;br&gt;vps3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3d9fa;strokeColor=#9c36b5;fontStyle=1;" parent="backup_group" vertex="1">
+          <mxGeometry x="35" y="65" width="145" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_ftp" value="FTP backup storage&lt;br&gt;vps config backups&lt;br&gt;pre-update archives" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#eebefa;strokeColor=#9c36b5;" parent="backup_group" vertex="1">
+          <mxGeometry x="220" y="70" width="200" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_server" value="server&lt;br&gt;pull-vps-backups-from-ftp.py&lt;br&gt;pulls /backups daily&lt;br&gt;stores under __backups/vps-backups" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d0ebff;strokeColor=#1c7ed6;fontStyle=1;" parent="backup_group" vertex="1">
+          <mxGeometry x="470" y="60" width="255" height="120" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_macos" value="macOS&lt;br&gt;Time Machine continuous&lt;br&gt;backup_macOS.sh monthly" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f5ff;strokeColor=#228be6;" parent="backup_group" vertex="1">
+          <mxGeometry x="1260" y="140" width="190" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_vaultwarden" value="vaultwarden&lt;br&gt;daily backup" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e7f5ff;strokeColor=#228be6;" parent="backup_group" vertex="1">
+          <mxGeometry x="970" y="220" width="190" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_omv_fsarchiver" value="OpenMediaVault&lt;br&gt;fsarchiver OS image&lt;br&gt;monthly" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3bf;strokeColor=#fab005;fontStyle=1;" parent="backup_group" vertex="1">
+          <mxGeometry x="870" y="120" width="190" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_rsync_script" value="rsync.sh&lt;br&gt;monthly server backup&lt;br&gt;Software, UserData, __backups,&lt;br&gt;TimeMachine, Acronis" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3bf;strokeColor=#fab005;fontStyle=1;" parent="backup_group" vertex="1">
+          <mxGeometry x="725" y="310" width="230" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_wd_green" value="WD Green / offline backup disks&lt;br&gt;monthly copy of server data&lt;br&gt;rsync target" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d3f9d8;strokeColor=#37b24d;fontStyle=1;" parent="backup_group" vertex="1">
+          <mxGeometry x="1040" y="310" width="160" height="115" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_server_disks" value="server disks&lt;br&gt;/ - OS SSD, 106G&lt;br&gt;TimeMachine - 733G&lt;br&gt;Data - 1.8T&lt;br&gt;UserData - 1.1T&lt;br&gt;__backups on UserData" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#495057;align=left;spacing=10;" parent="backup_group" vertex="1">
+          <mxGeometry x="35" y="270" width="290" height="155" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_userdata_contents" value="UserData / __backups&lt;br&gt;vps-backups from FTP&lt;br&gt;macOS zip archives&lt;br&gt;vaultwarden daily backups&lt;br&gt;OMV/fsarchiver images" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#1c7ed6;align=left;spacing=10;" parent="backup_group" vertex="1">
+          <mxGeometry x="390" y="280" width="290" height="135" as="geometry" />
+        </mxCell>
+        <mxCell id="backup_timemachine_share" value="TimeMachine share&lt;br&gt;continuous Mac backup&lt;br&gt;separate mounted disk" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#228be6;align=left;spacing=10;" parent="backup_group" vertex="1">
+          <mxGeometry x="1240" y="310" width="250" height="105" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_backup_vps_ftp" value="upload daily" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9c36b5;fontColor=#9c36b5;endArrow=block;" parent="backup_group" source="backup_vps_sources" target="backup_ftp" edge="1">
+          <mxGeometry x="0.5" y="58" relative="1" as="geometry">
+            <mxPoint y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_backup_ftp_server" value="pull daily" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#9c36b5;fontColor=#9c36b5;endArrow=block;" parent="backup_group" source="backup_ftp" target="backup_server" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_backup_macos_server" value="monthly zip archives" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#228be6;fontColor=#228be6;endArrow=block;entryX=1.003;entryY=0.174;entryDx=0;entryDy=0;entryPerimeter=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="backup_group" source="backup_macos" target="backup_server" edge="1">
+          <mxGeometry x="-0.5091" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1355" y="81" />
+            </Array>
+            <mxPoint x="1260" y="150" as="sourcePoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_backup_vaultwarden_server" value="daily" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#228be6;fontColor=#228be6;endArrow=block;entryX=1;entryY=0.75;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="backup_group" source="backup_vaultwarden" target="backup_server" edge="1">
+          <mxGeometry x="-0.4857" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="800" y="255" />
+              <mxPoint x="800" y="150" />
+            </Array>
+            <mxPoint x="1224.24" y="195" as="sourcePoint" />
+            <mxPoint x="730" y="140" as="targetPoint" />
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_backup_server_omv" value="monthly OS image" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#fab005;fontColor=#fab005;endArrow=block;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=0.998;exitY=0.341;exitDx=0;exitDy=0;exitPerimeter=0;" parent="backup_group" source="backup_server" target="backup_omv_fsarchiver" edge="1">
+          <mxGeometry x="0.0017" relative="1" as="geometry">
+            <mxPoint x="725" y="80" as="sourcePoint" />
+            <Array as="points">
+              <mxPoint x="820" y="101" />
+              <mxPoint x="820" y="165" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_backup_server_rsync" value="monthly" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#fab005;fontColor=#fab005;endArrow=block;exitX=0.996;exitY=0.909;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="backup_group" source="backup_server" target="backup_rsync_script" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="770" y="169" />
+              <mxPoint x="770" y="268" />
+              <mxPoint x="840" y="268" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_backup_server_wd" value="full server data copy" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#37b24d;fontColor=#37b24d;endArrow=block;" parent="backup_group" source="backup_rsync_script" target="backup_wd_green" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_backup_server_disks" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#495057;fontColor=#495057;dashed=1;endArrow=block;exitX=0.25;exitY=1;exitDx=0;exitDy=0;" parent="backup_group" source="backup_server" target="backup_server_disks" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="534" y="220" />
+              <mxPoint x="180" y="220" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="edge_backup_userdata" value="stored on UserData" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#1c7ed6;fontColor=#1c7ed6;dashed=1;endArrow=block;" parent="backup_group" source="backup_server" target="backup_userdata_contents" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_backup_tm_share" value="continuous" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#228be6;fontColor=#228be6;dashed=1;endArrow=block;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="backup_group" source="backup_macos" target="backup_timemachine_share" edge="1">
+          <mxGeometry x="0.4897" relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1365" y="290" />
+              <mxPoint x="1365" y="290" />
+            </Array>
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

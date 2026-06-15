@@ -83,6 +83,7 @@ save_totals_snapshot() {
   declare -A month_out=()
   declare -A activity_at=()
   declare -A activity_delta=()
+  declare -A user_ports=()
   declare -A seen=()
 
   ensure_state_dir
@@ -122,6 +123,12 @@ save_totals_snapshot() {
     activity_at["$user"]="${last_seen:-0}"
     seen["$user"]=1
   done < "$ACTIVITY_FILE"
+
+  while IFS=$'\t' read -r user port; do
+    [[ -n "$user" && -n "$port" ]] || continue
+    user_ports["$user"]="$port"
+    seen["$user"]=1
+  done < <(list_users)
 
   while IFS=$'\t' read -r user direction bytes; do
     [[ -n "$user" ]] || continue

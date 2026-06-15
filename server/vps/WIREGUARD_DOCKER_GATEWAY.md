@@ -22,10 +22,13 @@ Mac / iPhone
 - Container WireGuard IP: `10.80.0.10`
 - Mac WireGuard IP: `10.80.0.2`
 - iPhone WireGuard IP: `10.80.0.3`
-- Docker host from container: `172.17.0.1`
-- Container Docker bridge IP now: `172.17.0.3`
+- Docker network: `infra_net`
+- Docker network subnet: `172.30.0.0/24`
+- Docker host from container: `172.30.0.1`
+- `openclaw` Docker IP: `172.30.0.2`
+- `vpn-gateway` Docker IP: `172.30.0.3`
 
-`172.17.0.3` нужен только для allow-правил на сервисах хоста, потому что `socat` открывает новое TCP-соединение из контейнера к хосту.
+`172.30.0.3` нужен для allow-правил на сервисах хоста, потому что `socat` открывает новое TCP-соединение из контейнера к хосту.
 
 ## VPS
 
@@ -93,19 +96,19 @@ docker exec vpn-gateway /usr/local/bin/start-vpn-gateway
 Container forwards these ports from `10.80.0.10` to the Docker host:
 
 ```text
-10.80.0.10:2222  -> 172.17.0.1:22
-10.80.0.10:80    -> 172.17.0.1:80
-10.80.0.10:443   -> 172.17.0.1:443
-10.80.0.10:445   -> 172.17.0.1:445
-10.80.0.10:548   -> 172.17.0.1:548
-10.80.0.10:5000  -> 172.17.0.1:5000
-10.80.0.10:8880  -> 172.17.0.1:8880
-10.80.0.10:18790 -> 172.17.0.1:18790
-10.80.0.10:2812  -> 172.17.0.1:2812
-10.80.0.10:4000  -> 172.17.0.1:4000
-10.80.0.10:9091  -> 172.17.0.1:9091
-10.80.0.10:199   -> 172.17.0.1:199
-10.80.0.10:9443  -> 172.17.0.1:9443
+10.80.0.10:2222  -> 172.30.0.1:22
+10.80.0.10:80    -> 172.30.0.1:80
+10.80.0.10:443   -> 172.30.0.1:443
+10.80.0.10:445   -> 172.30.0.1:445
+10.80.0.10:548   -> 172.30.0.1:548
+10.80.0.10:5000  -> 172.30.0.1:5000
+10.80.0.10:8880  -> 172.30.0.1:8880
+10.80.0.10:18790 -> 172.30.0.1:18790
+10.80.0.10:2812  -> 172.30.0.1:2812
+10.80.0.10:4000  -> 172.30.0.1:4000
+10.80.0.10:9091  -> 172.30.0.1:9091
+10.80.0.10:199   -> 172.30.0.1:199
+10.80.0.10:9443  -> 172.30.0.1:9443
 10.80.0.10:8443  -> 192.168.2.1:8443
 ```
 
@@ -130,7 +133,7 @@ afp://10.80.0.10
 Because traffic reaches host services from the container, host services see source IP:
 
 ```text
-172.17.0.3
+172.30.0.3
 ```
 
 Use this in nginx/Monit allow rules while the container keeps this Docker IP.
@@ -138,13 +141,13 @@ Use this in nginx/Monit allow rules while the container keeps this Docker IP.
 Example nginx:
 
 ```nginx
-allow 172.17.0.3;      # docker vpn-gateway
+allow 172.30.0.3;      # docker vpn-gateway
 ```
 
 Example Monit:
 
 ```monit
-allow 172.17.0.3
+allow 172.30.0.3
 ```
 
 ## Monitoring
@@ -227,7 +230,7 @@ Allowed source networks for restricted Docker-published ports:
 192.168.1.0/24
 192.168.2.0/24
 192.168.10.0/24
-172.17.0.3/32
+172.30.0.3/32
 ```
 
 Shared firewall documentation:
@@ -254,7 +257,7 @@ docker exec vpn-gateway /usr/local/bin/check-vpn-gateway
 Current allow rules depend on:
 
 ```text
-172.17.0.3
+172.30.0.3
 ```
 
 This usually survives `docker restart`, but can change after:

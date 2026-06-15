@@ -769,7 +769,8 @@ function listUsers(string $serverHost): array
             'out_bytes' => 0,
             'total_bytes' => 0,
         ];
-        $onlineConnections = ($port !== '?' && isset($connectionCounts[$port])) ? (int) $connectionCounts[$port] : 0;
+        $onlineConnections = ($active === 'active' && $port !== '?' && isset($connectionCounts[$port])) ? (int) $connectionCounts[$port] : 0;
+        $lastActivityAt = $active === 'active' ? ($activityStats[$user] ?? 0) : 0;
         $rows[] = [
             'user' => $user,
             'port' => $port,
@@ -785,7 +786,7 @@ function listUsers(string $serverHost): array
             'month_out_bytes' => $monthlyTraffic['out_bytes'],
             'month_total_bytes' => $monthlyTraffic['total_bytes'],
             'online_connections' => $onlineConnections,
-            'last_activity_at' => $activityStats[$user] ?? 0,
+            'last_activity_at' => $lastActivityAt,
         ];
     }
     usort($rows, static function (array $a, array $b): int {

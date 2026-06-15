@@ -12,7 +12,8 @@ set httpd port 2812 and
     allow 192.168.2.127    # mac-13"
     allow 192.168.2.128    # mac-16"
     allow 192.168.10.2     # home 2 vpn
-    allow 172.17.0.3       # docker wireguard
+    allow 172.17.0.3;      # old docker wireguard bridge
+    allow 172.30.0.3;      # docker vpn-gateway
 set eventqueue
     basedir /var/lib/monit/events
     slots 100

@@ -37,6 +37,7 @@ users=($(ls $SF/UserData))
 D1() {
 # {{{ Mount DISK
 hdparm -J $D1
+mount $D/d1-p1
 # }}} 
 
 # {{{ Check DISK
@@ -60,12 +61,12 @@ DISK_SIZE_1=$(df | grep $D\d1-p1 | awk '{print $2}');
 
 GB=1048576
 S=0
-# path                                  backup_drive
-# /sharedfolders/Software/_Software/    d1
-# /sharedfolders/Software/OS/           d1
-# /sharedfolders/Software/omvbackup/    d1
-# /sharedfolders/UserData/              d1
-# /srv/dev-disk-by-label-UserData/__backups/  d1
+# path                                          backup_drive
+# /sharedfolders/Software/_Software/            d1
+# /sharedfolders/Software/OS/                   d1
+# /sharedfolders/Software/omvbackup/            d1
+# /sharedfolders/UserData/                      d1
+# /srv/dev-disk-by-label-UserData/__backups/    d1
 S1=0
 S=$(du -s /sharedfolders/Software/_Software/       | cut -f1); S1=$((S1 + $S))
 echo "/sharedfolders/Software/_Software:        " $(($S / GB))  "GB"    | $LOG
@@ -77,7 +78,7 @@ done; S1=$((S1 + $S))
 echo "/sharedfolders/UserData:                  " $(($S / GB))  "GB"    | $LOG
 S=$(du -s /sharedfolders/Software/omvbackup/         | cut -f1); S1=$((S1 + $S))
 echo "/sharedfolders/Software/omvbackup:        " $(($S / GB))  "GB"    | $LOG
-S=$(du -s /srv/dev-disk-by-label-Data/backups        | cut -f1); S1=$((S1 + $S))
+S=$(du -s /srv/dev-disk-by-label-UserData/__backups  | cut -f1); S1=$((S1 + $S))
 echo "/srv/dev-disk-by-label-UserData/__backups:" $(($S / GB))  "GB"    | $LOG
 
 echo "Requred space on drive 1:     " $(($S1 / GB))           "GB"  | $LOG
@@ -102,7 +103,7 @@ done
 echo -e "\n\n\n# BACK----------OmvBACKUP--------------"  $($DATE) | $LOG
 $CMD1 $SF/Software/omvbackup/ $D/d1-p1/omvbackup/                     | $LOG
 echo -e "\n\n\n# BACK----------__backups--------------"  $($DATE) | $LOG
-$CMD1 /srv/dev-disk-by-label-UserData/__backups/ $D/d1-p1/            | $LOG
+$CMD1 /srv/dev-disk-by-label-UserData/__backups/ $D/d1-p1/__backups   | $LOG
 # }}}
 
 # {{{ Test backup
@@ -116,11 +117,18 @@ echo -e       "## -----------UserData/$user-----------"  $($DATE) | $LOG
 $DIFF $SF/$user               $D/d1-p1/UserData/$user                 | $LOG
 done
 # }}}
+
+# {{{ Umount DISK
+umount $D/d1-p1
+hdparm -Y $D1
+# }}} 
 }
 
 D2(){
 # {{{ Mount DISK
 hdparm -J $D2
+mount $D/d2-p1
+mount $D/d2-p2
 # }}} 
 
 # {{{ Check DISK
@@ -148,9 +156,9 @@ DISK_SIZE_2=$(df | grep $D\d2-p2 | awk '{print $2}');
 
 GB=1048576
 S=0
-# path                                  backup_drive
-# /sharedfolders/TimeMachine/           d1
-# /sharedfolders/Software/Acronis/      d2
+# path                                          backup_drive
+# /sharedfolders/TimeMachine/                   d1
+# /sharedfolders/Software/Acronis/              d2
 
 S1=0
 S=$(du -s /sharedfolders/TimeMachine/            | cut -f1); S1=$((S1 + $S))
@@ -190,18 +198,15 @@ echo -e "\n\n\n# TEST------Software/Acronis-----------"  $($DATE) | $LOG
 $DIFF $SF/Software/Acronis/   $D/d2-p2/Acronis/                       | $LOG
 # }}}
 
+# {{{ Umount DISK
+umount $D/d2-p1
+umount $D/d2-p2
+hdparm -Y $D2
+# }}} 
 }
 
 D1
 D2
-
-# {{{ Umount DISK
-sync
-sleep 5
-hdparm -Y $D1
-sleep 5
-hdparm -Y $D2
-# }}} 
 
 # {{{ Finish
 echo -e "\n\n\n# ---------------Finished--------------"  $($DATE) | $LOG

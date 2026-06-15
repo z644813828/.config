@@ -10,11 +10,20 @@ IMAGE="${IMAGE:-openclaw-debian11-codex-telegram}"
 NAME="${NAME:-openclaw}"
 SSH_PORT="${SSH_PORT:-2022}"
 GATEWAY_PORT="${GATEWAY_PORT:-18789}"
+NETWORK="${NETWORK:-infra_net}"
+SUBNET="${SUBNET:-172.30.0.0/24}"
+GATEWAY="${GATEWAY:-172.30.0.1}"
+IP="${IP:-172.30.0.2}"
+
+docker network inspect "$NETWORK" >/dev/null 2>&1 || \
+  docker network create --subnet "$SUBNET" --gateway "$GATEWAY" "$NETWORK"
 
 docker run -d \
   --name "$NAME" \
   --init \
   --pids-limit 256 \
+  --network "$NETWORK" \
+  --ip "$IP" \
   -p "${SSH_PORT}:22" \
   -p "${GATEWAY_PORT}:18789" \
   "$IMAGE" \
