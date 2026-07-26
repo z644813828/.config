@@ -1,6 +1,6 @@
 #!/bin/bash
 
-dt1=$(tail -7 /sharedfolders/TimeMachine/MacBook\ Pro.sparsebundle/com.apple.TimeMachine.SnapshotHistory.plist | head -1)
+dt1=$(tail -7 /srv/dev-disk-by-label-Data/TimeMachine/MacBook\ Pro.sparsebundle/com.apple.TimeMachine.SnapshotHistory.plist | head -1)
 dt1=$(echo $dt1 | awk '{ print substr ( $0, 7 ) }')
 dt1=$(echo $dt1 | awk '{ print substr( $0, 1, length($0)-7 ) }')
 

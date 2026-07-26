@@ -26,6 +26,7 @@ chmod 700 "$STATE_DIR"
 
 python3 <<'PY'
 import ftplib
+import calendar
 import os
 import sqlite3
 import sys
@@ -45,6 +46,12 @@ now = time.time()
 
 
 def load_tg_settings():
+    env_token = (os.environ.get("TELEGRAM_BOT_TOKEN") or "").strip()
+    env_chat_id = (os.environ.get("TELEGRAM_CHAT_ID") or "").strip()
+    env_api = (os.environ.get("TELEGRAM_API_SERVER") or "https://api.telegram.org").strip().rstrip("/")
+    if env_token and env_chat_id:
+        return env_api, env_token, env_chat_id
+
     conn = sqlite3.connect("/etc/x-ui/x-ui.db")
     rows = dict(conn.execute(
         'select key, value from settings where key in ("tgBotToken","tgBotChatId","tgBotAPIServer")'
@@ -96,7 +103,7 @@ def ftp_latest_backup():
         try:
             resp = ftp.sendcmd(f"MDTM {name}")
             if resp.startswith("213 "):
-                mtime = time.mktime(time.strptime(resp[4:].strip(), "%Y%m%d%H%M%S"))
+                mtime = calendar.timegm(time.strptime(resp[4:].strip(), "%Y%m%d%H%M%S"))
         except Exception:
             pass
         item = (mtime, name)

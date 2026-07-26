@@ -615,6 +615,14 @@ $overallStatusText = statusPopupText($overallStatus);
                         "vaultwarden"
                     ],
                     [
+                        "$ddnsName:9444",
+                        "$localIp:9444",
+                        "Gitlab.png",
+                        "Gitlab",
+                        "GitLab is a complete DevOps platform that lets teams store code, collaborate on software development, and automate testing and deployment in a single application.",
+                        "gitlab"
+                    ],
+                    [
                         "$ddnsName:8880",
                         "$localIp:8880",
                         "FileBrowser.png",
@@ -629,14 +637,6 @@ $overallStatusText = statusPopupText($overallStatus);
                         "OpenClaw",
                         "Jarvis. An open-source, autonomous AI agent that functions as a personal digital assistant.",
                         "openclaw"
-                    ],
-                    [
-                        "$ddnsName:199",
-                        "$localIp:199",
-                        "NetData.png",
-                        "NetData",
-                        "Netdata's distributed, real-time monitoring Agent collects thousands of metrics from systems, hardware, containers, and applications with zero configuration.",
-                        "netdata"
                     ],
                     [
                         "$ddnsName:4000",
@@ -663,6 +663,14 @@ $overallStatusText = statusPopupText($overallStatus);
                         "keenetic-router"
                     ],
                     [
+                        "$ddnsName:199",
+                        "$localIp:199",
+                        "NetData.png",
+                        "NetData",
+                        "Netdata's distributed, real-time monitoring Agent collects thousands of metrics from systems, hardware, containers, and applications with zero configuration.",
+                        "netdata"
+                    ],
+                    [
                         "$ddnsName:9091",
                         "$localIp:9091",
                         "Transmission.png",
@@ -686,13 +694,14 @@ $overallStatusText = statusPopupText($overallStatus);
                         "It allows the computer to interact with APC UPSes.",
                         "apcupsd"
                     ],
-                    // [
-                    //     "$ddnsName:4041/status",
-                    //     "$localIp:4041/status",
-                    //     "Ngrok.png",
-                    //     "Ngrok",
-                    //     "Ngrok provides a real-time web UI where you can introspect all HTTP traffic running over your tunnels."
-                    // ],
+                    [
+                        "$ddnsName:4041/status",
+                        "$localIp:4041/status",
+                        "Ngrok.png",
+                        "Ngrok",
+                        "Ngrok provides a real-time web UI where you can introspect all HTTP traffic running over your tunnels.",
+                        "ngrok"
+                    ],
                     [
                         "arduino/index.php",
                         "arduino/index.php",

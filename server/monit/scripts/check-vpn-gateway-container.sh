@@ -9,14 +9,38 @@ fail() {
     exit 1
 }
 
+handshake_age() {
+    local latest now
+    latest=$(wg show wg0 latest-handshakes 2>/dev/null | awk '{print $2}' | sort -nr | head -n 1)
+    [ -n "$latest" ] || return 1
+    [ "$latest" -gt 0 ] 2>/dev/null || return 1
+    now=$(date +%s)
+    echo $((now - latest))
+}
+
+recover_wireguard() {
+    echo "WireGuard handshake is unavailable; restarting vpn gateway"
+    /usr/local/bin/stop-vpn-gateway
+    sleep 2
+    /usr/local/bin/start-vpn-gateway
+    sleep 3
+}
+
+wg show wg0 >/dev/null 2>&1 || recover_wireguard
 wg show wg0 >/dev/null 2>&1 || fail "WireGuard wg0 is not available"
 
-LATEST_HANDSHAKE=$(wg show wg0 latest-handshakes 2>/dev/null | awk '{print $2}' | sort -nr | head -n 1)
-[ -n "$LATEST_HANDSHAKE" ] || fail "WireGuard handshake is missing"
-[ "$LATEST_HANDSHAKE" -gt 0 ] 2>/dev/null || fail "WireGuard handshake is zero"
+# After a reboot the WireGuard peer may have no recorded handshake until the
+# container sends the first packet. Wake the tunnel before checking timestamps.
+ping -c 1 -W 2 "$VPS_WG_IP" >/dev/null 2>&1 || true
 
-NOW=$(date +%s)
-HANDSHAKE_AGE=$((NOW - LATEST_HANDSHAKE))
+HANDSHAKE_AGE=$(handshake_age || true)
+if [ -z "$HANDSHAKE_AGE" ] || [ "$HANDSHAKE_AGE" -gt "$MAX_HANDSHAKE_AGE_SECONDS" ]; then
+    recover_wireguard
+    ping -c 1 -W 2 "$VPS_WG_IP" >/dev/null 2>&1 || true
+    HANDSHAKE_AGE=$(handshake_age || true)
+fi
+
+[ -n "$HANDSHAKE_AGE" ] || fail "WireGuard handshake is missing"
 [ "$HANDSHAKE_AGE" -le "$MAX_HANDSHAKE_AGE_SECONDS" ] || fail "WireGuard handshake is stale: ${HANDSHAKE_AGE}s"
 
 ping -c 1 -W 2 "$VPS_WG_IP" >/dev/null 2>&1 || fail "Cannot ping VPS WireGuard IP $VPS_WG_IP"

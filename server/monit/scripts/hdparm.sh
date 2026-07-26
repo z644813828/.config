@@ -1,5 +1,7 @@
 #!/bin/bash
 
+BACKUP_IN_PROGRESS="/run/backup-weekly-cold.in-progress"
+
 # Функция для проверки состояния диска
 check_disk_standby() {
   disk="$1"
@@ -29,19 +31,20 @@ check_disk_standby() {
   fi
 }
 
-# Проверяем /dev/sda
-check_disk_standby /dev/sda
-sda_status=$?
+# ColdBackup (/dev/sde) штатно активен, пока идёт еженедельный бэкап.
+if [ -e "$BACKUP_IN_PROGRESS" ]; then
+  echo "Weekly ColdBackup is running; skipping standby check for /dev/sde."
+  sde_status=0
+else
+  check_disk_standby /dev/sde
+  sde_status=$?
+fi
 
-# Проверяем /dev/sdb
-check_disk_standby /dev/sdb
-sdb_status=$?
-
-# Общая проверка
-if [ "$sda_status" -eq 0 ] && [ "$sdb_status" -eq 0 ]; then
-  echo "Both /dev/sda and /dev/sdb are in standby."
+# Проверка /dev/sde
+if [ "$sde_status" -eq 0 ]; then
+  echo "/dev/sde is in standby."
   exit 0
 else
-  echo "At least one of /dev/sda and /dev/sdb is NOT in standby."
+  echo "/dev/sde is NOT in standby."
   exit -1
 fi

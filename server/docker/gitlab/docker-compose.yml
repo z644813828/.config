@@ -1,0 +1,29 @@
+version: "2"
+
+services:
+  gitlab:
+    image: gitlab/gitlab-ce:15.11.13-ce.0
+    container_name: gitlab
+    hostname: <HOSTNAME>
+    restart: unless-stopped
+
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'https://<HOSTNAME>:9444'
+
+        nginx['listen_port'] = 8929
+        nginx['listen_https'] = false
+
+        gitlab_rails['gitlab_shell_ssh_port'] = 2224
+
+        letsencrypt['enable'] = false
+        prometheus_monitoring['enable'] = false
+
+    ports:
+      - "127.0.0.1:8929:8929"
+      - "2224:22"
+
+    volumes:
+      - "./config:/etc/gitlab"
+      - "./logs:/var/log/gitlab"
+      - "./data:/var/opt/gitlab"

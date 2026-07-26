@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+HOST_IP="${HOST_IP:-172.30.0.1}"
+VPN_IP="${VPN_IP:-10.80.0.10}"
+LOG_DIR="${LOG_DIR:-/var/log/vpn-gateway-forwards}"
+
+mkdir -p "$LOG_DIR"
+
+PORTS="2222 80 443 445 548 5000 8880 18790 2812 4000 9091 199 8443 9443"
+
+for port in $PORTS; do
+  pkill -f "socat TCP-LISTEN:${port},bind=${VPN_IP}" 2>/dev/null || true
+done
+
+nohup socat TCP-LISTEN:2222,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:22 >"$LOG_DIR/ssh.log" 2>&1 &
+nohup socat TCP-LISTEN:80,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:80 >"$LOG_DIR/http.log" 2>&1 &
+nohup socat TCP-LISTEN:443,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:443 >"$LOG_DIR/https.log" 2>&1 &
+nohup socat TCP-LISTEN:445,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:445 >"$LOG_DIR/smb.log" 2>&1 &
+nohup socat TCP-LISTEN:548,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:548 >"$LOG_DIR/afp.log" 2>&1 &
+nohup socat TCP-LISTEN:5000,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:5000 >"$LOG_DIR/web5000.log" 2>&1 &
+nohup socat TCP-LISTEN:8880,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:8880 >"$LOG_DIR/web8880.log" 2>&1 &
+nohup socat TCP-LISTEN:18790,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:18790 >"$LOG_DIR/openclaw18790.log" 2>&1 &
+nohup socat TCP-LISTEN:2812,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:2812 >"$LOG_DIR/monit2812.log" 2>&1 &
+nohup socat TCP-LISTEN:4000,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:4000 >"$LOG_DIR/web4000.log" 2>&1 &
+nohup socat TCP-LISTEN:9091,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:9091 >"$LOG_DIR/transmission9091.log" 2>&1 &
+nohup socat TCP-LISTEN:199,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:199 >"$LOG_DIR/netdata199.log" 2>&1 &
+nohup socat TCP-LISTEN:9443,bind=${VPN_IP},fork,reuseaddr TCP:${HOST_IP}:9443 >"$LOG_DIR/vaultwarden9443.log" 2>&1 &
+nohup socat TCP-LISTEN:8443,bind=${VPN_IP},fork,reuseaddr TCP:192.168.2.1:8443 >"$LOG_DIR/asus-router8443.log" 2>&1 &

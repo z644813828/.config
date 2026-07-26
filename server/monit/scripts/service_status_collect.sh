@@ -213,6 +213,7 @@ check_streamdeck() {
     check_tcp_service "filebrowser" "FileBrowser" 127.0.0.1 8880
     check_tcp_service "openclaw" "OpenClaw" 127.0.0.1 18790
     check_tcp_service "vaultwarden" "Vaultwarden" 127.0.0.1 9443
+    check_tcp_service "gitlab" "Gitlab" 127.0.0.1 9444
     check_tcp_service "netdata" "NetData" 127.0.0.1 199
     check_monit
     check_tcp_service "asus-router" "Asus router" 192.168.2.1 8443

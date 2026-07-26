@@ -104,6 +104,7 @@ rm -rf "$STAGE"
 
 python3 - "$ARCHIVE" <<'PY'
 import ftplib
+import calendar
 import os
 import posixpath
 import sys
@@ -142,7 +143,7 @@ def list_backups(ftp):
         try:
             resp = ftp.sendcmd(f"MDTM {name}")
             if resp.startswith("213 "):
-                mtime = time.mktime(time.strptime(resp[4:].strip(), "%Y%m%d%H%M%S"))
+                mtime = calendar.timegm(time.strptime(resp[4:].strip(), "%Y%m%d%H%M%S"))
         except Exception:
             pass
         items.append({"name": name, "size": size, "mtime": mtime})
