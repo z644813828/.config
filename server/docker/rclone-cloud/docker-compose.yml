@@ -1,0 +1,22 @@
+version: "2"
+
+services:
+  setup:
+    build: .
+    container_name: rclone-cloud
+    hostname: rclone-cloud
+    ports:
+      - "2024:22"
+    volumes:
+      - /srv/dev-disk-by-label-Backups:/backup:ro
+      - /root/.backup-secrets/rclone:/root/.config/rclone:rw
+      - /root/.backup-secrets/rclone/authorized_keys:/root/.ssh/authorized_keys:ro
+      - ./workspace:/workspace:rw
+    restart: unless-stopped
+    networks:
+      infra_net:
+        ipv4_address: 172.30.0.4
+
+networks:
+  infra_net:
+    external: true

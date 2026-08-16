@@ -17,6 +17,7 @@ RESTRICTED_SERVICES=(
   "openclaw:22"
   "openclaw:18789"
   "vpn-gateway:22"
+  "rclone-cloud:22"
 )
 
 iptables -N "$CHAIN" 2>/dev/null || true

@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_DIR="/srv/dev-disk-by-label-Data/docker/compose/vaultwarden"
 BACKUP_DIR="/srv/dev-disk-by-label-Backups/Data/docker/vaultwarden"
-KEY_FILE="${BACKUP_DIR}/backup.key"
+KEY_FILE="/root/.backup-secrets/docker-vaultwarden.key"
 DATE="$(date +%F-%H%M%S)"
 WORK_DIR="${BACKUP_DIR}/tmp-${DATE}"
 ARCHIVE="${BACKUP_DIR}/vaultwarden-${DATE}.tar.gz"

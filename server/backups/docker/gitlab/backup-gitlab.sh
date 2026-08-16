@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_DIR="/srv/dev-disk-by-label-Data/docker/compose/gitlab"
 BACKUP_DIR="/srv/dev-disk-by-label-Backups/Data/docker/gitlab"
-KEY_FILE="${BACKUP_DIR}/backup.key"
+KEY_FILE="/root/.backup-secrets/docker-gitlab.key"
 LOCK="/run/backup-gitlab.lock"
 DATE="$(date +%F-%H%M%S)"
 WORK_DIR="${BACKUP_DIR}/tmp-${DATE}"

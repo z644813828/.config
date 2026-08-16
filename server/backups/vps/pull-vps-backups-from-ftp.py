@@ -5,7 +5,7 @@ from pathlib import Path
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-CONFIG_FILE = SCRIPT_DIR / "pull-vps-backups-from-ftp.env"
+CONFIG_FILE = Path("/root/.backup-secrets/pull-vps-backups-from-ftp.env")
 
 
 def load_env(path):
