@@ -3,6 +3,7 @@ set -euo pipefail
 
 SOURCE=/backup
 DESTINATION=gdrive_crypt:offsite-backups
+STATUS_REMOTE=gdrive_backups:rclone/date.txt
 WORKSPACE=/workspace
 LOG_DIR="$WORKSPACE/logs"
 LOCK_FILE="$WORKSPACE/.backup-to-gdrive.lock"
@@ -47,4 +48,10 @@ rclone copy "$SOURCE" "$DESTINATION" \
   --log-file "$log_file" \
   --log-level INFO
 
-printf '[%s] Backup copy completed successfully\n' "$(timestamp)" | tee -a "$log_file"
+completed_at="$(timestamp)"
+printf '%s\n' "$completed_at" | rclone rcat "$STATUS_REMOTE" \
+  --retries 3 \
+  --low-level-retries 10
+
+printf '[%s] Backup copy completed successfully; status written to %s\n' \
+  "$completed_at" "$STATUS_REMOTE" | tee -a "$log_file"

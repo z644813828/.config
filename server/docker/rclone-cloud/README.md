@@ -52,6 +52,7 @@ sudo /usr/local/sbin/docker-published-ports-firewall.sh
 ```bash
 docker exec rclone-cloud rclone version
 docker exec rclone-cloud rclone config show
+docker exec rclone-cloud bash /workspace/scripts/last-gdrive-backup.sh
 ssh server_rclone_cloud
 ssh server_rclone_cloud_lan
 ```
@@ -61,7 +62,20 @@ ssh server_rclone_cloud_lan
 После того как `/backup` заменён на непустой read-only mount:
 
 ```bash
-docker exec rclone-cloud /workspace/scripts/backup-to-gdrive.sh
+docker exec rclone-cloud bash /workspace/scripts/backup-to-gdrive.sh
 ```
+
+После успешного `rclone copy` скрипт обновляет plaintext-файл
+`gdrive_backups:rclone/date.txt` с UTC-временем. Он расположен в видимой папке
+`rclone` на Google Drive и не содержит имён или структуры бэкапа.
+
+Прочитать время последнего успешного cloud-бэкапа:
+
+```bash
+docker exec rclone-cloud bash /workspace/scripts/last-gdrive-backup.sh
+```
+
+Monit-проверка находится в `server/monit/conf.d/rclone_cloud_backup.conf` и
+считает бэкап устаревшим через 36 часов.
 
 Recovery-инструкция находится в `/workspace/docs/RESTORE.md`.
