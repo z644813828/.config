@@ -1,0 +1,33 @@
+{
+  "name": "multi-cursor",
+  "displayName": "Multi Cursor (Atom-style)",
+  "description": "Atom multi-cursor package behaviour for VS Code: expand cursors up/down and move only the last cursor.",
+  "version": "1.0.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": { "vscode": "^1.70.0" },
+  "categories": ["Keymaps", "Other"],
+  "extensionKind": ["ui", "workspace"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      { "command": "multiCursor.expandDown", "title": "Multi Cursor: Expand Down", "category": "Multi Cursor" },
+      { "command": "multiCursor.expandUp", "title": "Multi Cursor: Expand Up", "category": "Multi Cursor" },
+      { "command": "multiCursor.expandAllDown", "title": "Multi Cursor: Expand All Down", "category": "Multi Cursor" },
+      { "command": "multiCursor.expandAllUp", "title": "Multi Cursor: Expand All Up", "category": "Multi Cursor" },
+      { "command": "multiCursor.moveLastCursorLeft", "title": "Multi Cursor: Move Last Cursor Left", "category": "Multi Cursor" },
+      { "command": "multiCursor.moveLastCursorRight", "title": "Multi Cursor: Move Last Cursor Right", "category": "Multi Cursor" },
+      { "command": "multiCursor.moveLastCursorUp", "title": "Multi Cursor: Move Last Cursor Up", "category": "Multi Cursor" },
+      { "command": "multiCursor.moveLastCursorDown", "title": "Multi Cursor: Move Last Cursor Down", "category": "Multi Cursor" }
+    ],
+    "keybindings": [
+      { "command": "multiCursor.expandDown", "key": "alt+j", "when": "editorTextFocus" },
+      { "command": "multiCursor.expandUp", "key": "alt+k", "when": "editorTextFocus" },
+      { "command": "multiCursor.moveLastCursorLeft", "key": "alt+shift+h", "when": "editorTextFocus" },
+      { "command": "multiCursor.moveLastCursorDown", "key": "alt+shift+j", "when": "editorTextFocus" },
+      { "command": "multiCursor.moveLastCursorUp", "key": "alt+shift+k", "when": "editorTextFocus" },
+      { "command": "multiCursor.moveLastCursorRight", "key": "alt+shift+l", "when": "editorTextFocus" }
+    ]
+  }
+}
