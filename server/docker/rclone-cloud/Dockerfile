@@ -16,6 +16,11 @@ RUN apt-get update \
         'UsePAM no' \
         > /etc/ssh/sshd_config.d/rclone-cloud.conf
 
+ENV TZ=Europe/Moscow
+
+RUN ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime \
+    && echo "$TZ" > /etc/timezone
+
 RUN set -eux; \
     tmpdir="$(mktemp -d)"; \
     arch="$(dpkg --print-architecture)"; \

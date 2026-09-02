@@ -5,6 +5,8 @@ services:
     build: .
     container_name: rclone-cloud
     hostname: rclone-cloud
+    environment:
+      TZ: Europe/Moscow
     ports:
       - "2024:22"
     volumes:

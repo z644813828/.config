@@ -10,7 +10,7 @@ LOCK_FILE="$WORKSPACE/.backup-to-gdrive.lock"
 BWLIMIT="${RCLONE_BWLIMIT:-10M}"
 
 timestamp() {
-  date -u '+%Y-%m-%dT%H:%M:%SZ'
+  date '+%Y-%m-%dT%H:%M:%S%:z'
 }
 
 fail() {
@@ -32,7 +32,7 @@ mkdir -p "$LOG_DIR"
 exec 9>"$LOCK_FILE"
 flock -n 9 || fail "another backup process is already running"
 
-log_file="$LOG_DIR/rclone-copy-$(date -u '+%Y%m%dT%H%M%SZ').log"
+log_file="$LOG_DIR/rclone-copy-$(date '+%Y%m%dT%H%M%S%z').log"
 printf '[%s] Starting copy from %s to %s (bwlimit=%s)\n' \
   "$(timestamp)" "$SOURCE" "$DESTINATION" "$BWLIMIT" | tee -a "$log_file"
 

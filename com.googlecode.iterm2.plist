@@ -29,7 +29,7 @@
 	<key>AllowDragOfTabIntoNewWindow</key>
 	<false/>
 	<key>AlternateMouseScroll</key>
-	<true/>
+	<false/>
 	<key>AutoCommandHistory</key>
 	<false/>
 	<key>AutocompleteMaxOptions</key>
