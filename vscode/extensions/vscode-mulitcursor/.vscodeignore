@@ -1,3 +1,4 @@
 test/**
 .vscodeignore
 build-vsix.py
+*.vsix

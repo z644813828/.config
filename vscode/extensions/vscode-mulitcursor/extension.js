@@ -7,11 +7,13 @@ const vscode = require('vscode');
 //     direction removes it again instead of growing the block both ways;
 //   * the last cursor can be moved on its own, leaving the others in place.
 //
-// The last cursor is kept at index 0 of `editor.selections`, i.e. it is the
-// primary selection, so the status bar and auto-reveal follow it.
+// Selections stay in document order so indexed multicursor registers (Vim
+// yank/paste) agree with cursor order. Track the last cursor separately.
 
 /** Desired *visual* column, kept across vertical moves (Atom's goalColumn). */
 let goalColumn;
+let lastCursorIndex = 0;
+let trackedCursorCount = 0;
 
 /** Signature of the selections we set ourselves, to ignore our own events. */
 let ownSelections = null;
@@ -70,7 +72,17 @@ function positionAt(editor, line, visualColumn) {
 	return new vscode.Position(line, character);
 }
 
+function lastFirst(editor) {
+	const selections = editor.selections;
+	const index = Math.min(lastCursorIndex, selections.length - 1);
+	return [selections[index], ...selections.filter((_, i) => i !== index)];
+}
+
 function apply(editor, selections, reveal) {
+	const last = selections[0];
+	selections.sort((a, b) => a.active.line - b.active.line || a.active.character - b.active.character);
+	lastCursorIndex = selections.indexOf(last);
+	trackedCursorCount = selections.length;
 	ownSelections = signature(selections);
 	editor.selections = selections;
 	editor.revealRange(new vscode.Range(reveal, reveal), vscode.TextEditorRevealType.Default);
@@ -82,7 +94,7 @@ function expand(direction) {
 		return;
 	}
 
-	const selections = editor.selections;
+	const selections = lastFirst(editor);
 	const last = selections[0];
 	const line = last.active.line + direction;
 	if (line < 0 || line >= editor.document.lineCount) {
@@ -114,7 +126,7 @@ function expandAll(direction) {
 		return;
 	}
 
-	const selections = editor.selections;
+	const selections = lastFirst(editor);
 	const start = selections[0].active.line;
 	const stop = direction < 0 ? 0 : editor.document.lineCount - 1;
 	if (start === stop) {
@@ -147,7 +159,7 @@ function moveLastCursor(direction) {
 	}
 
 	const document = editor.document;
-	const selections = editor.selections;
+	const selections = lastFirst(editor);
 	const last = selections[0];
 	const from = last.active;
 	let position;
@@ -195,6 +207,8 @@ function moveLastCursor(direction) {
 }
 
 function reset() {
+	lastCursorIndex = 0;
+	trackedCursorCount = 0;
 	goalColumn = undefined;
 	ownSelections = null;
 }
@@ -217,6 +231,9 @@ function activate(context) {
 
 	context.subscriptions.push(
 		vscode.window.onDidChangeTextEditorSelection((e) => {
+			if (e.textEditor && e.textEditor !== vscode.window.activeTextEditor) {
+				return;
+			}
 			// Anything we did not do ourselves (a click, typing, another
 			// command) invalidates the remembered column. Our own changes come
 			// back as `Command` (the API source), so they are told apart by the
@@ -225,7 +242,14 @@ function activate(context) {
 			if (!mouse && ownSelections !== null && signature(e.selections) === ownSelections) {
 				return;
 			}
-			reset();
+			// Keyboard/API moves keep selection indices when the cursor count
+			// stays the same. Forget the goal column, but retain the last cursor.
+			if (!mouse && e.selections.length === trackedCursorCount) {
+				goalColumn = undefined;
+				ownSelections = null;
+			} else {
+				reset();
+			}
 		}),
 		vscode.window.onDidChangeActiveTextEditor(reset)
 	);

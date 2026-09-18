@@ -1,0 +1,17 @@
+server {
+    listen 9091 default_server ssl;
+    ssl_certificate     /etc/letsencrypt/live/<DDNS>/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/<DDNS>/privkey.pem;
+    server_name  transmission;
+
+    access_log  /var/log/nginx/transmission.access.log;
+
+    location / {
+        proxy_pass        http://localhost:9092;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /var/www/nginx-default;
+    }
+}

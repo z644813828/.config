@@ -792,6 +792,9 @@ $overallStatusText = statusPopupText($overallStatus);
 					</div>
 					<ul class="footer-links list-reset">
 						<li>
+                            <a href="<?php echo htmlspecialchars($publicHttpUrl, ENT_QUOTES, "UTF-8"); ?>" title="<?php echo $_SERVER['REMOTE_ADDR']; ?>"> <?php echo $_SERVER['REMOTE_ADDR']; ?> </a>
+						</li>
+						<li>
 							<a href="#">Contact</a>
 						</li>
 						<li>

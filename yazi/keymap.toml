@@ -1,0 +1,177 @@
+# Yazi 26.9.1 — ranger-compatible bindings migrated from rc.conf.
+# prepend_keymap deliberately overrides conflicting Yazi defaults while retaining
+# non-conflicting Yazi bindings.
+
+[mgr]
+prepend_keymap = [
+  # quit / help / shell / tasks
+  { on = "q", run = "close", desc = "Close tab / quit if last" },
+  { on = "Q", run = "quit --no-cwd-file", desc = "Ranger: quit!" },
+  { on = "?", run = "help", desc = "Ranger: help" },
+  { on = "w", run = "tasks:show", desc = "Ranger: task view" },
+  { on = ":", run = "shell --interactive", desc = "Ranger: console/shell" },
+  { on = ";", run = "shell --interactive", desc = "Ranger: console/shell" },
+  { on = "!", run = "shell --block --interactive", desc = "Ranger: shell" },
+  { on = "s", run = "shell --interactive", desc = "Ranger: shell" },
+  { on = "S", run = "shell --block -- fish", desc = "Ranger: shell fish" },
+  { on = "r", run = "shell ' %s' --cursor=0 --block --interactive", desc = "Open with: type application before %s" },
+
+  # navigation
+  { on = "j", run = "arrow 1", desc = "Down" },
+  { on = "k", run = "arrow -1", desc = "Up" },
+  { on = "h", run = "leave", desc = "Parent" },
+  { on = "l", run = "plugin smart-enter", desc = "Open file / enter directory" },
+  { on = "<Enter>", run = "plugin smart-enter", desc = "Open file / enter directory" },
+  { on = "<Right>", run = "plugin smart-enter", desc = "Open file / enter directory" },
+  { on = "<Down>", run = "arrow 1", desc = "Down" },
+  { on = "<Up>", run = "arrow -1", desc = "Up" },
+  { on = "<Left>", run = "leave", desc = "Parent" },
+  { on = "<Home>", run = "arrow top", desc = "Top" },
+  { on = "<End>", run = "arrow bot", desc = "Bottom" },
+  { on = ["g", "g"], run = "arrow top", desc = "Top" },
+  { on = "G", run = "arrow bot", desc = "Bottom" },
+  { on = "J", run = "arrow 50%", desc = "Half page down" },
+  { on = "K", run = "arrow -50%", desc = "Half page up" },
+  { on = "<C-d>", run = "arrow 50%", desc = "Half page down" },
+  { on = "<C-u>", run = "arrow -50%", desc = "Half page up" },
+  { on = "<PageDown>", run = "arrow 100%", desc = "Page down" },
+  { on = "<PageUp>", run = "arrow -100%", desc = "Page up" },
+  { on = "<C-f>", run = "arrow 100%", desc = "Page down" },
+  { on = "<C-b>", run = "arrow -100%", desc = "Page up" },
+  { on = "H", run = "back", desc = "History back" },
+  { on = "L", run = "forward", desc = "History forward" },
+  { on = "i", run = "shell -- qlmanage -p %h", desc = "macOS: Quick Look hovered file" },
+  { on = "[", run = "plugin parent-switch prev", desc = "Ranger: previous parent directory" },
+  { on = "]", run = "plugin parent-switch next", desc = "Ranger: next parent directory" },
+
+  # Vim/ranger numeric prefix. The plugin reads the remaining keys silently.
+  { on = "1", run = "plugin vim-count 1", desc = "Count prefix" },
+  { on = "2", run = "plugin vim-count 2", desc = "Count prefix" },
+  { on = "3", run = "plugin vim-count 3", desc = "Count prefix" },
+  { on = "4", run = "plugin vim-count 4", desc = "Count prefix" },
+  { on = "5", run = "plugin vim-count 5", desc = "Count prefix" },
+  { on = "6", run = "plugin vim-count 6", desc = "Count prefix" },
+  { on = "7", run = "plugin vim-count 7", desc = "Count prefix" },
+  { on = "8", run = "plugin vim-count 8", desc = "Count prefix" },
+  { on = "9", run = "plugin vim-count 9", desc = "Count prefix" },
+
+  # selection: ranger tag/mark semantics mapped to Yazi selection
+  { on = "t", run = "toggle", desc = "Ranger: tag/toggle selection" },
+  { on = ["u", "t"], run = "toggle --state=off", desc = "Ranger: remove tag" },
+  { on = "<Space>", run = ["toggle", "arrow 1"], desc = "Ranger: mark and move down" },
+  { on = "v", run = "toggle_all", desc = "Ranger: toggle all marks" },
+  { on = ["u", "v"], run = "toggle_all --state=off", desc = "Ranger: unmark all" },
+  { on = "V", run = "visual_mode", desc = "Ranger: visual selection" },
+  { on = ["u", "V"], run = "visual_mode --unset", desc = "Ranger: visual unset" },
+
+  # function keys
+  { on = "<F1>", run = "help", desc = "Help" },
+  { on = "<F3>", run = "spot", desc = "Ranger: display file" },
+  { on = "<F4>", run = "open --interactive", desc = "Ranger: edit/open with" },
+  { on = "<F5>", run = "yank", desc = "Ranger: copy" },
+  { on = "<F6>", run = "yank --cut", desc = "Ranger: cut" },
+  { on = "<F7>", run = "create --dir", desc = "Ranger: mkdir" },
+  { on = "<F10>", run = "quit", desc = "Ranger: exit" },
+
+  # personal g shortcuts
+  { on = ["g", "h"], run = "cd ~", desc = "Home" },
+  { on = ["g", "d"], run = "cd ~/Documents/Documents", desc = "Documents" },
+  { on = ["g", "z"], run = "cd ~/Downloads", desc = "Downloads" },
+  { on = ["g", "p"], run = "cd ~/Documents/Projects", desc = "Projects" },
+  { on = ["g", "l"], run = "cd ~/Documents/Libs", desc = "Libs" },
+  { on = ["g", "i"], run = "cd ~/Library/Mobile\\ Documents/com~apple~CloudDocs/Documents", desc = "iCloud Documents" },
+  { on = ["g", "s"], run = "cd /Users/dmitriy/sshfs", desc = "sshfs" },
+  { on = ["g", "m"], run = "cd /mnt", desc = "/mnt" },
+  { on = ["g", "/"], run = "cd /", desc = "Root" },
+
+  # editing / rename / create
+  { on = "E", run = "open --interactive", desc = "Ranger: edit" },
+  { on = ["c", "w"], run = "rename --cursor=before_ext", desc = "Ranger: rename" },
+  { on = "a", run = "rename --cursor=before_ext", desc = "Ranger: rename append" },
+  { on = "A", run = "rename --cursor=end", desc = "Ranger: rename at end" },
+  { on = "I", run = "rename --cursor=start", desc = "Ranger: rename at start" },
+  { on = "<Insert>", run = "create", desc = "Ranger: touch/create" },
+
+  # yank / cut / paste
+  { on = ["d", "d"], run = "yank --cut", desc = "Ranger: cut" },
+  { on = ["u", "d"], run = "unyank", desc = "Ranger: uncut" },
+  { on = ["y", "y"], run = "yank", desc = "Ranger: copy" },
+  { on = ["u", "y"], run = "unyank", desc = "Ranger: unyank" },
+  { on = ["p", "p"], run = "paste", desc = "Ranger: paste" },
+  { on = ["p", "o"], run = "paste --force", desc = "Ranger: paste overwrite" },
+  { on = ["p", "l"], run = "link", desc = "Ranger: absolute symlink" },
+  { on = ["p", "L"], run = "link --relative", desc = "Ranger: relative symlink" },
+  { on = ["p", "h", "l"], run = "hardlink", desc = "Ranger: hardlink" },
+  { on = ["D", "D"], run = "remove --permanently", desc = "Permanent delete with confirmation" },
+  { on = ["d", "D"], run = "remove --force", desc = "Ranger: trash" },
+  { on = "<Delete>", run = "remove --permanently", desc = "Ranger: delete" },
+
+  # clipboard: native Yazi copy writes to macOS clipboard
+  { on = ["y", "p"], run = "copy path", desc = "Ranger: copy full path" },
+  { on = ["y", "d"], run = "copy dirpath", desc = "Ranger: copy directory path" },
+  { on = ["y", "n"], run = "copy filename", desc = "Ranger: copy filename" },
+
+  # find/filter
+  { on = "/", run = "find --smart", desc = "Ranger: search/find" },
+  { on = "n", run = "find_arrow", desc = "Ranger: next match" },
+  { on = "N", run = "find_arrow --previous", desc = "Ranger: previous match" },
+  { on = ["z", "f"], run = "filter --smart", desc = "Ranger: filter" },
+
+  # tabs — same muscle memory as ranger
+  { on = "<C-n>", run = "tab_create --current", desc = "Ranger: new tab in current dir" },
+  { on = "<C-t>", run = "tab_create ~", desc = "Ranger: new tab at home" },
+  { on = "<C-F4>", run = "close", desc = "Ranger: close tab" },
+  { on = "<Tab>", run = "tab_switch 1 --relative", desc = "Next tab" },
+  { on = "<S-Tab>", run = "tab_switch -1 --relative", desc = "Previous tab" },
+  { on = "<A-Right>", run = "tab_switch 1 --relative", desc = "Next tab" },
+  { on = "<A-Left>", run = "tab_switch -1 --relative", desc = "Previous tab" },
+  { on = ["g", "t"], run = "tab_switch 1 --relative", desc = "Next tab" },
+  { on = ["g", "T"], run = "tab_switch -1 --relative", desc = "Previous tab" },
+  { on = "<A-1>", run = "tab_switch 0", desc = "Tab 1" },
+  { on = "<A-2>", run = "tab_switch 1", desc = "Tab 2" },
+  { on = "<A-3>", run = "tab_switch 2", desc = "Tab 3" },
+  { on = "<A-4>", run = "tab_switch 3", desc = "Tab 4" },
+  { on = "<A-5>", run = "tab_switch 4", desc = "Tab 5" },
+  { on = "<A-6>", run = "tab_switch 5", desc = "Tab 6" },
+  { on = "<A-7>", run = "tab_switch 6", desc = "Tab 7" },
+  { on = "<A-8>", run = "tab_switch 7", desc = "Tab 8" },
+  { on = "<A-9>", run = "tab_switch 8", desc = "Tab 9" },
+
+  # ranger sorting family
+  { on = ["o", "z"], run = "sort random", desc = "Sort random" },
+  { on = ["o", "s"], run = "sort size --reverse=no", desc = "Sort size" },
+  { on = ["o", "n"], run = "sort natural --reverse=no", desc = "Sort natural" },
+  { on = ["o", "m"], run = "sort mtime --reverse=no", desc = "Sort mtime" },
+  { on = ["o", "e"], run = "sort extension --reverse=no", desc = "Sort extension" },
+  { on = ["o", "S"], run = "sort size --reverse=yes", desc = "Sort size reverse" },
+  { on = ["o", "N"], run = "sort natural --reverse=yes", desc = "Sort natural reverse" },
+  { on = ["o", "M"], run = "sort mtime --reverse=yes", desc = "Sort mtime reverse" },
+  { on = ["o", "E"], run = "sort extension --reverse=yes", desc = "Sort extension reverse" },
+
+  # ranger z* toggles that have direct Yazi equivalents
+  { on = ["z", "h"], run = "hidden toggle", desc = "Toggle hidden" },
+  { on = "<C-h>", run = "hidden toggle", desc = "Toggle hidden" },
+  { on = "<Backspace>", run = "hidden toggle", desc = "Toggle hidden" },
+  { on = ["z", "d"], run = "sort --dir-first", desc = "Directories first" },
+
+  # ranger line modes with direct equivalents
+  { on = ["M", "f"], run = "linemode none", desc = "Ranger: filename line mode" },
+  { on = ["M", "p"], run = "linemode permissions", desc = "Ranger: permissions line mode" },
+
+  # archive commands: prompt lets you choose the archive name like ranger's ?
+  { on = [",", "a", "z"], run = "shell 'zip -r .zip %s' --cursor=7 --interactive", desc = "Ranger: create zip" },
+  { on = [",", "a", "7"], run = "shell '7z a -t7z .7z %s' --cursor=11 --interactive", desc = "Ranger: create 7z" },
+  { on = [",", "a", "t"], run = "shell 'tar cvpf .tar %s' --cursor=9 --interactive", desc = "Ranger: create tar" },
+  { on = [",", "a", "T"], run = "shell 'tar cvzpf .tgz %s' --cursor=10 --interactive", desc = "Ranger: create tgz" },
+  { on = [",", "a", "u", "z"], run = "shell --block -- unzip %h", desc = "Ranger: unzip" },
+  { on = [",", "a", "u", "7"], run = "shell --block -- 7z x %h", desc = "Ranger: extract 7z" },
+  { on = [",", "a", "u", "t"], run = "shell --block -- tar xvpf %h", desc = "Ranger: extract tar" },
+
+]
+
+# Input widgets use Vi editing by default.  Make one Esc consistently cancel
+# rename/create/filter input instead of merely switching that widget to Normal.
+[input]
+prepend_keymap = [
+  { on = "<Esc>", run = "close", desc = "Cancel input" },
+]

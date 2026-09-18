@@ -1,0 +1,187 @@
+{
+    "http.proxySupport": "override",
+    "http.proxyStrictSSL": false,
+    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.inlayHints.autoDeclarationTypes.enabled": true,
+    "editor.cursorBlinking": "solid",
+    "editor.formatOnSave": true,
+    "editor.formatOnPaste": true,
+    "cmake.pinnedCommands": [
+        "workbench.action.tasks.configureTaskRunner",
+        "workbench.action.tasks.runTask"
+    ],
+    "workbench.iconTheme": "a-file-icon-vscode",
+    "workbench.colorTheme": "Atom One Dark",
+    "vim.easymotion": true,
+    "vim.incsearch": true,
+    "vim.useSystemClipboard": true,
+    "vim.useCtrlKeys": true,
+    "vim.hlsearch": true,
+    "vim.handleKeys": {
+        "<C-a>": false,
+        "<C-f>": false,
+        "<C-d>": true,
+    },
+    // "vim.langmap": "ёйцукенгшщзхъ;`qwertyuiop[],фывапролджэ;asdfghjkl\\;',ячсмитьбю;zxcvbnm\\,.,ЁЙЦУКЕНГШЩЗХЪ;~QWERTYUIOP{},ФЫВАПРОЛДЖЭ;ASDFGHJKL:\",ЯЧСМИТЬБЮ;ZXCVBNM<>",
+    "vim.autoSwitchInputMethod.enable": false,
+    "vim.normalModeKeyBindingsNonRecursive": [
+        {
+            "before": [
+                "#"
+            ],
+            "after": [
+                "*"
+            ]
+        },
+        {
+            "before": [
+                "*"
+            ],
+            "after": [
+                "#"
+            ]
+        },
+        {
+            "before": [
+                "<Return>"
+            ],
+            "commands": [
+                ":nohlsearch"
+            ]
+        }
+    ],
+    "terminal.integrated.fontFamily": "Hack Nerd Font",
+    "terminal.integrated.initialHint": false,
+    "workbench.colorCustomizations": {
+        "terminal.background": "#292C33",
+        "terminal.foreground": "#D9DEE8",
+        "terminalCursor.background": "#292C33",
+        "terminalCursor.foreground": "#D9DEE8",
+        "terminal.selectionBackground": "#3C4252",
+        "terminal.ansiBlack": "#3C4252",
+        "terminal.ansiRed": "#B3666C",
+        "terminal.ansiGreen": "#A8BD91",
+        "terminal.ansiYellow": "#E6CC93",
+        "terminal.ansiBlue": "#87A0BE",
+        "terminal.ansiMagenta": "#AE8FAB",
+        "terminal.ansiCyan": "#94BECE",
+        "terminal.ansiWhite": "#E6E9EF",
+        "terminal.ansiBrightBlack": "#4D5668",
+        "terminal.ansiBrightRed": "#B3666C",
+        "terminal.ansiBrightGreen": "#A8BD91",
+        "terminal.ansiBrightYellow": "#E6CC93",
+        "terminal.ansiBrightBlue": "#87A0BE",
+        "terminal.ansiBrightMagenta": "#AE8FAB",
+        "terminal.ansiBrightCyan": "#98BBBA",
+        "terminal.ansiBrightWhite": "#EDEFF4",
+        "editorCursor.foreground": "#61afef"
+    },
+    "editor.fontFamily": "SF Mono",
+    "editor.lineNumbers": "relative",
+    "workbench.tree.enableStickyScroll": false,
+    "clangd.arguments": [
+        "--completion-style=detailed",
+        "--header-insertion=never"
+        // "--query-driver=/usr/bin/clang++,/usr/bin/clang,/Applications/Xcode.app/**/clang,/Applications/Xcode.app/**/clang++--completion-style=detailed",
+        // "-I/media/psf/Home/Documents/Libs/_Toolchain/amd64_d_PRIVATE/include/"
+    ],
+    "clangd.fallbackFlags": [
+        "-xc++",
+        "-std=c++20"
+    ],
+    "workbench.editor.showTabs": "none",
+    "editor.minimap.enabled": false,
+    "editor.suggest.showInlineDetails": true,
+    "editor.suggest.preview": true,
+    "editor.suggest.showStatusBar": true,
+    "editor.parameterHints.enabled": true,
+    "diffEditor.ignoreTrimWhitespace": false,
+    "projectManager.git.baseFolders": [
+        "/Users/dmitriy/Documents/Projects",
+        "/Users/dmitriy/.config"
+    ],
+    "projectManager.git.maxDepthRecursion": 6,
+    "projectManager.ignoreProjectsWithinProjects": true,
+    "projectManager.filterOnFullPath": true,
+    "projectManager.showParentFolderInfoOnDuplicates": true,
+    "cmake.configureOnOpen": false,
+    "cmake.buildBeforeRun": false,
+    "security.workspace.trust.enabled": false,
+    "security.workspace.trust.untrustedFiles": "open",
+    "git.openRepositoryInParentFolders": "never",
+    "workbench.editorAssociations": {
+        "*.copilotmd": "vscode.markdown.preview.editor",
+        "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.qrc": "default",
+        "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.ui": "default",
+        "*.bin": "hexEditor.hexedit",
+        "binary": "hexEditor.hexedit",
+        "*.qrc": "qt-core.qrcEditor"
+    },
+    "makefile.configureOnOpen": false,
+    "workbench.startupEditor": "none",
+    "hexeditor.columnWidth": 16,
+    "hexeditor.showDecodedText": false,
+    "hexeditor.defaultEndianness": "little",
+    "hexeditor.inspectorType": "aside",
+    "[cpp]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+        //     "editor.defaultFormatter": "xaver.clang-format"
+    },
+    "[fish]": {
+        "editor.formatOnSave": false,
+        "editor.formatOnType": false,
+        "editor.formatOnPaste": false,
+        "editor.folding": true,
+        "editor.foldingStrategy": "auto",
+        "editor.defaultFoldingRangeProvider": "zokugun.explicit-folding",
+        "explicitFolding.rules": [
+            {
+                "beginRegex": "^\\s*#.*\\{\\{\\{",
+                "endRegex": "^\\s*#.*\\}\\}\\}",
+                "foldLastLine": true,
+                "autoFold": true
+            }
+        ]
+    },
+    "clang-format.executable": "/usr/bin/clang-format",
+    "git.untrackedChanges": "hidden",
+    "explorer.excludeGitIgnore": true,
+    "diffEditor.renderSideBySide": false,
+    "git.blame.statusBarItem.enabled": true,
+    "[c]": {
+        "editor.defaultFormatter": "llvm-vs-code-extensions.vscode-clangd"
+    },
+    "search.searchEditor.focusResultsOnSearch": true,
+    "window.title": "${dirty}${activeEditorShort}${separator}${rootName}",
+    "editor.inlayHints.enabled": "on",
+    "terminal.integrated.profiles.linux": {
+        "bash": {
+            "path": "bash",
+            "icon": "terminal-bash"
+        },
+        "zsh": {
+            "path": "zsh"
+        },
+        "fish": {
+            "path": "/usr/bin/fish"
+        },
+        "tmux": {
+            "path": "tmux",
+            "icon": "terminal-tmux"
+        },
+        "pwsh": {
+            "path": "pwsh",
+            "icon": "terminal-powershell"
+        }
+    },
+    "terminal.integrated.defaultProfile.linux": "fish",
+    "qt-core.qtInstallationRoot": "/Users/dmitriy/Qt",
+    "[linux]": {
+        "qt-core.qtInstallationRoot": "/home/dmitriy/Qt"
+    },
+    "chat.disableAIFeatures": true,
+    "keyboard.touchbar.enabled": false,
+    "projectManager.groupList": true,
+    "vim.foldfix": true,
+    "remote.autoForwardPortsSource": "hybrid"
+}

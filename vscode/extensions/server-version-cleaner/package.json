@@ -1,0 +1,23 @@
+{
+  "name": "server-version-cleaner",
+  "displayName": "VS Code Server Version Cleaner",
+  "description": "Automatically remove old VS Code Server versions on remote Linux hosts.",
+  "version": "0.1.3",
+  "publisher": "local-tools",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "extensionKind": ["workspace"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "scripts": { "test": "node --test test/*.test.js" },
+  "contributes": {
+    "commands": [{ "command": "serverVersionCleaner.clean", "title": "VS Code Server: Clean Old Versions" }],
+    "configuration": {
+      "title": "Server Version Cleaner",
+      "properties": {
+        "serverVersionCleaner.enabled": { "type": "boolean", "default": true, "scope": "machine", "description": "Clean old server versions when the remote extension host starts." },
+        "serverVersionCleaner.keep": { "type": "integer", "default": 2, "minimum": 2, "scope": "machine", "description": "Number of newest versions to retain per channel. Running versions are also retained." }
+      }
+    }
+  }
+}

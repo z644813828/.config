@@ -1,0 +1,452 @@
+// Поместите настраиваемые сочетания клавиш в этот файл, чтобы переопределить сочетания клавиш по умолчанию.
+[
+    // --- BODY (Global) ---
+    {
+        "key": "alt+tab",
+        "command": "workbench.action.quickOpenPreviousRecentlyUsedEditorInGroup"
+    },
+    {
+        "key": "alt+shift+tab",
+        "command": "workbench.action.quickOpenLeastRecentlyUsedEditorInGroup"
+    },
+    {
+        "key": "alt+tab",
+        "command": "workbench.action.quickOpenNavigateNextInEditorPicker",
+        "when": "inEditorsPicker && inQuickOpen"
+    },
+    {
+        "key": "alt+shift+tab",
+        "command": "workbench.action.quickOpenNavigatePreviousInEditorPicker",
+        "when": "inEditorsPicker && inQuickOpen"
+    },
+    {
+        "key": "alt+w",
+        "command": "workbench.action.focusNextGroup",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "alt+w",
+        "command": "workbench.action.terminal.focusNextPane",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+t",
+        "command": "workbench.action.showCommands"
+    },
+    // Поиск (аналог fuzzy-grep)
+    {
+        "key": "cmd+f",
+        "command": "workbench.action.findInFiles"
+    },
+    // Фокус панелей
+    {
+        "key": "ctrl+backslash",
+        "command": "workbench.action.focusFirstEditorGroup"
+    },
+    {
+        "key": "alt+backslash",
+        "command": "workbench.action.focusFirstEditorGroup"
+    },
+    // Символы (Ctags в Atom -> Native Symbols в VS Code)
+    {
+        "key": "cmd+i",
+        "command": "workbench.action.gotoSymbol"
+    },
+    {
+        "key": "cmd+shift+i",
+        "command": "workbench.action.showAllSymbols"
+    },
+    // Терминал
+    {
+        "key": "cmd+t",
+        "command": "workbench.action.terminal.toggleTerminal"
+    },
+    {
+        "key": "ctrl+shift+w",
+        "command": "workbench.action.terminal.kill",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "cmd+w",
+        "command": "workbench.action.terminal.kill",
+        "when": "terminalFocus || terminalEditorFocus"
+    },
+    // Split/Move (аналог split-pane-custom)
+    {
+        "key": "cmd+alt+w",
+        "command": "workbench.action.splitEditor"
+    },
+    {
+        "key": "ctrl+alt+w",
+        "command": "workbench.action.moveEditorToNextGroup"
+    },
+    // --- WORKSPACE ---
+    // Diff (нужно расширение или встроенный diff)
+    {
+        "key": "cmd+k",
+        "command": "editor.action.formatDocument",
+        "when": "editorHasDocumentFormattingProvider"
+    }, // Project Manager (Требуется расширение "Project Manager")
+    {
+        "key": "ctrl+cmd+p",
+        "command": "projectManager.listProjectsNewWindow"
+    },
+    {
+        "key": "ctrl+alt+p",
+        "command": "projectManager.saveProject"
+    },
+    // --- EDITOR / VIM MODE ---
+    // Предполагается использование расширения "VSCodeVim"
+    {
+        "key": "cmd+backslash",
+        "command": "workbench.action.toggleSidebarVisibility"
+    },
+    {
+        "key": "ctrl+/",
+        "command": "editor.action.commentLine",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    // Перемещение строк
+    {
+        "key": "ctrl+j",
+        "command": "editor.action.moveLinesDownAction",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "ctrl+k",
+        "command": "editor.action.moveLinesUpAction",
+        "when": "editorTextFocus && !editorReadonly"
+    },
+    // Навигация по коду (Go to Definition)
+    {
+        "key": "ctrl+b",
+        "command": "editor.action.revealDefinition",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+t",
+        "command": "workbench.action.navigateBack",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+]",
+        "command": "editor.action.revealDefinition",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "alt+]",
+        "command": "editor.action.revealDefinition",
+        "when": "editorTextFocus"
+    },
+    // Header/Source switch (Требуется расширение "C/C++" от Microsoft)
+    {
+        "key": "alt+a",
+        "command": "clangd.switchheadersource",
+        "when": "editorTextFocus"
+    },
+    // Linter UI (Проблемы)
+    {
+        "key": "ctrl+l",
+        "command": "editor.action.marker.next",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+alt+l",
+        "command": "workbench.action.view.problems"
+    },
+    // Pane Split
+    {
+        "key": "cmd+d",
+        "command": "workbench.action.terminal.split",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "cmd+d",
+        "command": "workbench.action.splitEditorRight",
+        "when": "editorTextFocus && vim.active"
+    },
+    // Markdown Preview
+    {
+        "key": "cmd+shift+M",
+        "command": "markdown.showPreview",
+        "when": "editorTextFocus && editorLangId == 'markdown' && vim.active"
+    },
+    {
+        "key": "cmd+shift+M",
+        "command": "markdown.showSource",
+        "when": "activeWebviewPanelId == 'markdown.preview' || activeCustomEditorId == 'vscode.markdown.preview.editor'"
+    },
+    // Change Language Mode
+    {
+        "key": "ctrl+shift+O",
+        "command": "workbench.action.editor.changeLanguageMode",
+        "when": "editorTextFocus && vim.active"
+    },
+    // Todo Show (Duplicate, but with specific context)
+    {
+        "key": "cmd+alt+backslash",
+        "command": "todo-tree-view.focus",
+        "when": "editorTextFocus && vim.active"
+    },
+    // Last Cursor Position (navigateBack/Forward)
+    {
+        "key": "cmd+[",
+        "command": "workbench.action.navigateBack",
+        "when": "editorTextFocus && vim.active"
+    },
+    {
+        "key": "cmd+]",
+        "command": "workbench.action.navigateForward",
+        "when": "editorTextFocus && vim.active"
+    },
+    {
+        "key": "ctrl+o",
+        "command": "workbench.action.navigateBack",
+        "when": "editorTextFocus && vim.active"
+    },
+    {
+        "key": "ctrl+i",
+        "command": "workbench.action.navigateForward",
+        "when": "editorTextFocus && vim.active"
+    },
+    {
+        "key": "ctrl", // Standalone 'ctrl' key cannot be bound in VS Code. Closest is esc.
+        "command": "hideSuggestWidget",
+        "when": "editorTextFocus && suggestWidgetVisible"
+    },
+    {
+        "key": "cmd+shift+u",
+        "command": "editor.action.referenceSearch.trigger",
+        "when": "editorHasReferenceProvider && !inReferenceSearchEditor && !isInEmbeddedEditor"
+    },
+    {
+        "key": "cmd+u",
+        "command": "editor.showCallHierarchy",
+        "when": "editorHasCallHierarchyProvider && !inReferenceSearchEditor && !isInEmbeddedEditor"
+    },
+    {
+        "key": "space p",
+        "command": "workbench.action.quickOpen",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "space i",
+        "command": "workbench.action.showEditorSymbols",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "space shift+i",
+        "command": "workbench.action.showAllSymbols",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "space v",
+        "command": "workbench.action.navigateBack",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal' && isInDiffEditor"
+    },
+    {
+        "key": "space v",
+        "command": "git.openChange",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal' && !isInDiffEditor"
+    },
+    {
+        "key": "space s",
+        "command": "workbench.action.files.save",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "space q",
+        "command": "workbench.action.closeActiveEditor",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "z j",
+        "command": "editor.action.insertLineAfter",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "z k",
+        "command": "editor.action.insertLineBefore",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "z a",
+        "command": "editor.foldAll",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "z shift+a",
+        "command": "editor.unfoldAll",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "z z",
+        "command": "editor.toggleFold",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "tab",
+        "command": "editor.toggleFold",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "m m",
+        "command": "bookmarks.toggle",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "m a",
+        "command": "bookmarks.list",
+        "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
+    },
+    {
+        "key": "cmd+1",
+        "command": "workbench.actions.view.problems",
+        "when": "workbench.panel.markers.view.active"
+    },
+    {
+        "key": "cmd+2",
+        "command": "workbench.action.output.toggleOutput",
+        "when": "workbench.panel.output.active"
+    },
+    {
+        "key": "cmd+3",
+        "command": "workbench.debug.action.toggleRepl",
+        "when": "workbench.panel.repl.view.active"
+    },
+    {
+        "key": "cmd+4",
+        "command": "workbench.action.terminal.toggleTerminal"
+    },
+    {
+        "key": "cmd+5",
+        "command": "~remote.forwardedPortsContainer"
+    },
+    {
+        "key": "ctrl+0",
+        "command": "workbench.action.toggleSidebarVisibility"
+    },
+    {
+        "key": "cmd+0",
+        "command": "workbench.action.toggleSidebarVisibility"
+    },
+    {
+        "key": "ctrl+1",
+        "command": "workbench.view.explorer",
+    },
+    {
+        "key": "ctrl+2",
+        "command": "workbench.view.search",
+    },
+    {
+        "key": "ctrl+3",
+        "command": "workbench.scm.focus"
+    },
+    {
+        "key": "ctrl+4",
+        "command": "workbench.view.debug"
+    },
+    {
+        "key": "ctrl+5",
+        "command": "workbench.view.extensions"
+    },
+    {
+        "key": "ctrl+6",
+        "command": "workbench.view.extension.bookmarks"
+    },
+    {
+        "key": "ctrl+7",
+        "command": "workbench.view.extension.project-manager"
+    },
+    {
+        "key": "ctrl+8",
+        "command": "workbench.view.extension.codexSecondaryViewContainer",
+        "when": "viewContainer.workbench.view.extension.codexSecondaryViewContainer.enabled"
+    },
+    {
+        "key": "ctrl+8",
+        "command": "workbench.view.extension.containersView",
+        "when": "viewContainer.workbench.view.extension.containersView.enabled"
+    },
+    {
+        "key": "ctrl+9",
+        "command": "workbench.view.remote"
+    },
+    {
+        "key": "ctrl+1",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "sideBarVisible && activeViewlet == 'workbench.view.explorer'"
+    },
+    {
+        "key": "ctrl+2",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "sideBarVisible && activeViewlet == 'workbench.view.search'"
+    },
+    {
+        "key": "ctrl+3",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "sideBarVisible && activeViewlet == 'workbench.view.scm'"
+    },
+    {
+        "key": "ctrl+4",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "sideBarVisible && activeViewlet == 'workbench.view.debug'"
+    },
+    {
+        "key": "ctrl+5",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "sideBarVisible && activeViewlet == 'workbench.view.extensions'"
+    },
+    {
+        "key": "ctrl+6",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "sideBarVisible && activeViewlet == 'workbench.view.extension.bookmarks'"
+    },
+    {
+        "key": "ctrl+7",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "sideBarVisible && activeViewlet == 'workbench.view.extension.project-manager'"
+    },
+    {
+        "key": "ctrl+8",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "viewContainer.workbench.view.extension.codexSecondaryViewContainer.enabled && sideBarVisible && activeViewlet == 'workbench.view.extension.codexSecondaryViewContainer'"
+    },
+    {
+        "key": "ctrl+8",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "sideBarVisible && activeViewlet == 'workbench.view.extension.containersView'"
+    },
+    {
+        "key": "ctrl+9",
+        "command": "workbench.action.toggleSidebarVisibility",
+        "when": "sideBarVisible && activeViewlet == 'workbench.view.remote'"
+    },
+    {
+        "key": "shift+alt+o",
+        "command": "openInParallels.open"
+    },
+    {
+        "key": "enter",
+        "command": "search.action.focusSearchList",
+        "when": "searchViewletVisible && searchInputBoxFocus"
+    },
+    {
+        "key": "ctrl+shift+r",
+        "command": "editor.action.rename",
+        "when": "editorHasRenameProvider && editorTextFocus && !editorReadonly"
+    },
+    {
+        "key": "alt+cmd+o",
+        "command": "workbench.action.remote.showMenu"
+    },
+    {
+        "key": "shift+alt+j",
+        "command": "-bookmarks.expandSelectionToPrevious",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "shift+alt+g",
+        "command": "multiCursor.expandAllDown"
+    },
+]

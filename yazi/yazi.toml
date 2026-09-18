@@ -1,0 +1,43 @@
+# Yazi 26.9.1 — migrated from ranger/rc.conf
+[mgr]
+ratio = [1, 3, 4]
+sort_by = "natural"
+sort_sensitive = false
+sort_reverse = false
+sort_dir_first = true
+linemode = "size"
+show_hidden = false
+scrolloff = 8
+mouse_events = []
+
+[preview]
+wrap = "no"
+tab_size = 2
+# Allow large previews to fit the pane on high-resolution displays.
+max_width = 3840
+max_height = 2160
+
+[opener]
+edit = [
+  { run = '${EDITOR:-vim} %s', block = true, for = "unix" },
+]
+open = [
+  { run = 'open %s', desc = "Open", for = "macos" },
+]
+drawio = [
+  { run = 'open -a "draw.io" %s', desc = "draw.io", for = "macos" },
+]
+
+[open]
+prepend_rules = [
+  { url = "*.{json,csv,tex,py,pl,rb,js,sh,php,xml}", use = ["edit", "open"] },
+  { url = "*.drawio", use = "drawio" },
+]
+
+# Avoid optional external preview dependencies; these files still open normally via `l`.
+[plugin]
+prepend_previewers = [
+  { mime = "image/{png,jpeg,webp,bmp,tiff}", run = "image-fit" },
+  { mime = "application/pdf", run = "noop" },
+  { mime = "video/*", run = "noop" },
+]

@@ -115,9 +115,7 @@ abbr R " fish_reload"
 # }}}
 
 # {{{ Generic
-alias r='ranger'
 abbr q ' exit'
-abbr r ' ranger'
 abbr g 'git'
 alias rm='rm -i'
 alias vi="/usr/bin/vim"
@@ -133,6 +131,37 @@ bind \cx 'fg; commandline -f repaint'
 # }}}
 
 # {{{ Toolchain
+function __toolchain_apply_profile --argument-names toolchain_name
+    # Every variable/path managed by a profile must be listed here.  They are
+    # cleared before applying the next profile, so switching toolchains cannot
+    # leave settings from the previous one in the environment.
+
+    # sel -l managed_variables KEY1 KEY2
+    # set -l managed_paths PATH1 PATH2
+
+    set -eg $managed_variables
+    for managed_path in $managed_paths
+        set -gx PATH (string match -v -- $managed_path $PATH)
+    end
+
+    # Profile map: add a case, its variable/value pairs, and its PATH entries
+    # for each new toolchain family.
+    set -l environment_map
+    set -l profile_paths
+    switch $toolchain_name
+    # case 'amd64'
+    #     set environment_map \
+    #         KEY1 /tmp/key1 \
+    #         KEY2 /tmp/key2
+    #     set profile_paths PATH1
+    end
+
+    for index in (seq 1 2 (count $environment_map))
+        set -gx $environment_map[$index] $environment_map[(math $index + 1)]
+    end
+    set -gx PATH $PATH $profile_paths
+end
+
 function toolchain
     if test "$argv" = "auto"
         switch (basename $PWD)
@@ -161,6 +190,8 @@ function toolchain
         export LIBRARY_PATH=$L_PATH
         export LD_LIBRARY_PATH=$L_PATH
 
+        __toolchain_apply_profile $TOOLCHAIN
+
         printf "\033[0;32m Include path (CPATH, C_FLAGS):   \033[0m $CPATH \n"
         printf "\033[0;32m Library path: ([LD_]LIBRARY_PATH)\033[0m $LIBRARY_PATH \n"
 end
@@ -170,6 +201,17 @@ function __fish_complete_toolchain
 end
 complete -c toolchain --no-files -a "(__fish_complete_toolchain)"
 
+# }}}
+
+# {{{ r -> yazi / ranger
+abbr --erase r 2>/dev/null
+function r --description 'Run Yazi when available, otherwise start ranger'
+    if command -q yazi
+        command yazi $argv
+    else
+        command ranger
+    end
+end
 # }}}
 
 # {{{ Other

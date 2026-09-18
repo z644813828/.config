@@ -49,3 +49,4 @@ user-dirs.locale
 xfce4/
 cagent/.cagent_first_run
 server/vps/.vps-config-backup.env
+yazi/vfs.toml

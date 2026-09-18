@@ -562,19 +562,22 @@
                         ]
                     },
                     {
-                        "description": "Microsoft Remote Desktop",
+                        "description": "Windows App",
                         "manipulators": [
                             {
                                 "conditions": [
                                     {
                                         "bundle_identifiers": [
-                                            "com.microsoft.rdc.macos REMOVE"
+                                            "com.microsoft.rdc.macos"
                                         ],
                                         "type": "frontmost_application_if"
                                     }
                                 ],
-                                "from": { "key_code": "right_command" },
-                                "to": [],
+                                "from": {
+                                    "key_code": "right_command",
+                                    "modifiers": { "optional": ["any"] }
+                                },
+                                "to": [{ "key_code": "right_command", "lazy": true }],
                                 "type": "basic"
                             },
                             {
@@ -593,7 +596,7 @@
                                 "to": [
                                     {
                                         "key_code": "f4",
-                                        "modifiers": ["left_option"]
+                                        "modifiers": ["left_option", "fn"]
                                     }
                                 ],
                                 "type": "basic"

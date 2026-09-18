@@ -41,12 +41,12 @@ const at = (line, character) => new Selection(new Position(line, character), new
 
 console.log('expand');
 
-test('alt+j adds a cursor below, last cursor stays primary', () => {
+test('alt+j adds cursors in document order', () => {
 	const ed = open('aaaa\nbbbb\ncccc\ndddd', [at(0, 2)]);
 	run('multiCursor.expandDown');
-	assert.deepStrictEqual(cursors(ed), ['1:2', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '1:2']);
 	run('multiCursor.expandDown');
-	assert.deepStrictEqual(cursors(ed), ['2:2', '1:2', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '1:2', '2:2']);
 });
 
 test('alt+k adds a cursor above', () => {
@@ -60,9 +60,9 @@ test('expanding back removes the last cursor instead of growing both ways', () =
 	const ed = open('aaaa\nbbbb\ncccc\ndddd', [at(0, 2)]);
 	run('multiCursor.expandDown');
 	run('multiCursor.expandDown');
-	assert.deepStrictEqual(cursors(ed), ['2:2', '1:2', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '1:2', '2:2']);
 	run('multiCursor.expandUp');
-	assert.deepStrictEqual(cursors(ed), ['1:2', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '1:2']);
 	run('multiCursor.expandUp');
 	assert.deepStrictEqual(cursors(ed), ['0:2']);
 	// Once down to one cursor, up expands again.
@@ -79,9 +79,9 @@ test('stops at the last line', () => {
 test('short lines clip but the goal column survives', () => {
 	const ed = open('aaaaaaaa\nbb\ncccccccc', [at(0, 6)]);
 	run('multiCursor.expandDown');
-	assert.deepStrictEqual(cursors(ed), ['1:2', '0:6'], 'clipped to end of short line');
+	assert.deepStrictEqual(cursors(ed), ['0:6', '1:2'], 'clipped to end of short line');
 	run('multiCursor.expandDown');
-	assert.deepStrictEqual(cursors(ed), ['2:6', '1:2', '0:6'], 'column 6 restored');
+	assert.deepStrictEqual(cursors(ed), ['0:6', '1:2', '2:6'], 'column 6 restored');
 });
 
 test('tabs are measured as visual columns', () => {
@@ -89,16 +89,36 @@ test('tabs are measured as visual columns', () => {
 	//        line 1: "    xy" -> visual columns 0..
 	const ed = open('\tab\n    xy', [at(0, 2)], 4); // after the tab and "a" => visual 5
 	run('multiCursor.expandDown');
-	assert.deepStrictEqual(cursors(ed), ['1:5', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '1:5']);
 });
 
 test('expand all down / up', () => {
 	const ed = open('aaa\nbbb\nccc\nddd', [at(1, 1)]);
 	run('multiCursor.expandAllDown');
-	assert.deepStrictEqual(cursors(ed), ['3:1', '2:1', '1:1']);
+	assert.deepStrictEqual(cursors(ed), ['1:1', '2:1', '3:1']);
 	const other = open('aaa\nbbb\nccc\nddd', [at(2, 0)]);
 	run('multiCursor.expandAllUp');
 	assert.deepStrictEqual(cursors(other), ['0:0', '1:0', '2:0']);
+});
+
+test('six lines keep yank register indices aligned with paste order', () => {
+	const ed = open('1\n2\n3\n4\n5\n6');
+	for (let i = 0; i < 5; i++) run('multiCursor.expandDown');
+	const registers = ed.selections.map((s) => ed.document.lineAt(s.active.line).text);
+	assert.deepStrictEqual(registers, ['1', '2', '3', '4', '5', '6']);
+	// A consumer that visits paste destinations in document order must see
+	// the same register index for every line.
+	const pasted = registers.flatMap((value, i) => [ed.document.lineAt(i).text, value]);
+	assert.deepStrictEqual(pasted, ['1', '1', '2', '2', '3', '3', '4', '4', '5', '5', '6', '6']);
+});
+
+test('last cursor remains tracked when moving past another cursor', () => {
+	const ed = open('aaaa\nbbbb\ncccc', [at(1, 2)]);
+	run('multiCursor.expandDown');
+	run('multiCursor.moveLastCursorLeft');
+	run('multiCursor.moveLastCursorUp');
+	run('multiCursor.moveLastCursorUp');
+	assert.deepStrictEqual(cursors(ed), ['0:1', '1:2']);
 });
 
 console.log('move last cursor');
@@ -107,21 +127,21 @@ test('alt+shift+j/k moves only the last cursor', () => {
 	const ed = open('aaaa\nbbbb\ncccc\ndddd', [at(0, 2)]);
 	run('multiCursor.expandDown'); // cursors 1:2 (last), 0:2
 	run('multiCursor.moveLastCursorDown');
-	assert.deepStrictEqual(cursors(ed), ['2:2', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '2:2']);
 	run('multiCursor.moveLastCursorDown');
-	assert.deepStrictEqual(cursors(ed), ['3:2', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '3:2']);
 	run('multiCursor.moveLastCursorUp');
-	assert.deepStrictEqual(cursors(ed), ['2:2', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '2:2']);
 });
 
 test('alt+shift+h/l moves only the last cursor horizontally', () => {
 	const ed = open('aaaa\nbbbb', [at(0, 2)]);
 	run('multiCursor.expandDown');
 	run('multiCursor.moveLastCursorRight');
-	assert.deepStrictEqual(cursors(ed), ['1:3', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '1:3']);
 	run('multiCursor.moveLastCursorLeft');
 	run('multiCursor.moveLastCursorLeft');
-	assert.deepStrictEqual(cursors(ed), ['1:1', '0:2']);
+	assert.deepStrictEqual(cursors(ed), ['0:2', '1:1']);
 });
 
 test('horizontal move wraps across lines', () => {
@@ -182,6 +202,39 @@ test('clicking elsewhere resets the remembered column', () => {
 	vscode._fireSelectionChange({ selections: ed._selections, kind: 2 }); // user click
 	run('multiCursor.moveLastCursorDown');
 	assert.deepStrictEqual(cursors(ed), ['2:2'], 'column 6 forgotten after a click');
+});
+
+for (const kind of [1, 3, undefined]) {
+	test(`moving all cursors preserves the last cursor (event kind ${kind})`, () => {
+		const ed = open('aaaa\nbbbb\ncccc\ndddd\neeee', [at(0, 1)]);
+		run('multiCursor.expandDown');
+		run('multiCursor.expandDown');
+		for (let step = 0; step < 2; step++) {
+			ed._selections = ed.selections.map((s) => at(s.active.line + 1, 2));
+			vscode._fireSelectionChange({ textEditor: ed, selections: ed.selections, kind });
+		}
+		run('multiCursor.moveLastCursorRight');
+		assert.deepStrictEqual(cursors(ed), ['2:2', '3:2', '4:3']);
+		run('multiCursor.expandUp');
+		assert.deepStrictEqual(cursors(ed), ['2:2', '3:2', '3:3', '4:3']);
+	});
+}
+
+test('a mouse selection resets the last cursor even with the same count', () => {
+	const ed = open('aaaa\nbbbb\ncccc', [at(0, 1)]);
+	run('multiCursor.expandDown');
+	vscode._fireSelectionChange({ textEditor: ed, selections: ed.selections, kind: 2 });
+	run('multiCursor.moveLastCursorRight');
+	assert.deepStrictEqual(cursors(ed), ['0:2', '1:1']);
+});
+
+test('changing the number of cursors resets tracking', () => {
+	const ed = open('aaaa\nbbbb\ncccc', [at(0, 1)]);
+	run('multiCursor.expandDown');
+	run('multiCursor.expandDown');
+	ed.selections = [at(0, 1), at(1, 1)];
+	run('multiCursor.moveLastCursorRight');
+	assert.deepStrictEqual(cursors(ed), ['0:2', '1:1']);
 });
 
 console.log(failures ? `\n${failures} failing` : '\nall passing');

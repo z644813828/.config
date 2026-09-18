@@ -1,0 +1,25 @@
+# Nord palette matching nvim/init.vim and Nord.itermcolors.
+
+[mgr]
+border_symbol = " "
+border_style  = { fg = "#4C566A" }
+
+[tabs]
+active   = { fg = "#2E3440", bg = "#81A1C1", bold = false }
+inactive = { fg = "#D8DEE9", bg = "#3B4252" }
+# Replace Yazi's rounded Powerline separators with plain spacing.
+sep_inner = { open = " ", close = " " }
+sep_outer = { open = "", close = "" }
+
+[indicator]
+current = { fg = "#2E3440", bg = "#81A1C1", bold = false }
+parent  = { fg = "#2E3440", bg = "#81A1C1", bold = false }
+preview = { fg = "#2E3440", bg = "#81A1C1", bold = false }
+# Keep the number gutter aligned: unhovered rows always have one leading cell,
+# so the hovered row needs the same cell as well.
+padding = { open = " ", close = " " }
+
+[status]
+overall   = { fg = "#D8DEE9", bg = "#2E3440" }
+sep_left  = { open = "", close = "" }
+sep_right = { open = "", close = "" }

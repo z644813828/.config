@@ -1,0 +1,63 @@
+{
+	"Debug print": {
+		"prefix": "dbg",
+		"body": [
+			"printf(\"%s:%d $1\\\\n\", __func__, __LINE__); //DBGPRINT$2"
+		],
+		"description": "Debug print"
+	},
+	"Debug print (value)": {
+		"prefix": "dbv",
+		"body": [
+			"printf(\"%s:%d ${1:dbg} = ${2:%d}\\\\n\", __func__, __LINE__, ${3:value}); //DBGPRINT$4"
+		],
+		"description": "Debug print with value"
+	},
+	"Debug print (errno)": {
+		"prefix": "DBG",
+		"body": [
+			"printf(\"%s:%d %s\\\\n\", __func__, __LINE__, strerror(errno)); //DBGPRINT$1"
+		],
+		"description": "Debug print errno"
+	},
+	"Print bits of integer": {
+		"prefix": "brp",
+		"body": [
+			"int i;",
+			"for (i = 0; i < ${1:NB}; i++) {",
+			"\tprintf(\"%c\", (${2:SRC} & (1 << i)) ? '1' : '0');",
+			"\tif ((i + 1) % 16 == 0)",
+			"\t\tprintf(\"\\\\n\");",
+			"}$3"
+		],
+		"description": "Print bits of integer"
+	},
+	"Set a bit": {
+		"prefix": "bws",
+		"body": [
+			"|= (1 << ${1:BIT})$2"
+		],
+		"description": "Set a bit"
+	},
+	"Clear a bit": {
+		"prefix": "bwc",
+		"body": [
+			"&= ~(1 << ${1:BIT})$2"
+		],
+		"description": "Clear a bit"
+	},
+	"Toggle a bit": {
+		"prefix": "bwt",
+		"body": [
+			"^= (1 << ${1:BIT})$2"
+		],
+		"description": "Toggle a bit"
+	},
+	"Test a bit": {
+		"prefix": "bwtt",
+		"body": [
+			"& (1 << ${1:BIT})$2"
+		],
+		"description": "Test a bit"
+	}
+}

@@ -2,7 +2,7 @@
   "name": "multi-cursor",
   "displayName": "Multi Cursor (Atom-style)",
   "description": "Atom multi-cursor package behaviour for VS Code: expand cursors up/down and move only the last cursor.",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "publisher": "local",
   "license": "MIT",
   "engines": { "vscode": "^1.70.0" },
