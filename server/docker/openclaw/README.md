@@ -2,6 +2,30 @@
 
 Короткая документация по текущей установке OpenClaw в Docker-контейнере.
 
+## Compose для миграции
+
+`docker-compose.yml` предназначен для Docker Compose v2 на новом хосте.
+По умолчанию используется образ `openclaw:migration`, импортированный из
+`openclaw/rootfs.tar.gz` миграционного комплекта. Для другого подготовленного
+образа задайте `OPENCLAW_IMAGE`. Это не сборка OpenClaw с нуля.
+
+До запуска восстановите `/root/.openclaw` и mounts из комплекта, сравните
+настройки с `inventory/openclaw.json`. В compose нет предположительных volumes:
+если они есть в сохранённом inspect, добавьте реальные mounts до запуска.
+Сеть `infra_net` должна существовать с подсетью `172.30.0.0/24`.
+
+```bash
+docker compose config --quiet
+docker compose up -d
+docker compose logs --tail=50
+```
+
+Старый контейнер должен быть выключен: два экземпляра не должны одновременно
+получать сообщения одного Telegram-бота. Токен читается внутри контейнера из
+сохранённого конфига. Gateway работает на переднем плане с логами Docker;
+его завершение приводит к завершению контейнера и применению restart policy.
+Публикация портов требует прежних ограничений Docker firewall.
+
 ## Что поднято
 
 - Docker image был зафиксирован после настройки как `openclaw-debian11-codex-telegram`.
@@ -10,14 +34,14 @@
   - Debian 11;
   - Node.js `v24.15.0`;
   - npm `11.12.1`;
-  - OpenClaw `2026.4.24`;
-  - Codex CLI `0.125.0`;
+  - OpenClaw `2026.9.2`;
+  - Codex CLI `0.153.4`;
   - `bubblewrap`;
   - Telegram channel.
 - OpenClaw Gateway слушает внутри контейнера:
   - `0.0.0.0:18789`;
   - auth mode: `token`;
-  - default model: `openai-codex/gpt-5.5`.
+  - default model: `openai/gpt-5.6-sol`.
 - Docker ports:
   - host `2022` -> container `22` for SSH;
   - host `18789` -> container `18789` for OpenClaw Gateway HTTP/WebSocket.
@@ -38,8 +62,8 @@
 - OpenClaw gateway token:
   - `/root/.openclaw/openclaw.json`
   - `/root/.openclaw/gateway.token`
-- Codex OAuth:
-  - `/root/.codex/auth.json`
+- OpenAI/Codex OAuth profiles:
+  - `/root/.openclaw/state/openclaw.sqlite`
 - Telegram bot token:
   - внутри OpenClaw config `/root/.openclaw/openclaw.json`
 
@@ -94,27 +118,23 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now docker-published-ports-firewall.service
 ```
 
-Gateway token брать из контейнера:
-
-```bash
-docker exec openclaw node -e 'const c=require("/root/.openclaw/openclaw.json"); console.log(c.gateway.auth.token)'
-```
-
 ## Проверка
 
 ```bash
 docker ps --filter name=openclaw
 docker exec openclaw openclaw --version
 docker exec openclaw codex --version
-docker exec openclaw openclaw gateway status
+docker exec openclaw openclaw health
 docker exec openclaw openclaw channels status --deep
-docker exec openclaw openclaw models list
+docker exec openclaw openclaw models status
 ```
 
-Ожидаемое по моделям:
+В `models status` должны быть:
 
 ```text
-openai-codex/gpt-5.5 ... Auth yes ... default
+Default       : openai/gpt-5.6-sol
+Runtime auth  : status=usable
+OAuth/token status: один рабочий профиль openai:... ok
 ```
 
 Ожидаемое по Telegram:
@@ -153,7 +173,7 @@ docker exec openclaw openclaw config get agents
 
 ```text
 main (default)
-Model: openai-codex/gpt-5.5
+Model: openai/gpt-5.6-sol
 Telegram default: configured
 Routing: default
 ```
@@ -224,6 +244,27 @@ OpenClaw создал workspace:
 В нем есть `BOOTSTRAP.md`, `IDENTITY.md`, `USER.md`, `SOUL.md`, `TOOLS.md`.
 
 Первый Telegram ответ может просить заполнить identity/user данные. Это нормальное поведение OpenClaw bootstrap. После настройки личности агент может удалить `BOOTSTRAP.md`.
+
+## Monit
+
+Проверка OpenClaw на Docker-хосте:
+
+```text
+server/monit/scripts/openclaw_health.sh
+server/monit/conf.d/openclaw_health.conf
+```
+
+Она проверяет, что контейнер запущен, `openclaw health` проходит, а OAuth runtime
+имеет `status=usable` и хотя бы один профиль OpenAI со статусом `ok`. Наличие новой
+версии OpenClaw не является аварией и не должно влиять на Monit.
+
+Установка на Docker-хосте:
+
+```bash
+sudo install -m 0755 /home/dmitriy/.config/server/monit/scripts/openclaw_health.sh /etc/monit/scripts/
+sudo install -m 0644 /home/dmitriy/.config/server/monit/conf.d/openclaw_health.conf /etc/monit/conf.d/
+sudo monit -t && sudo systemctl reload monit
+```
 
 ## После изменений
 

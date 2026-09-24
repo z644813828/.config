@@ -110,12 +110,14 @@
     "security.workspace.trust.untrustedFiles": "open",
     "git.openRepositoryInParentFolders": "never",
     "workbench.editorAssociations": {
+        "{hexdiff}:/**/*.*": "hexEditor.hexedit",
         "*.copilotmd": "vscode.markdown.preview.editor",
         "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.qrc": "default",
         "{git,gitlens,chat-editing-snapshot-text-model,copilot,git-graph,git-graph-3}:/**/*.ui": "default",
         "*.bin": "hexEditor.hexedit",
         "binary": "hexEditor.hexedit",
-        "*.qrc": "qt-core.qrcEditor"
+        "*.qrc": "qt-core.qrcEditor",
+        "*.md": "vscode.markdown.editor"
     },
     "makefile.configureOnOpen": false,
     "workbench.startupEditor": "none",

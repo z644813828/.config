@@ -1,0 +1,30 @@
+# For Compose v2 on the new host. Import the migration rootfs before starting.
+# Reconcile mounts and runtime settings with inventory/openclaw.json first.
+services:
+  openclaw:
+    image: ${OPENCLAW_IMAGE:-openclaw:migration}
+    container_name: openclaw
+    restart: unless-stopped
+    init: true
+    pids_limit: 256
+    user: root
+    working_dir: /root
+    ports:
+      - "2022:22"
+      - "18789:18789"
+    networks:
+      infra_net:
+        ipv4_address: 172.30.0.2
+    command:
+      - bash
+      - -ec
+      - |
+        mkdir -p /run/sshd /root/.openclaw/logs
+        service ssh start 2>/dev/null || /usr/sbin/sshd
+        OPENCLAW_GATEWAY_TOKEN="$$(node -e 'const c=require("/root/.openclaw/openclaw.json"); if (!c.gateway || !c.gateway.auth || !c.gateway.auth.token) process.exit(1); process.stdout.write(c.gateway.auth.token)')"
+        export OPENCLAW_GATEWAY_TOKEN
+        exec openclaw gateway run --port 18789 --bind lan --auth token
+
+networks:
+  infra_net:
+    external: true

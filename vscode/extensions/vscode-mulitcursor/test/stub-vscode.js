@@ -14,13 +14,19 @@ class Selection extends Range {
 	get isEmpty() { return this.anchor.isEqual(this.active); }
 }
 
-const listeners = { selection: [], activeEditor: [] };
+const listeners = { selection: [], activeEditor: [], document: [] };
 function event(bucket) {
 	return (fn) => { bucket.push(fn); return { dispose() {} }; };
 }
 
 const vscode = {
 	Position, Range, Selection,
+	extensions: { getExtension() { return { isActive: true }; } },
+	workspace: {
+		onDidChangeTextDocument: event(listeners.document),
+		getConfiguration() { return { get(_key, fallback) { return fallback; } }; }
+	},
+	_fireDocumentChange(e) { listeners.document.forEach((fn) => fn(e)); },
 	TextEditorRevealType: { Default: 0 },
 	TextEditorSelectionChangeKind: { Keyboard: 1, Mouse: 2, Command: 3 },
 	commands: {
@@ -49,7 +55,7 @@ function makeEditor(text, tabSize = 4) {
 		set selections(value) {
 			this._selections = value;
 			// The real editor notifies listeners after an API-driven change.
-			vscode._fireSelectionChange({ selections: value, kind: 3 }); // 'api' arrives as Command
+			vscode._fireSelectionChange({ textEditor: this, selections: value, kind: 3 }); // 'api' arrives as Command
 		},
 		get selection() { return this._selections[0]; },
 		revealRange() {}

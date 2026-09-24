@@ -74,6 +74,7 @@ prepend_keymap = [
   { on = "<F10>", run = "quit", desc = "Ranger: exit" },
 
   # personal g shortcuts
+  { on = ["g", "."], run = "cd ~/.config", desc = "Config" },
   { on = ["g", "h"], run = "cd ~", desc = "Home" },
   { on = ["g", "d"], run = "cd ~/Documents/Documents", desc = "Documents" },
   { on = ["g", "z"], run = "cd ~/Downloads", desc = "Downloads" },

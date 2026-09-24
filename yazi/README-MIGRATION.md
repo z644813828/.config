@@ -26,11 +26,13 @@ Notes:
 - Option/Alt bindings require the terminal to send Option as Meta/Alt.
 - `q` uses Yazi's `close`: it closes the active tab and exits Yazi only when it was the last tab.
 - `l`, Enter, and Right use `plugins/smart-enter.yazi`: directories use `enter`,
-  while files use `open --hovered` so an existing selection cannot open the wrong item.
+  while files open the selection, or the hovered file when nothing is selected.
 - All openers use Yazi's `%s` file-path placeholder (not shell `$@`), so `l` passes the
-  hovered filename to `$EDITOR`; `S` opens a blocking `fish` shell like ranger's `map S shell fish`.
+  selected paths (or the hovered filename) to `$EDITOR`; `S` opens a blocking `fish` shell.
+- `r` prompts for an application command before `%s`; F4 retains the configured opener menu.
 - `zh`, Ctrl-H, and Backspace toggle hidden files.
-- The full current-directory header is hidden; tabs and the status bar remain visible.
+- The full current-directory path and right-aligned tabs share one header row.
+- Creation time and the search match counter appear in the status bar. Search highlighting is disabled.
 - `theme.toml` uses the Nord palette from the Neovim and iTerm profiles, with square tabs and indicators.
 - PDF preview is disabled with the built-in `noop` previewer, so Poppler/`pdftoppm` is not required;
   PDFs still open through the normal macOS opener. Video preview is disabled too, so FFmpeg/`ffprobe`
@@ -38,5 +40,6 @@ Notes:
 - `1` through `9` start a silent Vim/ranger count for `j`/`k`; more digits (including
   zero) are read by `plugins/vim-count.yazi`, so `3j`, `12k`, and `123j` work without
   a key-indicator popup. A standalone `0` is deliberately left to Yazi's default mapping.
-- `DD` is permanent delete, while `dD` moves to Trash, matching the ranger config's intent.
+- `DD` is permanent delete with confirmation; `dD` moves to Trash without confirmation.
+- `image-fit` enlarges cached image previews on macOS using `sips`; Linux retains standard previews.
 - Archive shortcuts require the corresponding command (zip/7z/tar) to exist.

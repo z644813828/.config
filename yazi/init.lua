@@ -1,3 +1,15 @@
+-- Yazi increments this before init.lua: 1 is the outermost instance.
+local yazi_level = tonumber(os.getenv("YAZI_LEVEL")) or 0
+if yazi_level > 1 then
+    ya.notify {
+        title = "Nested Yazi",
+        content = "Yazi is already running in the parent session. This is a nested instance (level "
+            .. yazi_level .. "). Press Q to close it.",
+        level = "warn",
+        timeout = 10,
+    }
+end
+
 require("hybrid-relative-numbers"):setup({
     min_width = 2,
     separator = " ",

@@ -539,9 +539,56 @@ bind \ct '__fzf_open --editor'
 if bind -M insert >/dev/null 2>/dev/null
     bind -M insert \ct '__fzf_open --editor'
 end
-bind \t '__fzf_complete'
+# Keep local fixes outside Fisher's managed functions directory.
+function __fzf_complete_local
+    # Load the plugin's option and preview helpers before using them.
+    functions -q __fzf_complete; or return
+
+    set -l candidates (complete -C (commandline -cp))
+    set -l result
+    test (count $candidates) -gt 0; or return
+
+    if test (count $candidates) -eq 1
+        set result (string split -m 1 -f 1 \t -- $candidates[1])
+    else
+        set -l query (commandline -ct)
+        set -l output (
+            printf '%s\n' $candidates |
+                eval (__fzfcmd) (__fzf_complete_opts) \
+                    --delimiter=(string escape -- \t) \
+                    --query=(string escape -- "$query") --print-query
+        )
+        set -l picker_status $pipestatus
+        if test $picker_status[-1] -ne 0
+            commandline -f repaint
+            return
+        end
+
+        # The first line is the query, including when it is empty.
+        for candidate in $output[2..-1]
+            set -a result (string split -m 1 -f 1 \t -- "$candidate")
+        end
+        if test (count $result) -eq 0
+            set result "$output[1]"
+        end
+    end
+
+    set -l escaped
+    for candidate in $result
+        # Preserve home expansion, while quoting spaces and shell metacharacters.
+        if string match -q '~/*' -- "$candidate"
+            set -a escaped \~/(string escape -- (string sub -s 3 -- "$candidate"))
+        else
+            set -a escaped (string escape -- "$candidate")
+        end
+    end
+    commandline -t -- (string join ' ' -- $escaped)
+    commandline -f repaint
+end
+
+bind \t '__fzf_complete_local'
 if bind -M insert >/dev/null 2>/dev/null
-    bind -M insert \t '__fzf_complete'
+    bind -M insert \t '__fzf_complete_local'
 end
 
 set -U FZF_FIND_FILE_COMMAND "ag -l --hidden --ignore .git \$dir 2> /dev/null"

@@ -1,0 +1,7 @@
+*
+!Dockerfile
+!requirements.txt
+!bridge.py
+!telegram_api.py
+!monit_api.py
+!commands.py

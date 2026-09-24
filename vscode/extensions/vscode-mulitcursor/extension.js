@@ -1,4 +1,6 @@
 const vscode = require('vscode');
+const { watchPasteCursors } = require('./paste-cursors');
+let cancelPasteCorrection = () => {};
 
 // Port of the Atom `multi-cursor` package (joseramonc/multi-cursor).
 //
@@ -207,6 +209,7 @@ function moveLastCursor(direction) {
 }
 
 function reset() {
+	cancelPasteCorrection();
 	lastCursorIndex = 0;
 	trackedCursorCount = 0;
 	goalColumn = undefined;
@@ -214,6 +217,10 @@ function reset() {
 }
 
 function activate(context) {
+	cancelPasteCorrection = watchPasteCursors(context, () => trackedCursorCount, (editor, selections) => {
+		const last = selections[lastCursorIndex];
+		apply(editor, [last, ...selections.filter((_, i) => i !== lastCursorIndex)], last.active);
+	});
 	const commands = {
 		'multiCursor.expandDown': () => expand(1),
 		'multiCursor.expandUp': () => expand(-1),

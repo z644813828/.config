@@ -1,0 +1,22 @@
+[Unit]
+Description=Monit SMTP to Telegram bridge
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=monit-telegram
+Group=monit-telegram
+EnvironmentFile=/etc/monit-telegram.env
+ExecStart=/opt/monit-telegram/venv/bin/python /opt/monit-telegram/bridge.py
+Restart=always
+RestartSec=5
+StateDirectory=monit-telegram
+StateDirectoryMode=0700
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+
+[Install]
+WantedBy=multi-user.target

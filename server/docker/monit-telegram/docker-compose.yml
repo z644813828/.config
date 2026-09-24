@@ -1,0 +1,27 @@
+version: "2"
+
+services:
+  monit-telegram:
+    build: .
+    image: local/monit-telegram
+    container_name: monit-telegram
+    restart: unless-stopped
+    # The bridge binds only to 127.0.0.1:2525 on the Linux host.
+    network_mode: host
+    env_file:
+      - /etc/monit-telegram.env
+    volumes:
+      - queue:/var/lib/monit-telegram
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"
+
+volumes:
+  queue:
