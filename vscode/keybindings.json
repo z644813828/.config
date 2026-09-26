@@ -36,7 +36,14 @@
     // Поиск (аналог fuzzy-grep)
     {
         "key": "cmd+f",
-        "command": "workbench.action.findInFiles"
+        "command": "workbench.action.findInFiles",
+        "when": "activeCustomEditorId != local.hexEditor || terminalFocus || sideBarFocus || inQuickOpen"
+    },
+    // Поиск внутри Hex Editor
+    {
+        "key": "cmd+f",
+        "command": "hexEditor.find",
+        "when": "activeCustomEditorId == local.hexEditor && !terminalFocus && !sideBarFocus && !inQuickOpen"
     },
     // Фокус панелей
     {
@@ -81,6 +88,12 @@
         "command": "workbench.action.moveEditorToNextGroup"
     },
     // --- WORKSPACE ---
+    // Показать/скрыть файлы из .gitignore (earshinov.vscode-toggle-exclude-gitignore).
+    // Расширение переключает explorer.excludeGitIgnore с записью в настройки.
+    {
+        "key": "cmd+shift+.",
+        "command": "earshinov.toggleExcludeGitIgnore.toggleExcludeGitIgnore"
+    },
     // Diff (нужно расширение или встроенный diff)
     {
         "key": "cmd+k",

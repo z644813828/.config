@@ -1,0 +1,92 @@
+{
+  "name": "hex-editor",
+  "displayName": "Hex Editor",
+  "description": "Theme-aware binary editor with offsets, selection sizes, address navigation and byte/text search.",
+  "version": "1.0.0",
+  "publisher": "local",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./extension.js",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "local.hexEditor",
+        "displayName": "Hex Editor",
+        "selector": [
+          {
+            "filenamePattern": "*"
+          }
+        ],
+        "priority": "option"
+      }
+    ],
+    "commands": [
+      {
+        "command": "hexEditor.open",
+        "title": "Open in Hex Editor",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.find",
+        "title": "Find",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.goto",
+        "title": "Go to Address",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.group",
+        "title": "Integer Type",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.radix",
+        "title": "Display Format",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.next",
+        "title": "Next Match",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.previous",
+        "title": "Previous Match",
+        "category": "Hex Editor"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "hexEditor.find",
+        "key": "ctrl+f",
+        "mac": "cmd+f",
+        "when": "activeCustomEditorId == local.hexEditor && !terminalFocus && !sideBarFocus && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.goto",
+        "key": "ctrl+g",
+        "mac": "cmd+g",
+        "when": "activeCustomEditorId == local.hexEditor && !terminalFocus && !sideBarFocus && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.next",
+        "key": "f3",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.previous",
+        "key": "shift+f3",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      }
+    ]
+  }
+}

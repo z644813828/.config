@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src {{csp}}; script-src 'nonce-{{nonce}}';">
+<link rel="stylesheet" href="{{style}}">
+<title>Hex Editor</title>
+</head>
+<body>
+<header>
+
+
+<form id="edit-group" hidden><label id="edit-label" for="edit-value">Value</label><input id="edit-value" spellcheck="false"><button>Apply</button><button id="cancel-edit" type="button">Cancel</button></form>
+</header>
+<div id="workspace">
+<main id="viewport" tabindex="0" aria-label="Binary editor. Arrow keys to navigate, Shift to select, hexadecimal digits to edit.">
+<div id="columns" class="row"><span class="offset">Offset</span><span class="hex heading"></span><span class="ascii">ASCII</span></div>
+<div id="before"></div><div id="rows"></div><div id="after"></div>
+</main>
+<div id="hover-guides" hidden aria-hidden="true"><div class="hover-horizontal"></div><div class="hover-vertical"></div></div>
+<aside id="inspector" aria-labelledby="inspector-title">
+<h2 id="inspector-title">Data Inspector</h2>
+<div id="inspector-offset"></div>
+<dl id="inspector-values"></dl>
+<label class="endian"><input id="little-endian" type="checkbox" checked> Little Endian</label>
+</aside>
+</div>
+
+<script nonce="{{nonce}}" src="{{core}}"></script><script nonce="{{nonce}}" src="{{script}}"></script>
+</body>
+</html>
