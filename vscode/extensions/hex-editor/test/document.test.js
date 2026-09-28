@@ -11,12 +11,16 @@ test('binary document edits, undo, redo, save, backup and revert preserve bytes'
   const mock = {
     EventEmitter: class { event() {} fire(value) { edit = value; } },
     Uri: { parse: uri, joinPath: (_, name) => uri(name) },
-    workspace: { fs: {
-      stat: async target => ({ size: files.get(String(target)).length }),
-      readFile: async target => files.get(String(target)).slice(),
-      writeFile: async (target, bytes) => files.set(String(target), bytes.slice()),
-      delete: async target => files.delete(String(target))
-    } },
+    workspace: {
+      fs: {
+        stat: async target => ({ size: files.get(String(target)).length }),
+        readFile: async target => files.get(String(target)).slice(),
+        writeFile: async (target, bytes) => files.set(String(target), bytes.slice()),
+        delete: async target => files.delete(String(target))
+      },
+      getConfiguration: () => ({ get: (_, fallback) => fallback }),
+      onDidChangeConfiguration() {}
+    },
     window: { registerCustomEditorProvider: (_, value) => { provider = value; } },
     commands: { registerCommand(name, handler) { commands.set(name, handler); } }
   };

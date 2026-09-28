@@ -22,7 +22,6 @@
     {
         "key": "alt+w",
         "command": "workbench.action.focusNextGroup",
-        "when": "editorTextFocus"
     },
     {
         "key": "alt+w",
@@ -53,6 +52,98 @@
     {
         "key": "alt+backslash",
         "command": "workbench.action.focusFirstEditorGroup"
+    },
+    // Option+1–8: сплит редактора по номеру; Option+9: последний сплит.
+    // При фокусе в терминале Option+1–9 выбирает терминал по номеру.
+    {
+        "key": "alt+1",
+        "command": "workbench.action.focusFirstEditorGroup",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "alt+2",
+        "command": "workbench.action.focusSecondEditorGroup",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "alt+3",
+        "command": "workbench.action.focusThirdEditorGroup",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "alt+4",
+        "command": "workbench.action.focusFourthEditorGroup",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "alt+5",
+        "command": "workbench.action.focusFifthEditorGroup",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "alt+6",
+        "command": "workbench.action.focusSixthEditorGroup",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "alt+7",
+        "command": "workbench.action.focusSeventhEditorGroup",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "alt+8",
+        "command": "workbench.action.focusEighthEditorGroup",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "alt+9",
+        "command": "workbench.action.focusLastEditorGroup",
+        "when": "!terminalFocus"
+    },
+    {
+        "key": "alt+1",
+        "command": "workbench.action.terminal.focusAtIndex1",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+2",
+        "command": "workbench.action.terminal.focusAtIndex2",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+3",
+        "command": "workbench.action.terminal.focusAtIndex3",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+4",
+        "command": "workbench.action.terminal.focusAtIndex4",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+5",
+        "command": "workbench.action.terminal.focusAtIndex5",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+6",
+        "command": "workbench.action.terminal.focusAtIndex6",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+7",
+        "command": "workbench.action.terminal.focusAtIndex7",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+8",
+        "command": "workbench.action.terminal.focusAtIndex8",
+        "when": "terminalFocus"
+    },
+    {
+        "key": "alt+9",
+        "command": "workbench.action.terminal.focusAtIndex9",
+        "when": "terminalFocus"
     },
     // Символы (Ctags в Atom -> Native Symbols в VS Code)
     {
@@ -244,7 +335,7 @@
     },
     {
         "key": "space i",
-        "command": "workbench.action.showEditorSymbols",
+        "command": "workbench.action.gotoSymbol",
         "when": "editorTextFocus && vim.active && vim.mode == 'Normal'"
     },
     {

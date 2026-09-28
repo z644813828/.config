@@ -43,7 +43,7 @@ button:hover { background: var(--vscode-button-secondaryHoverBackground); }
 
 /* A separate overlay cannot affect virtual row sizes or capture mouse input. */
 #hover-guides { position: fixed; overflow: hidden; pointer-events: none; z-index: 2; }
-#hover-guides > div { position: absolute; background: var(--vscode-focusBorder, currentColor); opacity: 0.06; pointer-events: none; }
+#hover-guides > div { position: absolute; background: var(--vscode-focusBorder, currentColor); opacity: var(--hover-opacity, 0.06); pointer-events: none; }
 .hover-horizontal { left: 0; width: 100%; height: 1px; }
 .hover-vertical { top: 0; height: 100%; width: 1px; }
 
@@ -57,5 +57,4 @@ header:has(#edit-group[hidden]) { display: none; }
 
 .search-match { background: var(--vscode-editor-findMatchHighlightBackground, rgba(234, 166, 40, 0.3)); box-shadow: inset 0 0 0 1px var(--vscode-editor-findMatchHighlightBorder, transparent); }
 .search-match.selected { background: var(--vscode-editor-findMatchBackground, rgba(234, 166, 40, 0.55)); color: var(--vscode-editor-findMatchForeground, var(--vscode-editor-foreground)); }
-
 

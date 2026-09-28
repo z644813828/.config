@@ -93,11 +93,17 @@ function createStatusBar(context) {
     ];
     box.show();
   }
-  for (const action of ['find', 'goto', 'group', 'radix', 'next', 'previous']) {
+  const movements = {
+    moveLeft: [-1, false], moveRight: [1, false], moveUp: [-16, false], moveDown: [16, false],
+    extendLeft: [-1, true], extendRight: [1, true], extendUp: [-16, true], extendDown: [16, true]
+  };
+  for (const action of ['find', 'goto', 'group', 'radix', 'next', 'previous', 'pageUp', 'pageDown', ...Object.keys(movements)]) {
     context.subscriptions.push(vscode.commands.registerCommand(`hexEditor.${action}`, async () => {
       const panel = active(); if (!panel) return;
       if (action === 'find' || action === 'goto') { openInput(panel, action); return; }
       if (action === 'next' || action === 'previous') { post(panel, 'search', { direction: action === 'next' ? 1 : -1 }); return; }
+      if (action === 'pageUp' || action === 'pageDown') { post(panel, 'page', { direction: action === 'pageUp' ? -1 : 1 }); return; }
+      if (movements[action]) { post(panel, 'move', { delta: movements[action][0], extend: movements[action][1] }); return; }
       const state = views.get(panel);
       const choices = action === 'group' ? [1, 2, 4, 8].map(value => ({ label: `uint${value * 8}_t`, value })) : [{ label: 'Hex', value: 16 }, { label: 'Dec', value: 10 }];
       for (const choice of choices) if (choice.value === (action === 'group' ? state.groupSize : state.radix)) choice.description = 'Current';

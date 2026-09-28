@@ -2,6 +2,11 @@ const vscode = acquireVsCodeApi();
 const $ = id => document.getElementById(id);
 const viewport = $('viewport');
 const hoverGuides = $('hover-guides');
+function applySettings(settings) {
+  const value = Number(settings.hoverOpacity);
+  const opacity = Number.isFinite(value) ? Math.max(0, Math.min(100, value)) / 100 : 0.06;
+  hoverGuides.style.setProperty('--hover-opacity', String(opacity));
+}
 
 let hoverPoint = null, hoverFrame = 0;
 function hideHoverGuides() {
@@ -207,6 +212,14 @@ function applyAction(message) {
     if (message.action === 'group' && [1, 2, 4, 8].includes(message.value)) groupSize = message.value;
     if (message.action === 'radix' && [10, 16].includes(message.value)) radix = message.value;
     cancelEdit(); nibble = ''; selectionUnit = 1; updateColumns(); render();
+  } else if (message.action === 'page') {
+    const page = 16 * Math.max(1, Math.floor(viewport.clientHeight / 24) - 1);
+    select(cursor + (message.direction === -1 ? -page : page), false, true, selectionUnit);
+  } else if (message.action === 'move') {
+    const step = selectionUnit > 1 && Math.abs(message.delta) === 1 ? groupSize : 1;
+    const target = cursor + message.delta * step;
+    const lastGroup = Math.floor((bytes.length - 1) / step) * step;
+    select(selectionUnit > 1 && message.delta > 0 ? Math.min(lastGroup, target) : target, Boolean(message.extend), true, selectionUnit);
   } else if (message.action === 'search' || message.action === 'query') {
     if (typeof message.query === 'string' && (searchQuery !== message.query || searchMode !== message.mode)) {
       searchQuery = message.query; searchMode = message.mode === 'text' ? 'text' : 'hex'; resetSearchCount();
@@ -228,6 +241,12 @@ viewport.addEventListener('keydown', event => {
     event.preventDefault(); nibble = ''; vscode.postMessage({ type: event.key.toLowerCase() === 'y' || event.shiftKey ? 'redo' : 'undo' }); render(); return;
   }
   if (mod && event.key.toLowerCase() === 'a') { event.preventDefault(); anchor = 0; select(bytes.length - 1, true); return; }
+  if (event.ctrlKey && !event.metaKey && !event.altKey && !event.shiftKey && ['u', 'd'].includes(event.key.toLowerCase())) {
+    event.preventDefault();
+    const page = 16 * Math.max(1, Math.floor(viewport.clientHeight / 24) - 1);
+    select(cursor + (event.key.toLowerCase() === 'u' ? -page : page), false, true, selectionUnit);
+    return;
+  }
   if (mod || event.altKey) return;
   const step = selectionUnit > 1 ? groupSize : 1;
   const steps = { ArrowLeft: -step, ArrowRight: step, ArrowUp: -16, ArrowDown: 16, PageUp: -16 * Math.max(1, Math.floor(viewport.clientHeight / 24) - 1), PageDown: 16 * Math.max(1, Math.floor(viewport.clientHeight / 24) - 1) };
@@ -305,13 +324,16 @@ function search(direction) {
 }
 window.addEventListener('message', event => {
   const message = event.data;
-  if (message.type === 'action') {
+  if (message.type === 'settings') {
+    applySettings(message);
+  } else if (message.type === 'action') {
     applyAction(message);
   } else if (message.type === 'data') {
     cancelEdit(); selectionUnit = 1;
     dataRevision++;
     bytes = Uint8Array.from(atob(message.bytes), c => c.charCodeAt(0));
     cursor = Math.min(cursor, Math.max(0, bytes.length - 1)); anchor = cursor; nibble = ''; hasSelection = false; lastSearch = ''; render();
+    requestAnimationFrame(() => viewport.focus({ preventScroll: true }));
   } else if (message.type === 'patch') { bytes.set(message.values || [message.value], message.offset); dataRevision++; render(); }
 });
 vscode.postMessage({ type: 'ready' });

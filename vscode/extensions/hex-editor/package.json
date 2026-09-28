@@ -2,7 +2,7 @@
   "name": "hex-editor",
   "displayName": "Hex Editor",
   "description": "Theme-aware binary editor with offsets, selection sizes, address navigation and byte/text search.",
-  "version": "1.0.0",
+  "version": "1.0.9",
   "publisher": "local",
   "engines": {
     "vscode": "^1.85.0"
@@ -15,6 +15,18 @@
     "test": "node --test test/*.test.js"
   },
   "contributes": {
+    "configuration": {
+      "title": "Hex Editor",
+      "properties": {
+        "hexEditor.hoverOpacity": {
+          "type": "number",
+          "default": 6,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Opacity in percent for the row and column highlight under the pointer. Set 0 to disable it."
+        }
+      }
+    },
     "customEditors": [
       {
         "viewType": "local.hexEditor",
@@ -62,6 +74,56 @@
         "command": "hexEditor.previous",
         "title": "Previous Match",
         "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.pageUp",
+        "title": "Page Up",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.pageDown",
+        "title": "Page Down",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.moveLeft",
+        "title": "Move Left",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.moveRight",
+        "title": "Move Right",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.moveUp",
+        "title": "Move Up",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.moveDown",
+        "title": "Move Down",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.extendLeft",
+        "title": "Extend Left",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.extendRight",
+        "title": "Extend Right",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.extendUp",
+        "title": "Extend Up",
+        "category": "Hex Editor"
+      },
+      {
+        "command": "hexEditor.extendDown",
+        "title": "Extend Down",
+        "category": "Hex Editor"
       }
     ],
     "keybindings": [
@@ -85,6 +147,56 @@
       {
         "command": "hexEditor.previous",
         "key": "shift+f3",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.pageUp",
+        "key": "ctrl+u",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.pageDown",
+        "key": "ctrl+d",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.moveLeft",
+        "key": "left",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.moveRight",
+        "key": "right",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.moveUp",
+        "key": "up",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.moveDown",
+        "key": "down",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.extendLeft",
+        "key": "shift+left",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.extendRight",
+        "key": "shift+right",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.extendUp",
+        "key": "shift+up",
+        "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
+      },
+      {
+        "command": "hexEditor.extendDown",
+        "key": "shift+down",
         "when": "activeCustomEditorId == local.hexEditor && !inQuickOpen"
       }
     ]

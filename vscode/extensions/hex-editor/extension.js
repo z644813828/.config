@@ -7,7 +7,13 @@ const LIMIT = 32 * 1024 * 1024;
 function activate(context) {
   const changes = new vscode.EventEmitter();
   const statusBar = require('./statusbar').createStatusBar(context);
+  const webviews = new Set();
+  const hoverOpacity = () => vscode.workspace.getConfiguration('hexEditor').get('hoverOpacity', 6);
   context.subscriptions.push(changes);
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(event => {
+    if (!event.affectsConfiguration('hexEditor.hoverOpacity')) return;
+    for (const panel of webviews) panel.webview.postMessage({ type: 'settings', hoverOpacity: hoverOpacity() });
+  }));
   const provider = {
     onDidChangeCustomDocument: changes.event,
     async openCustomDocument(uri, openContext) {
@@ -20,7 +26,8 @@ function activate(context) {
     async resolveCustomEditor(document, panel) {
       document.panels.add(panel);
       statusBar.attach(panel);
-      panel.onDidDispose(() => document.panels.delete(panel));
+      webviews.add(panel);
+      panel.onDidDispose(() => { document.panels.delete(panel); webviews.delete(panel); });
       const media = vscode.Uri.joinPath(context.extensionUri, 'media');
       panel.webview.options = { enableScripts: true, localResourceRoots: [media] };
       const nonce = crypto.randomBytes(16).toString('hex');
@@ -30,8 +37,17 @@ function activate(context) {
         .replaceAll('{{style}}', resource('editor.css')).replaceAll('{{core}}', resource('core.js')).replaceAll('{{script}}', resource('editor.js'));
       panel.webview.onDidReceiveMessage(message => {
         if (message.type === 'status') statusBar.update(panel, message.state);
-        if (message.type === 'command' && ['find', 'goto'].includes(message.action) && panel.active) vscode.commands.executeCommand(`hexEditor.${message.action}`);
-        if (message.type === 'ready') send(document, panel);
+        if (message.type === 'command' && panel.active) {
+          const commands = {
+            find: 'hexEditor.find',
+            goto: 'hexEditor.goto'
+          };
+          if (commands[message.action]) vscode.commands.executeCommand(commands[message.action]);
+        }
+        if (message.type === 'ready') {
+          send(document, panel);
+          panel.webview.postMessage({ type: 'settings', hoverOpacity: hoverOpacity() });
+        }
         if (message.type === 'edit') {
           const { offset } = message;
           const values = message.values === undefined ? [message.value] : message.values;
