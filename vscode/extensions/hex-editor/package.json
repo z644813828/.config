@@ -2,7 +2,7 @@
   "name": "hex-editor",
   "displayName": "Hex Editor",
   "description": "Theme-aware binary editor with offsets, selection sizes, address navigation and byte/text search.",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "publisher": "local",
   "engines": {
     "vscode": "^1.85.0"

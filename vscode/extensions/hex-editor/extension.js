@@ -78,7 +78,10 @@ function activate(context) {
   function send(document, panel) {
     panel.webview.postMessage({ type: 'data', bytes: Buffer.from(document.bytes).toString('base64') });
   }
-  context.subscriptions.push(vscode.window.registerCustomEditorProvider('local.hexEditor', provider, { supportsMultipleEditorsPerDocument: true, webviewOptions: { enableFindWidget: false } }));
+  context.subscriptions.push(vscode.window.registerCustomEditorProvider('local.hexEditor', provider, {
+    supportsMultipleEditorsPerDocument: true,
+    webviewOptions: { enableFindWidget: false, retainContextWhenHidden: true }
+  }));
   context.subscriptions.push(vscode.commands.registerCommand('hexEditor.open', async uri => {
     uri = uri || vscode.window.activeTextEditor?.document.uri;
     if (!uri) [uri] = await vscode.window.showOpenDialog({ canSelectMany: false }) || [];

@@ -4,7 +4,7 @@ const vm = require('node:vm');
 const fs = require('node:fs');
 const path = require('node:path');
 test('binary document edits, undo, redo, save, backup and revert preserve bytes', async () => {
-  let provider, listener, edit;
+  let provider, providerOptions, listener, edit;
   const commands = new Map();
   const files = new Map([['file', Uint8Array.of(0, 128, 255)]]);
   const uri = value => ({ toString: () => value });
@@ -21,7 +21,7 @@ test('binary document edits, undo, redo, save, backup and revert preserve bytes'
       getConfiguration: () => ({ get: (_, fallback) => fallback }),
       onDidChangeConfiguration() {}
     },
-    window: { registerCustomEditorProvider: (_, value) => { provider = value; } },
+    window: { registerCustomEditorProvider: (_, value, options) => { provider = value; providerOptions = options; } },
     commands: { registerCommand(name, handler) { commands.set(name, handler); } }
   };
   const sandbox = {
@@ -35,6 +35,7 @@ test('binary document edits, undo, redo, save, backup and revert preserve bytes'
   };
   vm.runInNewContext(fs.readFileSync(path.join(__dirname, '../extension.js'), 'utf8'), sandbox);
   sandbox.module.exports.activate({ subscriptions: [], extensionPath: path.join(__dirname, '..'), extensionUri: uri('extension') });
+  assert.equal(providerOptions.webviewOptions.retainContextWhenHidden, true);
   const document = await provider.openCustomDocument(uri('file'), {});
   const messages = [];
   await provider.resolveCustomEditor(document, { active: true, onDidDispose() {}, webview: {
