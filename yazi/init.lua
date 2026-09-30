@@ -8,6 +8,20 @@ if yazi_level > 1 then
         level = "warn",
         timeout = 10,
     }
+
+    -- A second Yazi inside a ratarmount directory holds FUSE/preview handles.
+    -- The outer Yazi then cannot unmount the archive and both sessions may
+    -- appear frozen. A normal Fish shell is fine; only nested Yazi is refused.
+    local cwd = os.getenv("PWD") or ""
+    if cwd:match("/%.cache/yazi/ratarmount%-v1/session%.[^/]+/mount/?$") then
+        ya.notify {
+            title = "Nested Yazi blocked",
+            content = "Close the archive view first; nested Yazi would keep its FUSE mount busy.",
+            level = "warn",
+            timeout = 8,
+        }
+        ya.emit("quit", { no_cwd_file = true })
+    end
 end
 
 require("hybrid-relative-numbers"):setup({
@@ -51,6 +65,13 @@ function Root:layout()
 end
 
 function Tabs:redraw()
+	-- During Yazi's very first frame the tab snapshot may still be empty.
+	-- Do not divide by zero here: an exception aborts redraw of all three panes
+	-- until the first navigation event forces another repaint.
+	if #cx.tabs == 0 then
+		return ui.Line(""):area(self._area)
+	end
+
     local style = self:style()
     local si, so = th.tabs.sep_inner, th.tabs.sep_outer
     local reserved = ui.Line({ si.open, si.close, so.open, so.close }):width()
@@ -62,7 +83,33 @@ function Tabs:redraw()
         tabs_width = tabs_width + ui.Line(names[i]):width()
     end
 
-    local path = ui.truncate(tostring(cx.active.current.cwd), {
+    -- Keep the first frame independent of functional plugins.  Loading the
+    -- archive VFS from a UI renderer can race Yazi's initial pane snapshot.
+    local cwd = tostring(cx.active.current.cwd)
+    -- Archive sessions use an internal VFS URL; it is useful for the engine
+    -- but not as a human-facing path in the one-line header.
+    if cwd:match("^archive://") then
+        cwd = "Archive [read-only]"
+    else
+        -- `archive-browser` mounts archives as normal local folders for macOS
+        -- Yazi. Recover the source label from its tiny session sidecar rather
+        -- than showing the implementation cache path.
+        local home = os.getenv("HOME")
+        local cache = os.getenv("XDG_CACHE_HOME") or (home and home .. "/.cache")
+        if cache then
+            local prefix = cache .. "/yazi/ratarmount-v1/"
+            local id = cwd:match("^" .. prefix:gsub("([^%w])", "%%%1") .. "(session%.[^/]+)/mount")
+            if id then
+                local file = io.open(prefix .. id .. "/.origin", "r")
+                if file then
+                    local origin = file:read("*l")
+                    file:close()
+                    if origin and origin ~= "" then cwd = "Archive: " .. origin end
+                end
+            end
+        end
+    end
+    local path = ui.truncate(cwd, {
         max = math.max(0, self._area.w - tabs_width - 1),
         rtl = true,
     })

@@ -21,7 +21,21 @@ function activate(context) {
       const stat = await vscode.workspace.fs.stat(source);
       if (stat.size > LIMIT) throw new Error('Hex Editor currently supports files up to 32 MiB.');
       const bytes = await vscode.workspace.fs.readFile(source);
-      return { uri, bytes, panels: new Set(), dispose() { this.panels.clear(); } };
+      const document = {
+        uri,
+        bytes,
+        dirty: false,
+        panels: new Set(),
+        watcher: undefined,
+        reloadTimer: undefined,
+        dispose() {
+          if (this.reloadTimer) clearTimeout(this.reloadTimer);
+          this.watcher?.dispose();
+          this.panels.clear();
+        }
+      };
+      if (!openContext.backupId && uri.scheme === 'file') watch(document);
+      return document;
     },
     async resolveCustomEditor(document, panel) {
       document.panels.add(panel);
@@ -56,6 +70,7 @@ function activate(context) {
           if (before.every((value, index) => value === values[index])) return;
           const apply = replacement => {
             document.bytes.set(replacement, offset);
+            document.dirty = true;
             for (const view of document.panels) view.webview.postMessage(replacement.length === 1 ? { type: 'patch', offset, value: replacement[0] } : { type: 'patch', offset, values: replacement });
           };
           apply(values);
@@ -64,10 +79,17 @@ function activate(context) {
         if (message.type === 'undo' || message.type === 'redo') vscode.commands.executeCommand(message.type);
       });
     },
-    async saveCustomDocument(document) { await vscode.workspace.fs.writeFile(document.uri, document.bytes.slice()); },
-    async saveCustomDocumentAs(document, destination) { await vscode.workspace.fs.writeFile(destination, document.bytes.slice()); },
+    async saveCustomDocument(document) {
+      await vscode.workspace.fs.writeFile(document.uri, document.bytes.slice());
+      document.dirty = false;
+    },
+    async saveCustomDocumentAs(document, destination) {
+      await vscode.workspace.fs.writeFile(destination, document.bytes.slice());
+      document.dirty = false;
+    },
     async revertCustomDocument(document) {
       document.bytes = await vscode.workspace.fs.readFile(document.uri);
+      document.dirty = false;
       for (const panel of document.panels) send(document, panel);
     },
     async backupCustomDocument(document, context) {
@@ -77,6 +99,43 @@ function activate(context) {
   };
   function send(document, panel) {
     panel.webview.postMessage({ type: 'data', bytes: Buffer.from(document.bytes).toString('base64') });
+  }
+  function notify(document, text) {
+    for (const panel of document.panels) panel.webview.postMessage({ type: 'message', text });
+  }
+  function watch(document) {
+    const directory = vscode.Uri.file(path.dirname(document.uri.fsPath));
+    const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(directory, path.basename(document.uri.fsPath)));
+    document.watcher = watcher;
+    const reload = async () => {
+      if (document.dirty) {
+        notify(document, 'File changed on disk. Save, revert, or discard local edits before reloading.');
+        return;
+      }
+      try {
+        const stat = await vscode.workspace.fs.stat(document.uri);
+        if (stat.size > LIMIT) throw new Error('File exceeds the 32 MiB editor limit.');
+        const updated = await vscode.workspace.fs.readFile(document.uri);
+        if (sameBytes(document.bytes, updated)) return;
+        document.bytes = updated;
+        for (const panel of document.panels) send(document, panel);
+        notify(document, 'Reloaded after an external file change.');
+      } catch (error) {
+        notify(document, `Could not reload changed file: ${error.message || error}`);
+      }
+    };
+    const schedule = () => {
+      if (document.reloadTimer) clearTimeout(document.reloadTimer);
+      document.reloadTimer = setTimeout(() => { document.reloadTimer = undefined; reload(); }, 100);
+    };
+    watcher.onDidChange(schedule);
+    watcher.onDidCreate(schedule);
+    watcher.onDidDelete(() => notify(document, 'File was deleted on disk.'));
+  }
+  function sameBytes(left, right) {
+    if (left.length !== right.length) return false;
+    for (let index = 0; index < left.length; index++) if (left[index] !== right[index]) return false;
+    return true;
   }
   context.subscriptions.push(vscode.window.registerCustomEditorProvider('local.hexEditor', provider, {
     supportsMultipleEditorsPerDocument: true,

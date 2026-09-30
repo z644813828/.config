@@ -1,0 +1,2 @@
+# Merge this section into your private ~/.config/yazi/vfs.toml.
+# Keep any existing SFTP profiles. Restart Yazi after changing VFS authorities.

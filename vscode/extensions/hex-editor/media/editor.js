@@ -326,6 +326,8 @@ window.addEventListener('message', event => {
   const message = event.data;
   if (message.type === 'settings') {
     applySettings(message);
+  } else if (message.type === 'message') {
+    setMessage(message.text || '');
   } else if (message.type === 'action') {
     applyAction(message);
   } else if (message.type === 'data') {

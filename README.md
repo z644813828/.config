@@ -148,6 +148,9 @@ The configuration in [yazi/](yazi/) targets **26.9.1** and belongs in
   **with confirmation**.
 - `r`: enter an application command before `%s`; `F4`: choose a configured opener.
 - `l` / Enter: enter a directory or open selected files.
+- [Archive browser](yazi/plugins/archive-browser.yazi/): `l` / Enter mounts
+  archives as **read-only** directories through macFUSE and `ratarmount`.
+  `h`/Left at the archive root unmounts it; `w` shows the initial mount task.
 - [theme.toml](yazi/theme.toml) and [init.lua](yazi/init.lua): Nord colours,
   monochrome icons, hybrid line numbers, path and right-aligned tabs on one row,
   creation time and search position in the status bar.

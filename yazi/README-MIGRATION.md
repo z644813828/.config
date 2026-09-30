@@ -24,7 +24,8 @@ Notes:
   `/base/2` is current with `f` hovered, they enter `/base/1` and `/base/3` respectively.
 - Ctrl-N creates a tab in the current directory; Tab/Shift-Tab switch tabs.
 - Option/Alt bindings require the terminal to send Option as Meta/Alt.
-- `q` uses Yazi's `close`: it closes the active tab and exits Yazi only when it was the last tab.
+- `q` closes the active tab and exits Yazi only when it was the last tab; `Q`
+  exits Yazi explicitly.
 - `l`, Enter, and Right use `plugins/smart-enter.yazi`: directories use `enter`,
   while files open the selection, or the hovered file when nothing is selected.
 - All openers use Yazi's `%s` file-path placeholder (not shell `$@`), so `l` passes the
@@ -43,3 +44,8 @@ Notes:
 - `DD` is permanent delete with confirmation; `dD` moves to Trash without confirmation.
 - `image-fit` enlarges cached image previews on macOS using `sips`; Linux retains standard previews.
 - Archive shortcuts require the corresponding command (zip/7z/tar) to exist.
+- `l`/Enter/Right on an unselected archive mounts it read-only through
+  [archive browser](plugins/archive-browser.yazi/README.md). `h`/Left at its root
+  unmounts it and returns to the archive. Requires macFUSE and `ratarmount`.
+  The mount is a normal local directory, so previews, `r`, F4 and E use the
+  usual Yazi openers directly. `w` shows the initial mount task.
