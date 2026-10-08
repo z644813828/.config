@@ -26,6 +26,8 @@
 	<integer>128000</integer>
 	<key>AitermURL</key>
 	<string>https://api.openai.com/v1/responses</string>
+	<key>AllowClipboardAccess</key>
+	<true/>
 	<key>AllowDragOfTabIntoNewWindow</key>
 	<false/>
 	<key>AlternateMouseScroll</key>
@@ -5160,8 +5162,10 @@ Split Vertically…</string>
 			<string></string>
 			<key>AWDS Window Option</key>
 			<string>No</string>
+			<key>Allow Change Cursor Blink</key>
+			<true/>
 			<key>Allow Title Reporting</key>
-			<false/>
+			<true/>
 			<key>Ambiguous Double Width</key>
 			<false/>
 			<key>Ansi 0 Color</key>
@@ -5374,6 +5378,8 @@ Split Vertically…</string>
 			</dict>
 			<key>Application Keypad Allowed</key>
 			<true/>
+			<key>Automatically Enable Alternate Mouse Scroll</key>
+			<false/>
 			<key>Automatically Log</key>
 			<true/>
 			<key>BM Growl</key>
@@ -5504,6 +5510,8 @@ Split Vertically…</string>
 			<string>No</string>
 			<key>Description</key>
 			<string>Default</string>
+			<key>Disable Printing</key>
+			<false/>
 			<key>Disable Window Resizing</key>
 			<true/>
 			<key>Draw Powerline Glyphs</key>
@@ -7248,8 +7256,10 @@ Split Vertically…</string>
 			<string></string>
 			<key>AWDS Window Option</key>
 			<string>No</string>
+			<key>Allow Change Cursor Blink</key>
+			<true/>
 			<key>Allow Title Reporting</key>
-			<false/>
+			<true/>
 			<key>Ambiguous Double Width</key>
 			<false/>
 			<key>Ansi 0 Color</key>
@@ -7907,7 +7917,7 @@ Split Vertically…</string>
 			<key>Minimum Contrast</key>
 			<real>0.44008700284090913</real>
 			<key>Mouse Reporting</key>
-			<false/>
+			<true/>
 			<key>Name</key>
 			<string>SSH</string>
 			<key>Non Ascii Font</key>

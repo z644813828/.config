@@ -159,6 +159,31 @@ systemctl restart mtproto-web-tls.service
 
 Типичный runtime-конфиг Xray для 3x-ui: `/usr/local/x-ui/bin/config.json`.
 
+## Бэкапы конфигурации на FTP
+
+На VPS1/VPS2/VPS3 используются одинаковые `vps-config-backup` и systemd units.
+Ежедневный `vps-config-backup.timer` запускает архивирование и отправку на FTP.
+При ошибке сервис повторяет попытку раз в час до успеха
+(`vps-config-backup.service.d/retry.conf`); лимит количества запусков отключён,
+чтобы продолжительный сбой FTP не прекращал повторы до следующего дня.
+После успешной загрузки сервис завершается и ждёт ежедневного таймера.
+Проверка давности `vps-backup-age-alert.timer` остаётся независимой; порог — 36 часов.
+
+```bash
+systemctl list-timers --all vps-config-backup.timer vps-backup-age-alert.timer
+systemctl show vps-config-backup.service -p Result -p RestartUSec
+journalctl -u vps-config-backup.service -n 30 --no-pager
+```
+
+Повторный ручной запуск:
+
+```bash
+systemctl reset-failed vps-config-backup.service
+systemctl start vps-config-backup.service
+```
+
+FTP-реквизиты хранятся в `/root/.vps-config-backup.env`. Не публиковать этот файл.
+
 ## Системные примечания
 
 На сервере уже включены:
