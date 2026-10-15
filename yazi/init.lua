@@ -31,6 +31,9 @@ require("hybrid-relative-numbers"):setup({
     hovered_fg = "#2E3440",
 })
 
+-- Fill directory item counts in the size column asynchronously.
+require("dir-count"):setup()
+
 require("smart-enter"):setup({
     -- With selected files, l/Enter/Right opens the whole selection.  Without
     -- one, it opens only the hovered item.
