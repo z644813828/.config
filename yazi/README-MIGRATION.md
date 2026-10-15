@@ -23,14 +23,19 @@ Notes:
 - `[` and `]` use `plugins/parent-switch.yazi` for ranger-style `move_parent`: when
   `/base/2` is current with `f` hovered, they enter `/base/1` and `/base/3` respectively.
 - Ctrl-N creates a tab in the current directory; Tab/Shift-Tab switch tabs.
+- `gs` asks for host, login, password, port and path in top-of-window inputs,
+  mounts it through SSHFS in a new tab, and unmounts it when that tab is closed.
+  Yazi has no MC-style `sh://`/FISH filesystem.
 - Option/Alt bindings require the terminal to send Option as Meta/Alt.
 - `q` closes the active tab and exits Yazi only when it was the last tab; `Q`
   exits Yazi explicitly.
 - `l`, Enter, and Right use `plugins/smart-enter.yazi`: directories use `enter`,
   while files open the selection, or the hovered file when nothing is selected.
 - All openers use Yazi's `%s` file-path placeholder (not shell `$@`), so `l` passes the
-  selected paths (or the hovered filename) to `$EDITOR`; `S` opens a blocking `fish` shell.
+  selected paths (or the hovered filename) to `$EDITOR`; `S` opens local fish, or an SSH
+  terminal in the matching remote directory when the current tab is an SSHFS mount.
 - `r` prompts for an application command before `%s`; F4 retains the configured opener menu.
+- Qt translation files (`.ts`) open in Qt Linguist.
 - `zh`, Ctrl-H, and Backspace toggle hidden files.
 - The full current-directory path and right-aligned tabs share one header row.
 - Creation time and the search match counter appear in the status bar. Search highlighting is disabled.

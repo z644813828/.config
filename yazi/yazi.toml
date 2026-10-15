@@ -27,9 +27,13 @@ open = [
 drawio = [
   { run = 'open -a "draw.io" %s', desc = "draw.io", for = "macos" },
 ]
+linguist = [
+  { run = 'open -a "Linguist" %s', desc = "Qt Linguist", for = "macos" },
+]
 
 [open]
 prepend_rules = [
+  { url = "*.ts", use = "linguist" },
   { url = "*.{json,csv,tex,py,pl,rb,js,sh,php,xml}", use = ["edit", "open"] },
   { url = "*.drawio", use = "drawio" },
 ]
@@ -40,4 +44,9 @@ prepend_previewers = [
   { mime = "image/{png,jpeg,webp,bmp,tiff}", run = "image-fit" },
   { mime = "application/pdf", run = "noop" },
   { mime = "video/*", run = "noop" },
+]
+# SSHFS mounts (remote-connect): guess MIME from the name instead of reading
+# every file over the network with `file`.
+prepend_fetchers = [
+  { url = "**/yazi/sshfs-v1/session.*/mount/**", run = "sshfs-mime", prio = "high", group = "mime" },
 ]
