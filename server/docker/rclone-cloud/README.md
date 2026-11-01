@@ -149,7 +149,7 @@ docker exec rclone-cloud bash /workspace/scripts/last-gdrive-backup.sh
 0 3 * * * /usr/bin/docker exec rclone-cloud /bin/bash /workspace/scripts/backup-to-gdrive.sh >> /var/log/rclone-cloud.log 2>&1
 ```
 
-Monit-проверка находится в `server/monit/conf.d/rclone_cloud_backup.conf` и
+Monit-проверка находится в `server/monit/omv/conf.d/rclone_cloud_backup.conf` и
 считает бэкап устаревшим через 36 часов.
 
 Recovery-инструкция находится в `/workspace/docs/RESTORE.md`.

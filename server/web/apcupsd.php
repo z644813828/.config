@@ -1,6 +1,43 @@
 <?php
-if ($_GET) {
-    echo shell_exec("apcaccess status");
+if (isset($_GET['status'])) {
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store');
+    header('X-Content-Type-Options: nosniff');
+    try {
+        $path = getenv('OMV_UPS_STATUS_FILE') ?: '/var/lib/monit/server-home/ups-status.json';
+        $raw = @file_get_contents($path);
+        if ($raw === false || strlen($raw) > 16384) {
+            throw new RuntimeException('Unavailable snapshot');
+        }
+        $snapshot = json_decode($raw, true, 32, JSON_THROW_ON_ERROR);
+        if (!is_array($snapshot) || ($snapshot['schema'] ?? null) !== 1
+            || ($snapshot['source'] ?? null) !== 'proxmox'
+            || !is_string($snapshot['generated_at'] ?? null)) {
+            throw new RuntimeException('Invalid snapshot');
+        }
+        $stamp = strtotime($snapshot['generated_at']);
+        if ($stamp === false || time() - $stamp > 180 || $stamp - time() > 30) {
+            throw new RuntimeException('Stale snapshot');
+        }
+        $values = $snapshot['values'] ?? null;
+        if (!is_array($values) || !is_string($values['STATUS'] ?? null)
+            || $values['STATUS'] === '' || count($values) > 32) {
+            throw new RuntimeException('Invalid fields');
+        }
+        $lines = ['UPDATED      : ' . $snapshot['generated_at']];
+        foreach ($values as $key => $value) {
+            if (!is_string($key) || !preg_match('/^[A-Z][A-Z0-9]*$/D', $key)
+                || !is_string($value) || $value === '' || strlen($value) > 256
+                || preg_match('/[\x00-\x1F\x7F]/', $value)) {
+                throw new RuntimeException('Invalid value');
+            }
+            $lines[] = str_pad($key, 13) . ': ' . $value;
+        }
+        echo implode("\n", $lines) . "\n";
+    } catch (Throwable $error) {
+        http_response_code(503);
+        echo "UPS data is unavailable or older than 3 minutes.\n";
+    }
     return;
 }
 ?>
@@ -12,6 +49,15 @@ if ($_GET) {
     body {
       font-family: sans-serif;
       margin: 0;
+    }
+
+    #data {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    #tab2 {
+      overflow-x: auto;
     }
 
     /* Стили для навигационной панели (navbar) */
@@ -66,7 +112,9 @@ if ($_GET) {
     </style>
 
     <head>
-        <script src="js/jquery.js"></script>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>APC UPS</title>
     </head>
     <div class="navbar">
         <a onclick="openTab('tab1')">Current values</a>
@@ -242,24 +290,23 @@ if ($_GET) {
 
 
 <script type="text/javascript">
-(function load_data() {
-    $.ajax({
-        type: 'get',
-        data: { cmd: "" },
-        success: function(result) {
-            $("#data").text(result);
-            setTimeout(load_data, 1000);
-        },
-        timeout: function(result) {
-            $("#data").text(result);
-            setTimeout(load_data, 1000);
-        },
-        error: function(result) {
-            $("#data").text(result);
-            setTimeout(load_data, 1000);
-        }
-    });
-})();
+async function loadData() {
+    try {
+        const url = new URL(window.location.href);
+        url.search = '?status=1';
+        const response = await fetch(url, {
+            cache: 'no-store',
+            credentials: 'same-origin',
+            signal: AbortSignal.timeout(8000)
+        });
+        document.getElementById('data').textContent = await response.text();
+    } catch (error) {
+        document.getElementById('data').textContent = 'UPS data is temporarily unavailable.';
+    } finally {
+        setTimeout(loadData, 5000);
+    }
+}
+loadData();
 function openTab(tabId) {
   // Сначала убираем класс "active" у всех вкладок и контента
   var tabcontents = document.getElementsByClassName("tabcontent");

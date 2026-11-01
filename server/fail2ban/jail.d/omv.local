@@ -1,0 +1,9 @@
+[sshd]
+enabled = true
+backend = systemd
+port = 22
+maxretry = 5
+findtime = 10m
+bantime = 2h
+# Preserve trusted access paths; add other trusted client IPs locally.
+ignoreip = 127.0.0.1/8 ::1 192.168.2.1 192.168.2.127 192.168.2.131 192.168.2.250 192.168.10.2 172.30.0.3

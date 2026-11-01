@@ -12,7 +12,17 @@
 До запуска восстановите `/root/.openclaw` и mounts из комплекта, сравните
 настройки с `inventory/openclaw.json`. В compose нет предположительных volumes:
 если они есть в сохранённом inspect, добавьте реальные mounts до запуска.
-Сеть `infra_net` должна существовать с подсетью `172.30.0.0/24`.
+На OMV сеть `infra_net` должна существовать с подсетью `172.31.0.0/24`;
+контейнер использует `172.31.0.2`, trusted proxy — шлюз `172.31.0.1`.
+Это другая сеть, не Proxmox infra_net (`172.30.0.0/24`). SSH опубликован только
+на `192.168.2.254:2022`, gateway — только на `127.0.0.1:18789`; внешний доступ
+идёт через HTTPS nginx на 18790.
+
+Рабочий контейнер создан через docker run. Не выполняйте compose up поверх него
+ради синхронизации шаблона: актуальные OAuth, сессии и workspace находятся в
+writable layer. Старый импортированный образ может не содержать новых изменений.
+Перед пересозданием отдельно сохраните текущее состояние и проверьте восстановление.
+Команды ниже относятся к подготовке нового контейнера, а не к обновлению рабочего.
 
 ```bash
 docker compose config --quiet
@@ -250,8 +260,8 @@ OpenClaw создал workspace:
 Проверка OpenClaw на Docker-хосте:
 
 ```text
-server/monit/scripts/openclaw_health.sh
-server/monit/conf.d/openclaw_health.conf
+server/monit/omv/scripts/openclaw_health.sh
+server/monit/omv/conf.d/openclaw_health.conf
 ```
 
 Она проверяет, что контейнер запущен, `openclaw health` проходит, а OAuth runtime
@@ -281,10 +291,15 @@ OpenClaw запрещает его при работающем gateway.
 Установка на Docker-хосте:
 
 ```bash
-sudo install -m 0755 /home/dmitriy/.config/server/monit/scripts/openclaw_health.sh /etc/monit/scripts/
-sudo install -m 0644 /home/dmitriy/.config/server/monit/conf.d/openclaw_health.conf /etc/monit/conf.d/
+sudo install -m 0755 /home/dmitriy/.config/server/monit/omv/scripts/openclaw_health.sh /etc/monit/scripts/
+sudo install -m 0644 /home/dmitriy/.config/server/monit/omv/conf.d/openclaw_health.conf /etc/monit/conf.d/
 sudo monit -t && sudo systemctl reload monit
 ```
+
+## Историческая установка
+
+Остальные инструкции про Debian 11 и образ openclaw-debian11 описывают исходный
+контейнер. Для новой OMV используйте сетевые настройки и ограничения выше.
 
 ## После изменений
 

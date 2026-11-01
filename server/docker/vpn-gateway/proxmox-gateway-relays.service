@@ -1,0 +1,17 @@
+[Unit]
+Description=Proxmox and OMV relays via Docker WireGuard gateway
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /opt/proxmox-vpn-gateway/proxmox-gateway-relays.sh
+Restart=always
+RestartSec=5
+KillMode=control-group
+TimeoutStopSec=10
+
+[Install]
+WantedBy=multi-user.target

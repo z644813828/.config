@@ -21,8 +21,22 @@ command -v sshpass  # needed only for password authentication
 `sshfs` must be able to connect to the host from a normal terminal first.
 Aliases from `~/.ssh/config` are offered in the initial picker. Selecting one
 uses `ssh -G` to resolve the effective configuration, including `Include` and
-`Host *`; its `User` and `Port` are prefilled. Leave the password empty to use
-an SSH key.
+`Host *`; its `User` and `Port` are prefilled, and `HostName` is resolved by SSH.
+The plugin also reads a custom `#Password` comment in matching `Host` blocks
+of `~/.ssh/config` (first matching value wins; wildcard/negated hosts are supported).
+For example:
+
+```sshconfig
+Host example
+    User root
+    #Password password
+    HostName 192.168.1.1
+    Port 22
+```
+
+The password prompt is prefilled from the value remembered for this host,
+login and port, or from `#Password` on first use. Editing it replaces the value
+in Yazi's memory. Leave it empty to use an SSH key.
 
 Yazi 26.9.1 has no completion for plugin inputs, so the host prompt drives
 the built-in completion popup (`cmp:trigger`) itself. The popup lists
@@ -32,16 +46,37 @@ after a host is chosen or the prompt is cancelled.
 
 ## Keys
 
+The `g` key opens a context-dependent menu. SSHFS tabs offer `gh` and `g/`
+to go to the mount root, `gg` to go to the top of the list, and `gt`/`gT`
+for the next/previous tab.
+All other `g` combinations are disabled and omitted from that menu,
+including `gs` and `g<Space>`.
+Use Tab/Shift-Tab to switch tabs and Ctrl-T to open a local tab.
+Local tabs retain the full menu, including all personal directory shortcuts.
+The SSHFS association belongs to the tab even if it navigates outside the
+mount. Duplicated tabs share the association; closing one keeps the mount
+while another tab owns it. Menu actions are defined in `g_menu` in `main.lua`.
+
 | Key | Action |
 | --- | --- |
-| `g` then `s` | Asks for a host with the same completion popup as `g<Space>`, listing `~/.ssh/config` aliases (type to filter, Tab/Enter to complete; a host or IP that matches nothing is used as typed), then prompts for login, password, port and remote absolute path. |
-| `S` | Open a terminal in the current directory. On an SSHFS tab it connects to the matching directory on the server; locally it opens Fish. |
-| `q` / `Ctrl-F4` | Close the tab. For an SSHFS tab it first leaves the mount, unmounts it, then closes the tab. |
-| `Q` / `F10` | Quit Yazi, cleaning up the current SSHFS mount first. |
+| `g` then `s` | Asks for a host with the same completion popup as `g<Space>`, listing `~/.ssh/config` aliases (type to filter, Tab/Enter to complete; a host or IP that matches nothing is used as typed), then prompts for login, password, port and remote path. The path accepts `/absolute/path`, `~`, and `~/path`. |
+| `S` | Open a terminal in the current directory, using Fish if available, otherwise `$SHELL` (or `/bin/sh`). On an SSHFS tab both the directory and shell are on the remote server. |
+| `s` | On an SSHFS tab, open the same remote terminal as `S`. Locally, retain Yazi's interactive shell-command prompt. |
+| `Ctrl-N` | Create a tab at exactly the current directory, including inside an existing SSHFS mount. |
+| `q` / `Ctrl-F4` | Close the tab. An SSHFS mount is unmounted only when no other tab uses it. Closing the final tab cleans all mounts and exits. |
+| `Q` / `F10` | Quit Yazi after cleaning every SSHFS mount created by Yazi, including mounts in other tabs. |
 
-The password prompt is obscured. Its value is passed only to the short-lived
-`sshpass` process and is not written to the session directory. Prefer SSH keys
-where possible.
+The password prompt is obscured. Entered passwords live only in Yazi's memory
+until it exits, and are reused by `s`/`S` through `sshpass -e`. They are never
+written to session files or shell command text. The plugin does not modify
+`~/.ssh/config`; a `#Password` you put there remains a plain-text comment.
+
+Before mounting or opening a terminal, credentials are checked without giving
+SSH access to Yazi's terminal. Key authentication uses `BatchMode=yes`; password
+authentication allows one attempt through `sshpass`. Authentication failures
+do not open a background password prompt. Unknown or changed host keys are
+rejected (`StrictHostKeyChecking=yes`); add/verify the host in a normal SSH
+terminal first. These controls follow the [OpenSSH options](https://man.openbsd.org/ssh_config).
 
 ## Behaviour and cleanup
 

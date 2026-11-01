@@ -3,28 +3,30 @@ set -euo pipefail
 
 # Example only. Do not put secrets in this file.
 #
-# Assumes an image was committed after OpenClaw/Codex/Telegram setup:
-#   docker commit openclaw openclaw-debian11-codex-telegram
+# Uses the imported OMV migration image; persistent state remains inside it.
 
-IMAGE="${IMAGE:-openclaw-debian11-codex-telegram}"
+IMAGE="${IMAGE:-openclaw:migration}"
 NAME="${NAME:-openclaw}"
 SSH_PORT="${SSH_PORT:-2022}"
 GATEWAY_PORT="${GATEWAY_PORT:-18789}"
 NETWORK="${NETWORK:-infra_net}"
-SUBNET="${SUBNET:-172.30.0.0/24}"
-GATEWAY="${GATEWAY:-172.30.0.1}"
-IP="${IP:-172.30.0.2}"
+IP="${IP:-172.31.0.2}"
 
-docker network inspect "$NETWORK" >/dev/null 2>&1 || \
-  docker network create --subnet "$SUBNET" --gateway "$GATEWAY" "$NETWORK"
+docker network inspect "$NETWORK" >/dev/null
+if docker inspect "$NAME" >/dev/null 2>&1; then
+  echo "STOP: existing container; preserve its writable-layer state before replacement" >&2
+  exit 1
+fi
 
 docker run -d \
   --name "$NAME" \
+  --restart unless-stopped \
+  --workdir /root \
   --init \
   --pids-limit 256 \
   --network "$NETWORK" \
   --ip "$IP" \
-  -p "${SSH_PORT}:22" \
-  -p "${GATEWAY_PORT}:18789" \
+  -p "192.168.2.254:${SSH_PORT}:22" \
+  -p "127.0.0.1:${GATEWAY_PORT}:18789" \
   "$IMAGE" \
-  bash -lc 'service ssh start 2>/dev/null || /usr/sbin/sshd; TOKEN=$(node -e "const c=require(\"/root/.openclaw/openclaw.json\"); console.log(c.gateway.auth.token)"); nohup env OPENCLAW_GATEWAY_TOKEN="$TOKEN" openclaw gateway run --port 18789 --bind lan --auth token --token "$TOKEN" >/root/.openclaw/logs/gateway.out 2>&1 & tail -f /dev/null'
+  bash -ec 'service ssh start; OPENCLAW_GATEWAY_TOKEN=$(node -e "const c=require(\"/root/.openclaw/openclaw.json\"); if (!c.gateway?.auth?.token) process.exit(1); process.stdout.write(c.gateway.auth.token)"); export OPENCLAW_GATEWAY_TOKEN; exec openclaw gateway run --port 18789 --bind lan --auth token'

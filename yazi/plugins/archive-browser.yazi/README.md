@@ -6,7 +6,9 @@ a Lua VFS: Yazi, Quick Look and applications see ordinary read-only files.
 
 `h`/Left at the mounted archive root unmounts it, deletes its private index and
 returns to the source archive. `q`/`Q` while inside an archive does the same
-cleanup before closing Yazi. Nested archives are supported; mounts are removed
+cleanup before closing Yazi. If an archive is shared by multiple tabs, `q`
+closes only the active tab and keeps the mount for the remaining tabs. `Q`
+and closing the final Yazi tab clean all mounts. Nested archives are supported; mounts are removed
 in inside-out order on exit. `w` displays the initial `Mount <archive>` task.
 
 ## Requirements

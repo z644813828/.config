@@ -1,0 +1,14 @@
+# Merge these settings into the package's /etc/apcupsd/apcupsd.conf.
+# This is a settings reference, not a replacement for the entire package file.
+UPSCABLE usb
+UPSTYPE usb
+DEVICE
+ONBATTERYDELAY 6
+# Provisional thresholds: validate against UPS runtime and guest shutdown time.
+BATTERYLEVEL 20
+MINUTES 5
+TIMEOUT 0
+KILLDELAY 0
+NETSERVER on
+NISIP 127.0.0.1
+NISPORT 3551

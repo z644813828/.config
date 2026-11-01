@@ -132,6 +132,8 @@
     align-items: center;
     justify-content: center;
     gap: 9px;
+    max-width: 100%;
+    padding: 0 4px;
    }
    .status-dot {
     display: inline-block;
@@ -449,7 +451,13 @@ function overallServiceStatus(array $statuses, string $generatedAt = ''): array
         'down' => 0,
     );
 
-    foreach ($statuses as $item) {
+    foreach ($statuses as $key => $item) {
+        if ($key === 'netdata') {
+            continue;
+        }
+        if ($key === 'filebrowser' && isset($statuses['nextcloud'])) {
+            continue;
+        }
         if (!is_array($item)) {
             continue;
         }
@@ -507,6 +515,9 @@ $asusRouterLocalHost = $localIpHostForLinks === '10.80.0.10' ? '10.80.0.10' : '1
 $asusRouterLocalUrl = 'https://' . $asusRouterLocalHost . ':8443/Main_Login.asp';
 $keeneticRemoteUrl = envValue('OMV_KEENETIC_REMOTE_URL', '#');
 $keeneticLocalUrl = 'http://192.168.1.1';
+$proxmoxUrl = envValue('OMV_PROXMOX_URL', $currentHttpHost === '10.80.0.10'
+    ? 'https://10.80.0.10:8006/' : 'https://192.168.2.250:8006/');
+$monitUrl = envValue('OMV_MONIT_URL', $localIp . ':2812/');
 $panels = loadPanels();
 $serviceStatusFile = envValue('OMV_SERVICE_STATUS_FILE', __DIR__ . '/service-status.json');
 $serviceStatuses = loadServiceStatus($serviceStatusFile);
@@ -599,6 +610,14 @@ $overallStatusText = statusPopupText($overallStatus);
                         "openmediavault"
                     ],
                     [
+                        $proxmoxUrl,
+                        $proxmoxUrl,
+                        "Proxmox.png",
+                        "Proxmox VE",
+                        "Virtual machines, storage, backups and host management.",
+                        "proxmox"
+                    ],
+                    [
                         "#",
                         "#",
                         "3x-ui.png",
@@ -625,10 +644,10 @@ $overallStatusText = statusPopupText($overallStatus);
                     [
                         "$ddnsName:8880",
                         "$localIp:8880",
-                        "FileBrowser.png",
-                        "FileBrowser",
-                        "Filebrowser provides a file managing interface within a specified directory and it can be used to upload, delete, preview, rename and edit your files.",
-                        "filebrowser"
+                        "Nextcloud.svg",
+                        "Nextcloud Files",
+                        "Personal files, shared folders and public download links.",
+                        "nextcloud"
                     ],
                     [
                         "$ddnsName:18790",
@@ -639,8 +658,8 @@ $overallStatusText = statusPopupText($overallStatus);
                         "openclaw"
                     ],
                     [
-                        "$ddnsName:4000",
-                        "$localIp:2812",
+                        $monitUrl,
+                        $monitUrl,
                         "Monit.png",
                         "Monit",
                         "With all features needed for system monitoring and error recovery. It's like having a watchdog with a toolbox on your server",
@@ -661,14 +680,6 @@ $overallStatusText = statusPopupText($overallStatus);
                         "Keenetic router",
                         "Remote GUI allows you to access your router's online settings, also known as the graphical user interface (GUI), through a WAN connection.",
                         "keenetic-router"
-                    ],
-                    [
-                        "$ddnsName:199",
-                        "$localIp:199",
-                        "NetData.png",
-                        "NetData",
-                        "Netdata's distributed, real-time monitoring Agent collects thousands of metrics from systems, hardware, containers, and applications with zero configuration.",
-                        "netdata"
                     ],
                     [
                         "$ddnsName:9091",
@@ -736,8 +747,8 @@ $overallStatusText = statusPopupText($overallStatus);
                                                     <img class="scale2 feature-tile-icon" src="dist/images/<?php echo $elem[IDX_IMG]?>" alt="3x-ui">
                                                 </button>
                                             <?php else: ?>
-                                                <a href="<?php echo $isLocal ? $elem[IDX_LOCAL_PATH] : $elem[IDX_PATH]?>">
-                                                    <img class="scale2 feature-tile-icon" src="dist/images/<?php echo $elem[IDX_IMG]?>" alt="Feature 01">
+                                                <a href="<?php echo htmlspecialchars($isLocal ? $elem[IDX_LOCAL_PATH] : $elem[IDX_PATH], ENT_QUOTES, 'UTF-8'); ?>">
+                                                    <img class="scale2 feature-tile-icon" src="dist/images/<?php echo $elem[IDX_IMG]?>" alt="<?php echo htmlspecialchars($elem[IDX_NAME], ENT_QUOTES, 'UTF-8'); ?>">
                                                 </a>
                                             <?php endif; ?>
 										</div>

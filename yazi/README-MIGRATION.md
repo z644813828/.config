@@ -25,6 +25,8 @@ Notes:
 - Ctrl-N creates a tab in the current directory; Tab/Shift-Tab switch tabs.
 - `gs` asks for host, login, password, port and path in top-of-window inputs,
   mounts it through SSHFS in a new tab, and unmounts it when that tab is closed.
+  The remote path accepts `/absolute/path`, `~`, and `~/path`; the latter two are
+  relative to the selected user's remote home directory.
   Yazi has no MC-style `sh://`/FISH filesystem.
 - Option/Alt bindings require the terminal to send Option as Meta/Alt.
 - `q` closes the active tab and exits Yazi only when it was the last tab; `Q`
@@ -54,3 +56,5 @@ Notes:
   unmounts it and returns to the archive. Requires macFUSE and `ratarmount`.
   The mount is a normal local directory, so previews, `r`, F4 and E use the
   usual Yazi openers directly. `w` shows the initial mount task.
+- `Q`/F10 clean every SSHFS and archive FUSE session under Yazi's cache before
+  exiting, including mounts opened in other tabs.

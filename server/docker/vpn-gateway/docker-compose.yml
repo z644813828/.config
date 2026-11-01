@@ -1,34 +1,41 @@
-# Reference only.
-#
-# The current Debian 11 Docker host has docker-compose 1.8.0, which does not
-# support all required runtime options for this container. Use docker-run.sh on
-# that host.
-
-version: "2.4"
-
+# Proxmox only. Review existing docker inspect before any replacement.
+name: proxmox-vpn-gateway
 services:
   vpn-gateway:
-    image: vpn-gateway-debian11-wireguard
+    image: vpn-gateway:migration
     container_name: vpn-gateway
     restart: unless-stopped
     init: true
     pids_limit: 256
-    cap_add:
-      - NET_ADMIN
-      - SYS_MODULE
+    cap_add: [NET_ADMIN, SYS_MODULE]
+    devices:
+      - /dev/net/tun:/dev/net/tun
     sysctls:
-      net.ipv4.conf.all.src_valid_mark: "1"
-      net.ipv4.ip_forward: "1"
+      net.ipv4.conf.all.src_valid_mark: '1'
+      net.ipv4.ip_forward: '1'
     ports:
-      - "2023:22"
+      - '192.168.2.250:2023:22'
     networks:
       infra_net:
         ipv4_address: 172.30.0.3
-    command:
-      - bash
-      - -lc
-      - service ssh start; /usr/local/bin/start-vpn-gateway; tail -f /dev/null
-
+    volumes:
+      - type: bind
+        source: /root/.backup-secrets/proxmox-vpn-gateway/etc/wireguard
+        target: /etc/wireguard
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /root/.backup-secrets/proxmox-vpn-gateway/root/.ssh
+        target: /root/.ssh
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /opt/proxmox-vpn-gateway/start-host-forwards
+        target: /usr/local/bin/start-host-forwards
+        read_only: true
+        bind:
+          create_host_path: false
+    command: [bash, -lc, 'service ssh start && /usr/local/bin/start-vpn-gateway && exec sleep infinity']
 networks:
   infra_net:
     external: true

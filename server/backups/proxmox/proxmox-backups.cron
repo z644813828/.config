@@ -1,0 +1,9 @@
+# Install as /etc/cron.d/proxmox-backups (root:root 0644).
+# Uses HOST timezone: expected Europe/Moscow. Sunday VM backup is live snapshot mode.
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# Sunday: OMV VM -> host recovery bundle -> verified encrypted cloud copy.
+0 4 * * 0 root /usr/bin/flock -n /run/proxmox-backup-chain.lock /bin/bash -c 'umask 077; /usr/bin/python3 /usr/local/sbin/backup_omv.py --run && /usr/bin/python3 /usr/local/sbin/backup_host.py --run && /usr/bin/python3 /usr/local/sbin/upload_gdrive.py --run --prune' >> /var/log/proxmox-backup.log 2>&1
+# Monday-Saturday: host recovery bundle -> cloud copy (latest two VM/host copies).
+0 4 * * 1-6 root /usr/bin/flock -n /run/proxmox-backup-chain.lock /bin/bash -c 'umask 077; /usr/bin/python3 /usr/local/sbin/backup_host.py --run && /usr/bin/python3 /usr/local/sbin/upload_gdrive.py --run --prune' >> /var/log/proxmox-backup.log 2>&1

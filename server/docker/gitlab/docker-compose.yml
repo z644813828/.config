@@ -1,19 +1,17 @@
-version: "2"
+name: gitlab
 
 services:
   gitlab:
-    image: gitlab/gitlab-ce:15.11.13-ce.0
+    image: gitlab/gitlab-ce:19.5.3-ce.0
     container_name: gitlab
-    hostname: <HOSTNAME>
+    hostname: server.example.invalid
     restart: unless-stopped
-
+    shm_size: '256m'
     environment:
       GITLAB_OMNIBUS_CONFIG: |
-        external_url 'https://<HOSTNAME>:9444'
-
-        nginx['listen_port'] = 8929
-        nginx['listen_https'] = false
-
+        external_url 'https://server.example.invalid:9444'
+        gitlab_rails['nginx']['listen_port'] = 8929
+        gitlab_rails['nginx']['listen_https'] = false
         gitlab_rails['gitlab_shell_ssh_port'] = 2224
 
         letsencrypt['enable'] = false
@@ -21,9 +19,21 @@ services:
 
     ports:
       - "127.0.0.1:8929:8929"
-      - "2224:22"
+      - "192.168.2.254:2224:22"
 
     volumes:
-      - "./config:/etc/gitlab"
-      - "./logs:/var/log/gitlab"
-      - "./data:/var/opt/gitlab"
+      - type: bind
+        source: ./config
+        target: /etc/gitlab
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./logs
+        target: /var/log/gitlab
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./data
+        target: /var/opt/gitlab
+        bind:
+          create_host_path: false

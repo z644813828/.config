@@ -10,11 +10,11 @@ services:
     user: root
     working_dir: /root
     ports:
-      - "2022:22"
-      - "18789:18789"
+      - "192.168.2.254:2022:22"
+      - "127.0.0.1:18789:18789"
     networks:
       infra_net:
-        ipv4_address: 172.30.0.2
+        ipv4_address: 172.31.0.2
     command:
       - bash
       - -ec

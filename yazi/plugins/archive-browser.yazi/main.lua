@@ -77,6 +77,24 @@ local function session_for(url, exact)
 	}
 end
 
+local function is_mounted(root)
+	local out = Command("mount"):output()
+	if not out or not out.status.success then return false end
+	return out.stdout:find(" on " .. escape_pattern(root) .. " %(") ~= nil
+end
+
+local function cached_sessions()
+	local files = fs.read_dir(cache_root(), { resolve = true }) or {}
+	local result = {}
+	for _, file in ipairs(files) do
+		if file.cha.is_dir and file.name:match("^session%.") then
+			local dir = tostring(file.url)
+			result[#result + 1] = { root = dir .. "/mount", dir = dir }
+		end
+	end
+	return result
+end
+
 local function remove_session(session)
 	-- Do not remove the directory before unmounting: on macOS that would leave a
 	-- hidden, still-running FUSE daemon behind.
@@ -117,11 +135,29 @@ local function remove_session(session)
 end
 
 local function cleanup_all()
-	local ordered = {}
-	for _, session in pairs(sessions) do ordered[#ordered + 1] = session end
+	local ordered, seen = {}, {}
+	local function add(session)
+		if not seen[session.root] then
+			seen[session.root], ordered[#ordered + 1] = true, session
+		end
+	end
+	for _, session in pairs(sessions) do add(session) end
+	for _, session in ipairs(cached_sessions()) do add(session) end
 	-- A nested archive lives below its parent mount. Unmount deepest paths first.
 	table.sort(ordered, function(a, b) return #a.root > #b.root end)
-	for _, session in ipairs(ordered) do remove_session(session) end
+	local first_error
+	for _, session in ipairs(ordered) do
+		local ok, err = pcall(function()
+			if is_mounted(session.root) then
+				remove_session(session)
+			else
+				fs.remove("dir_all", Url(session.dir))
+				sessions[session.root] = nil
+			end
+		end)
+		if not ok and not first_error then first_error = err end
+	end
+	if first_error then fail(first_error) end
 end
 
 local function session_count()
@@ -184,12 +220,24 @@ function M:entry(job)
 	local current = cx.active.current.hovered
 	local hovered = current and Url(tostring(current.url))
 	local action = job.args[1]
+	local other_cwds = {}
+	for i = 1, #cx.tabs do
+		if i ~= cx.tabs.idx then other_cwds[#other_cwds + 1] = tostring(cx.tabs[i].current.cwd.path) end
+	end
+	if action == "close" and #cx.tabs == 1 then action = "quit" end
 	ya.dbg("archive-browser entry", "action=", tostring(action), "cwd=", tostring(cwd), "hovered=", tostring(hovered))
 	ya.async(function()
 		if action == "close" or action == "quit" then
 			-- Plugin modules may be reloaded between keypresses. Recover the
 			-- current session from origin.txt instead of relying only on `sessions`.
 			local current_session = session_for(cwd, false)
+			if current_session and action == "close" then
+				for _, path in ipairs(other_cwds) do
+					if path == current_session.root or path:sub(1, #current_session.root + 1) == current_session.root .. "/" then
+						return ya.emit("close", {})
+					end
+				end
+			end
 			ya.dbg("archive-browser cleanup", "sessions=", tostring(session_count()),
 				"current=", tostring(current_session and current_session.root))
 			local ok, err = pcall(function()
@@ -199,7 +247,9 @@ function M:entry(job)
 					ya.sleep(0.15)
 					remove_session(current_session)
 				end
-				cleanup_all()
+				-- Closing one tab must not break archive tabs that remain open. A full
+				-- scan is reserved for an actual Yazi exit.
+				if action == "quit" then cleanup_all() end
 			end)
 			if not ok then error(err, 0) end
 			return ya.emit(action == "quit" and "quit" or "close", action == "quit" and { no_cwd_file = true } or {})

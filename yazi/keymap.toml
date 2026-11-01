@@ -12,7 +12,7 @@ prepend_keymap = [
   { on = ":", run = "shell --interactive", desc = "Ranger: console/shell" },
   { on = ";", run = "shell --interactive", desc = "Ranger: console/shell" },
   { on = "!", run = "shell --block --interactive", desc = "Ranger: shell" },
-  { on = "s", run = "shell --interactive", desc = "Ranger: shell" },
+  { on = "s", run = "plugin remote-connect shell-interactive", desc = "Shell command / remote SSH terminal" },
   { on = "S", run = "plugin remote-connect shell", desc = "Shell in current directory" },
   { on = "r", run = "plugin archive-browser open-with", desc = "Open with: type application before files" },
 
@@ -28,7 +28,7 @@ prepend_keymap = [
   { on = "<Left>", run = "plugin archive-browser leave", desc = "Parent / leave archive" },
   { on = "<Home>", run = "arrow top", desc = "Top" },
   { on = "<End>", run = "arrow bot", desc = "Bottom" },
-  { on = ["g", "g"], run = "arrow top", desc = "Top" },
+  { on = "g", run = "plugin remote-connect g-menu", desc = "Go to" },
   { on = "G", run = "arrow bot", desc = "Bottom" },
   { on = "J", run = "arrow 50%", desc = "Half page down" },
   { on = "K", run = "arrow -50%", desc = "Half page up" },
@@ -73,19 +73,6 @@ prepend_keymap = [
   { on = "<F7>", run = "create --dir", desc = "Ranger: mkdir" },
   { on = "<F10>", run = "plugin remote-connect quit", desc = "Ranger: exit" },
 
-  # personal g shortcuts
-  { on = ["g", "."], run = "cd ~/.config", desc = "Config" },
-  { on = ["g", "h"], run = "cd ~", desc = "Home" },
-  { on = ["g", "d"], run = "cd ~/Documents/Documents", desc = "Documents" },
-  { on = ["g", "z"], run = "cd ~/Downloads", desc = "Downloads" },
-  { on = ["g", "p"], run = "cd ~/Documents/Projects", desc = "Projects" },
-  { on = ["g", "l"], run = "cd ~/Documents/Libs", desc = "Libs" },
-  { on = ["g", "i"], run = "cd ~/Library/Mobile\\ Documents/com~apple~CloudDocs/Documents", desc = "iCloud Documents" },
-  { on = ["g", "s"], run = "plugin remote-connect mount", desc = "SFTP/SSHFS: connect" },
-  { on = ["g", "m"], run = "cd /mnt", desc = "/mnt" },
-  { on = ["g", "/"], run = "cd /", desc = "Root" },
-  { on = ["g", "o"], run = "cd /opt", desc = "/opt" },
-
   # editing / rename / create
   { on = "E", run = "plugin archive-browser choose", desc = "Ranger: edit" },
   { on = ["c", "w"], run = "rename --cursor=before_ext", desc = "Ranger: rename" },
@@ -120,15 +107,13 @@ prepend_keymap = [
   { on = ["z", "f"], run = "filter --smart", desc = "Ranger: filter" },
 
   # tabs — same muscle memory as ranger
-  { on = "<C-n>", run = "tab_create --current", desc = "Ranger: new tab in current dir" },
+  { on = "<C-n>", run = "plugin remote-connect new-tab", desc = "Ranger: new tab in current dir" },
   { on = "<C-t>", run = "tab_create ~", desc = "Ranger: new tab at home" },
   { on = "<C-F4>", run = "plugin remote-connect close", desc = "Ranger: close tab" },
   { on = "<Tab>", run = "tab_switch 1 --relative", desc = "Next tab" },
   { on = "<S-Tab>", run = "tab_switch -1 --relative", desc = "Previous tab" },
   { on = "<A-Right>", run = "tab_switch 1 --relative", desc = "Next tab" },
   { on = "<A-Left>", run = "tab_switch -1 --relative", desc = "Previous tab" },
-  { on = ["g", "t"], run = "tab_switch 1 --relative", desc = "Next tab" },
-  { on = ["g", "T"], run = "tab_switch -1 --relative", desc = "Previous tab" },
   { on = "<A-1>", run = "tab_switch 0", desc = "Tab 1" },
   { on = "<A-2>", run = "tab_switch 1", desc = "Tab 2" },
   { on = "<A-3>", run = "tab_switch 2", desc = "Tab 3" },

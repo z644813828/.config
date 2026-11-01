@@ -3,7 +3,7 @@ import argparse
 import ftplib
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 
@@ -37,7 +37,7 @@ def get_config(args):
 
     values["DEST_DIR"] = str(args.dest_dir or values.get("DEST_DIR") or "/srv/backups/vps-config")
     try:
-        values["LOCAL_RETENTION_DAYS"] = int(values.get("LOCAL_RETENTION_DAYS", "90"))
+        values["LOCAL_RETENTION_DAYS"] = int(values.get("LOCAL_RETENTION_DAYS", "30"))
     except ValueError:
         raise SystemExit("LOCAL_RETENTION_DAYS must be a positive integer")
     if values["LOCAL_RETENTION_DAYS"] <= 0:
@@ -99,7 +99,8 @@ def mirror_dir(ftp, remote_dir, local_dir):
 
 
 def prune_local_backups(dest_root, retention_days, now=None):
-    cutoff = (now or datetime.utcnow()) - timedelta(days=retention_days)
+    # Archive names encode UTC without tzinfo; retain that comparison format.
+    cutoff = (now or datetime.now(timezone.utc).replace(tzinfo=None)) - timedelta(days=retention_days)
     groups = {}
     # os.walk does not traverse symlink directories. Never delete their targets.
     for directory, directories, filenames in os.walk(str(dest_root), followlinks=False):

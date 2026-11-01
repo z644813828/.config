@@ -1,0 +1,92 @@
+name: nextcloud
+
+x-nextcloud-environment: &nextcloud-environment
+  POSTGRES_HOST: db
+  POSTGRES_DB: nextcloud
+  POSTGRES_USER: nextcloud
+  POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+  REDIS_HOST: redis
+  NEXTCLOUD_TRUSTED_DOMAINS: 'server.example.invalid 192.168.2.254 10.80.0.10 localhost 127.0.0.1'
+  OVERWRITEHOST: 'server.example.invalid:8880'
+  OVERWRITEPROTOCOL: https
+  OVERWRITECLIURL: 'https://server.example.invalid:8880'
+  APACHE_DISABLE_REWRITE_IP: '1'
+  PHP_MEMORY_LIMIT: 512M
+
+services:
+  db:
+    image: postgres:17-bookworm
+    container_name: nextcloud-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: nextcloud
+      POSTGRES_USER: nextcloud
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-U', 'nextcloud', '-d', 'nextcloud']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  redis:
+    image: redis:7.4-alpine
+    container_name: nextcloud-redis
+    restart: unless-stopped
+    command: ['redis-server', '--save', '', '--appendonly', 'no']
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  app:
+    image: nextcloud:34.0.5-apache
+    container_name: nextcloud
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      <<: *nextcloud-environment
+      NEXTCLOUD_ADMIN_USER: cloudadmin
+      NEXTCLOUD_ADMIN_PASSWORD_FILE: /run/secrets/admin_password
+    secrets:
+      - db_password
+      - admin_password
+    ports:
+      - '127.0.0.1:8081:80'
+    volumes:
+      - html:/var/www/html
+      - data:/var/www/html/data
+
+  cron:
+    image: nextcloud:34.0.5-apache
+    container_name: nextcloud-cron
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_started
+    entrypoint: /cron.sh
+    environment: *nextcloud-environment
+    secrets:
+      - db_password
+    volumes:
+      - html:/var/www/html
+      - data:/var/www/html/data
+
+volumes:
+  db:
+  html:
+  data:
+
+secrets:
+  db_password:
+    file: ./secrets/db_password
+  admin_password:
+    file: ./secrets/admin_password
