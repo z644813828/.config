@@ -1,0 +1,41 @@
+{
+  "name": "dev-container-manager",
+  "displayName": "DevContainerManager",
+  "version": "1.0.0",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "activationEvents": [
+    "onCommand:devContainerManager.createCodex",
+    "onCommand:devContainerManager.createQwen"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "devContainerManager.createCodex",
+        "title": "Создать контейнер разработки (Codex)",
+        "category": "DevContainerManager"
+      },
+      {
+        "command": "devContainerManager.createQwen",
+        "title": "Создать контейнер разработки (Qwen)",
+        "category": "DevContainerManager"
+      }
+    ],
+    "menus": {
+      "statusBar/remoteIndicator": [
+        {
+          "command": "devContainerManager.createCodex",
+          "when": "!remoteName && workspaceFolderCount > 0",
+          "group": "remote_30_devcontainer_01@1"
+        },
+        {
+          "command": "devContainerManager.createQwen",
+          "when": "!remoteName && workspaceFolderCount > 0",
+          "group": "remote_30_devcontainer_01@2"
+        }
+      ]
+    }
+  }
+}

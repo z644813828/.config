@@ -1,0 +1,25 @@
+services:
+  ollama-gateway:
+    image: nginx:alpine
+    container_name: qwen-ollama-gateway
+    user: "101:101"
+    entrypoint: ["/usr/sbin/nginx"]
+    command: ["-g", "daemon off;"]
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    sysctls:
+      net.ipv4.ip_forward: "0"
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      qwen-isolated:
+        aliases: [ollama-gateway]
+      qwen-uplink: {}
+
+networks:
+  qwen-isolated:
+    external: true
+  qwen-uplink:
+    external: true

@@ -28,7 +28,7 @@ tooling, Remote SSH, and Dev Containers.
 - [Snippets](vscode/snippets/): C/C++ templates.
 - Local extensions: [Multi Cursor](vscode/extensions/vscode-mulitcursor/),
   [Open in Parallels](vscode/extensions/open-in-parallels/),
-  [Trixie Dev Container](vscode/extensions/trixie-devcontainer/),
+  [DevContainerManager](vscode/extensions/dev-container-manager/),
   [Server Version Cleaner](vscode/extensions/server-version-cleaner/), and
   [Hex Editor](vscode/extensions/hex-editor/README.md).
 

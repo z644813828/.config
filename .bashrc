@@ -23,6 +23,7 @@ then
     if [[ -r "$HOME/.bashrc.linux.local" ]]; then
         source "$HOME/.bashrc.linux.local"
     fi
+   export FEX_ROOTFS="/home/dmitriy/.local/share/fex-emu/RootFS/Ubuntu_20_04.sqsh" 
 else
     alias s="echo 'Connected to 10.211.55.3';ssh -X -t dmitriy@10.211.55.3 fish"
     alias m='open -a /Applications/MacVim.app'

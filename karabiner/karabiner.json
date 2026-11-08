@@ -100,7 +100,7 @@
                                     "key_code": "9",
                                     "modifiers": { "mandatory": ["right_option", "right_shift"] }
                                 },
-                                "to": [{ "shell_command": "open -a '/Applications/Qt Creator'" }],
+                                "to": [{ "shell_command": "open -a '/Users/dmitriy/Qt/Qt Creator.app'" }],
                                 "type": "basic"
                             },
                             {

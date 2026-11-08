@@ -1851,6 +1851,8 @@
 	<string>Default</string>
 	<key>Default Bookmark Guid</key>
 	<string>3AE3B3BB-3043-4192-A1F8-5D4731E914C8</string>
+	<key>Default Browser Profile Guid</key>
+	<string>3AE3B3BB-3043-4192-A1F8-5D4731E914C8</string>
 	<key>DimBackgroundWindows</key>
 	<false/>
 	<key>DimInactiveSplitPanes</key>

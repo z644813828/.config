@@ -1,5 +1,9 @@
+# The following lines were added by Docker Desktop to add commands to your PATH.
+export PATH="$PATH:/Users/dmitriy/.docker/bin"
+# End of Docker Desktop section.
+
 # {{{ Shell environment variables
-set -U _USER "dmitriy"
+set -U _USER dmitriy
 # Default editor in system
 set -x EDITOR nvim
 # Don't save history if leading space 
@@ -17,10 +21,10 @@ set -x VM_DEBIAN_3 "10.211.55.5"
 set -x VM_DEBIAN_4 "10.211.55.6"
 
 switch (uname)
-case Linux
-    set -x TOOLCHAINS_PATH "/home/$_USER/Documents/Libs/_Toolchain"
-case Darwin
-    set -x TOOLCHAINS_PATH "/Users/$_USER/Documents/Libs/_Toolchain"
+    case Linux
+        set -x TOOLCHAINS_PATH "/home/$_USER/Documents/Libs/_Toolchain"
+    case Darwin
+        set -x TOOLCHAINS_PATH "/Users/$_USER/Documents/Libs/_Toolchain"
 end
 
 # }}} 
@@ -28,28 +32,30 @@ end
 # {{{ Extensions path
 # Not to dublicate extentions for root and main user
 switch (uname)
-case Linux
-    set fish_function_path /home/$_USER/.config/fish/functions $fish_function_path
-case Darwin
-    set fish_function_path /Users/$_USER/.config/fish/functions $fish_function_path
+    case Linux
+        set fish_function_path /home/$_USER/.config/fish/functions $fish_function_path
+    case Darwin
+        set fish_function_path /Users/$_USER/.config/fish/functions $fish_function_path
 end
 # }}} 
 
 # {{{ Install fisher plugin manager and packages if not exist
 function PlugInstall
     set -x plugins_list
-    set -a plugins_list "oh-my-fish/theme-bobthefish"       # Prompt theme
-    set -a plugins_list "jethrokuan/fzf"                    # Improved fzf-integration
-    set -a plugins_list "laughedelic/pisces"                # Helper for pairing simbols
-    set -a plugins_list "oh-my-fish/plugin-bang-bang"       # Bash style history substitution
-    set -a plugins_list "oh-my-fish/plugin-grc"             # Code highlighting
-    set -a plugins_list "jethrokuan/z"                      # Z port for fish
-    set -a plugins_list "jorgebucaran/getopts.fish"         # Parse CLI options
-    set -a plugins_list "edc/bass"                          # bash commands compatibility
+    set -a plugins_list oh-my-fish/theme-bobthefish # Prompt theme
+    set -a plugins_list jethrokuan/fzf # Improved fzf-integration
+    set -a plugins_list laughedelic/pisces # Helper for pairing simbols
+    set -a plugins_list oh-my-fish/plugin-bang-bang # Bash style history substitution
+    set -a plugins_list oh-my-fish/plugin-grc # Code highlighting
+    set -a plugins_list jethrokuan/z # Z port for fish
+    set -a plugins_list "jorgebucaran/getopts.fish" # Parse CLI options
+    set -a plugins_list edc/bass # bash commands compatibility
     # set -a plugins_list "oh-my-fish/plugin-brew"          # Integrate Homebrew paths into shell 
     # set -a plugins_list "aughedelic/brew-completions"     # Homebrew completions
     # set -a plugins_list "oh-my-fish/plugin-local-config"  # Support different config files
-    for i in $plugins_list; fisher install $i; end
+    for i in $plugins_list
+        fisher install $i
+    end
     fish_reload
 end
 
@@ -80,8 +86,8 @@ abbr cdc ' cd ~/.config/'
 
 # {{{ SUDO wrapper
 # If need to execute function from root, written as alias, fe `sudo r`
-function sudo 
-    command sudo -sE $argv 
+function sudo
+    command sudo -sE $argv
 end
 abbr sf " sudo fish"
 # }}}
@@ -92,19 +98,22 @@ function fish_reload
     if test -n "$jobs_list"
         printf "\033[0;31m Error!\033[0m \n"
         jobs
-        return 1;
+        return 1
+
     else
         source $HOME/.config/fish/config.fish
-        if count $argv > /dev/null
-            set -x PROMPT $argv;
+        if count $argv >/dev/null
+            set -x PROMPT $argv
+
         end
         printf "\033[0;32m Config reloaded !\033[0m \n"
-        fish; kill -9 $fish_pid
+        fish
+        kill -9 $fish_pid
     end
 end
-function __fish_complete_fish_reload 
+function __fish_complete_fish_reload
     echo "0 echo ▶ "
-    echo "toolchain"
+    echo toolchain
     echo "1 theme_powerline_fonts no"
     echo "2 theme_powerline_fonts yes"
 end
@@ -116,11 +125,11 @@ abbr R " fish_reload"
 
 # {{{ Generic
 abbr q ' exit'
-abbr g 'git'
+abbr g git
 alias rm='rm -i'
 alias vi="/usr/bin/vim"
-alias v 'nvim'
-alias vim 'nvim'
+alias v nvim
+alias vim nvim
 alias vimdiff='nvim -d'
 alias vim-='nvim -R -'
 set -g NPROC (nproc)
@@ -139,7 +148,10 @@ function __toolchain_apply_profile --argument-names toolchain_name
     # sel -l managed_variables KEY1 KEY2
     # set -l managed_paths PATH1 PATH2
 
-    set -eg $managed_variables
+    for variable in $managed_variables
+        set -eg "$variable"
+    end
+
     for managed_path in $managed_paths
         set -gx PATH (string match -v -- $managed_path $PATH)
     end
@@ -149,11 +161,11 @@ function __toolchain_apply_profile --argument-names toolchain_name
     set -l environment_map
     set -l profile_paths
     switch $toolchain_name
-    # case 'amd64'
-    #     set environment_map \
-    #         KEY1 /tmp/key1 \
-    #         KEY2 /tmp/key2
-    #     set profile_paths PATH1
+        # case 'amd64'
+        #     set environment_map \
+        #         KEY1 /tmp/key1 \
+        #         KEY2 /tmp/key2
+        #     set profile_paths PATH1
     end
 
     for index in (seq 1 2 (count $environment_map))
@@ -163,18 +175,18 @@ function __toolchain_apply_profile --argument-names toolchain_name
 end
 
 function toolchain
-    if test "$argv" = "auto"
+    if test "$argv" = auto
         switch (basename $PWD)
-        # case "path1" , "path2"
+            # case "path1" , "path2"
             # toolchain TOOLCHAIN_NAME_HERE
-        case "mp17_test" , "libelplc" , "elplc_daemon"
-            toolchain e2k
-        case "*"
-            toolchain amd64
+            case mp17_test , libelplc , elplc_daemon
+                toolchain e2k
+            case "*"
+                toolchain amd64
         end
         return
     end
-    if test -e $TOOLCHAINS_PATH/$argv && count $argv > /dev/null
+    if test -e $TOOLCHAINS_PATH/$argv && count $argv >/dev/null
         export TOOLCHAIN=$argv
         set -g L_PATH "$TOOLCHAINS_PATH/$argv/lib"
         set -g H_PATH "$TOOLCHAINS_PATH/$argv/include/"
@@ -183,20 +195,20 @@ function toolchain
         set -g L_PATH ""
         set -g H_PATH ""
         printf "\033[0;31m Error!\033[0m Toolchain not found: \n"
-        __fish_complete_toolchain 
+        __fish_complete_toolchain
     end
-        export CPATH=$H_PATH:$H_PATH/third_party
-        export C_FLAGS=$H_PATH:$H_PATH/third_party
-        export LIBRARY_PATH=$L_PATH
-        export LD_LIBRARY_PATH=$L_PATH
+    export CPATH=$H_PATH:$H_PATH/third_party
+    export C_FLAGS=$H_PATH:$H_PATH/third_party
+    export LIBRARY_PATH=$L_PATH
+    export LD_LIBRARY_PATH=$L_PATH
 
-        __toolchain_apply_profile $TOOLCHAIN
+    __toolchain_apply_profile $TOOLCHAIN
 
-        printf "\033[0;32m Include path (CPATH, C_FLAGS):   \033[0m $CPATH \n"
-        printf "\033[0;32m Library path: ([LD_]LIBRARY_PATH)\033[0m $LIBRARY_PATH \n"
+    printf "\033[0;32m Include path (CPATH, C_FLAGS):   \033[0m $CPATH \n"
+    printf "\033[0;32m Library path: ([LD_]LIBRARY_PATH)\033[0m $LIBRARY_PATH \n"
 end
 
-function __fish_complete_toolchain 
+function __fish_complete_toolchain
     bash -c "ls -p1 $TOOLCHAINS_PATH/ | grep '/' | sed 's/\///g'"
 end
 complete -c toolchain --no-files -a "(__fish_complete_toolchain)"
@@ -215,8 +227,8 @@ end
 # }}}
 
 # {{{ Other
-    alias cat='bat'
-    abbr S '$SCRIPTS/'
+alias cat='bat'
+abbr S '$SCRIPTS/'
 # }}} 
 
 # }}} 
@@ -224,234 +236,237 @@ end
 # OS depending 
 switch (uname)
 
-# {{{ | Linux
-case Linux
-# {{{ du with sort
-function ddu 
-    command du -sk $argv | sort -nr | cut -f2 | xargs -d '\n' du -sh 
-end
-# }}}
+    # {{{ | Linux
+    case Linux
+        # {{{ du with sort
+        function ddu
+            command du -sk $argv | sort -nr | cut -f2 | xargs -d '\n' du -sh
+        end
+        # }}}
 
-# {{{ Other 
-    alias ls='ls --color -h --group-directories-first'
-    alias ll='ls -lh -G --color -h --group-directories-first'
-    function pvs 
-        eval $SCRIPTS/pvs.sh $argv
-    end
-# }}}
+        # {{{ Other 
+        alias ls='ls --color -h --group-directories-first'
+        alias ll='ls -lh -G --color -h --group-directories-first'
+        function pvs
+            eval $SCRIPTS/pvs.sh $argv
+        end
+        # }}}
 
-# }}} 
+        # }}} 
 
-# {{{ | MacOS
-case Darwin
+        # {{{ | MacOS
+    case Darwin
 
-if test "$TERM_PROGRAM" = "vscode" 
-    ssh -t dmitriy@10.211.55.3 "export PROMPT=toolchain; cd '$PWD'; toolchain auto; clear; fish"
-end
+        if test "$TERM_PROGRAM" = vscode
+            ssh -t dmitriy@10.211.55.3 "export PROMPT=toolchain; cd '$PWD'; toolchain auto; clear; fish"
+        end
 
-    # {{{ Qt
+        # {{{ Qt
         abbr qmake '~/Qt/6.2.4/macos/bin/qmake'
-    # }}}
+        # }}}
 
-    # {{{ Atom
-    function _atom
-        if count $argv > /dev/null
-            atom $argv
-        else
-            atom .
+        # {{{ Atom
+        function _atom
+            if count $argv >/dev/null
+                atom $argv
+            else
+                atom .
+            end
         end
-    end
-    alias a='_atom'
-    # }}}
+        alias a='_atom'
+        # }}}
 
-    # {{{ VSCode
-    function _code
-        if count $argv > /dev/null
-            code $argv
-        else
-            code .
+        # {{{ VSCode
+        function _code
+            if count $argv >/dev/null
+                code $argv
+            else
+                code .
+            end
         end
-    end
-    alias c='_code'
-    # }}}
+        alias c='_code'
+        # }}}
 
-    # {{{ Wakeonlan 
-    function __fish_complete_wakeonlan 
-        echo "50:EB:F6:2C:44:63 #Home1"
-        echo "50:EB:F6:2C:44:63 #Home2"
-        echo "84:16:F9:05:75:85 #Server"
-        echo "70:8B:CD:7F:25:A9 #Work"
-    end
-    complete -c wakeonlan --no-files -a "(__fish_complete_wakeonlan)"
-    # }}} 
-
-    # {{{ Get program identifier
-    function get_identifier
-        if not test -d /Applications/$argv.app
-            printf "\033[0;31m Error!\033[0m Program no found\n"
-        else
-            set cmd '/usr/libexec/PlistBuddy -c \'Print CFBundleIdentifier\' /Applications/'$argv'.app/Contents/Info.plist'
-            echo $cmd
-            eval command $cmd
+        # {{{ Wakeonlan 
+        function __fish_complete_wakeonlan
+            echo "50:EB:F6:2C:44:63 #Home1"
+            echo "50:EB:F6:2C:44:63 #Home2"
+            echo "84:16:F9:05:75:85 #Server"
+            echo "70:8B:CD:7F:25:A9 #Work"
         end
-    end
-    # }}} 
+        complete -c wakeonlan --no-files -a "(__fish_complete_wakeonlan)"
+        # }}} 
 
-    # {{{ Check new updates in project
-    function check_pull
-        if count $argv > /dev/null
-            command $SCRIPTS/check_pull.sh $argv
-        else
-            git remote update
-            git status
+        # {{{ Get program identifier
+        function get_identifier
+            if not test -d /Applications/$argv.app
+                printf "\033[0;31m Error!\033[0m Program no found\n"
+            else
+                set cmd '/usr/libexec/PlistBuddy -c \'Print CFBundleIdentifier\' /Applications/'$argv'.app/Contents/Info.plist'
+                echo $cmd
+                eval command $cmd
+            end
         end
-    end
-    # }}}
-    
-    # {{{ Home server git manager
-    function git_server_new
-        command $SCRIPTS/git_server_new.sh $argv
-    end
-    function git_server_list
-        command $SCRIPTS/git_server_list.sh
-    end
-    function git_server_clone
-        command $SCRIPTS/git_server_clone.sh $argv
-    end
-    # }}}
+        # }}} 
 
-    # {{{ Connect via sshpass with password from `~/.ssh/config`
-    function ssh
-        command $SCRIPTS/ssh.sh $argv
-    end
-    # }}}
-    
-    # {{{ SSHFS with password from `~/.ssh/config` and flags
-    function sshfs
-        command $SCRIPTS/sshfs.sh $argv
-    end
-    # }}}
+        # {{{ Check new updates in project
+        function check_pull
+            if count $argv >/dev/null
+                command $SCRIPTS/check_pull.sh $argv
+            else
+                git remote update
+                git status
+            end
+        end
+        # }}}
 
-    # {{{ SCP with password from `~/.ssh/config`
-    # function scp
+        # {{{ Home server git manager
+        function git_server_new
+            command $SCRIPTS/git_server_new.sh $argv
+        end
+        function git_server_list
+            command $SCRIPTS/git_server_list.sh
+        end
+        function git_server_clone
+            command $SCRIPTS/git_server_clone.sh $argv
+        end
+        # }}}
+
+        # {{{ Connect via sshpass with password from `~/.ssh/config`
+        function ssh
+            command $SCRIPTS/ssh.sh $argv
+        end
+        # }}}
+
+        # {{{ SSHFS with password from `~/.ssh/config` and flags
+        function sshfs
+            command $SCRIPTS/sshfs.sh $argv
+        end
+        # }}}
+
+        # {{{ SCP with password from `~/.ssh/config`
+        # function scp
         # command $SCRIPTS/scp.sh $argv
-    # end
-    # }}}
+        # end
+        # }}}
 
-    # {{{ SSH wrapper to connect to VM or run a command
-    function s
-        set -l remote_pwd (string replace -a ' ' '\\ ' $PWD)
-        if count $argv > /dev/null
-            command ssh -Xo LogLevel=QUIET -t $_USER@$VM_DEBIAN_1 "cd $remote_pwd; $argv"
-        else
-            command ssh -Xt $_USER@$VM_DEBIAN_1 "cd $remote_pwd; echo 'Connected to $VM_DEBIAN_1'; trash-list; fish"
+        # {{{ SSH wrapper to connect to VM or run a command
+        function s
+            set -l remote_pwd (string replace -a ' ' '\\ ' $PWD)
+            if count $argv >/dev/null
+                command ssh -Xo LogLevel=QUIET -t $_USER@$VM_DEBIAN_1 "cd $remote_pwd; $argv"
+            else
+                command ssh -Xt $_USER@$VM_DEBIAN_1 "cd $remote_pwd; echo 'Connected to $VM_DEBIAN_1'; trash-list; fish"
+            end
         end
-    end
-    # }}}
+        # }}}
 
-    # {{{ SSH host status polling
-    function sssh
-        if count $argv > /dev/null
-            set ip $argv
-        else
-            set ip $VM_DEBIAN_1
-        end
-            while true; 
+        # {{{ SSH host status polling
+        function sssh
+            if count $argv >/dev/null
+                set ip $argv
+            else
+                set ip $VM_DEBIAN_1
+            end
+            while true
+
                 command $SCRIPTS/ssh.sh $ip
-                if test "$status" = 0 
+                if test "$status" = 0
                     break
                 else
                     sleep 1
                 end
             end
-    end
-    # }}}
-
-    # {{{ Minicom wrapper
-    abbr mminicom 'env LC_ALL=ru_RU.CP1251 sudo minicom -C ~/temp/minicom_log/(date +%Y.%m.%d-%H:%M:%S).log -8 -m --device'
-    # }}}
-
-    # {{{ SSH to extra VM
-    function s2
-        command ssh -Xt $_USER@$VM_DEBIAN_2 "cd $PWD; echo 'Connected to $VM_DEBIAN_2'; fish"
-    end
-    function s3
-        command ssh -Xt $_USER@$VM_DEBIAN_3 "cd $PWD; echo 'Connected to $VM_DEBIAN_3'; fish"
-    end
-    function s4
-        command ssh -Xt $_USER@$VM_DEBIAN_4 "cd $PWD; echo 'Connected to $VM_DEBIAN_4'; fish"
-    end
-    # }}}
-
-    # {{{ JS minify
-    function js_minify
-        set input_file $argv
-        set output_file $argv.min
-        set compiler '/opt/compiler-latest/closure-compiler-v20200517.jar'
-        set flags1 '--charset=UTF-8'
-        set flags2 '--strict_mode_input=false' 
-        echo java -jar \
-            $compiler \
-            $flags1 \
-            --js $input_file \
-            --js_output_file $output_file \
-            $flags2
-        echo ">>"
-        java -jar \
-            $compiler \
-            $flags1 \
-            --js $input_file \
-            --js_output_file $output_file \
-            $flags2
-    end
-    # }}}
-
-    # {{{ ScrCPY 
-    # https://github.com/Genymobile/scrcpy
-    # adb tcpip 5555; 
-    function sscrcpy
-        if count $argv > /dev/null
-            set ip (ssh -G $argv | grep "^hostname " | awk '{printf "%s", $2}')
-            adb connect $ip:5555;
-            scrcpy -s $ip:5555 --rotation 0 --turn-screen-off -b2M -m800 --max-fps 15
-        else
-            scrcpy --rotation 0 --turn-screen-off -b2M -m800 --max-fps 15
         end
-    end
-    # }}}
+        # }}}
 
-    # {{{ Other
-    alias cdi='cd ~/Library/Mobile\ Documents/com~apple~CloudDocs'
-    alias m='/Applications/MacVim.app/Contents/bin/mvim'
-    alias m_cli='/usr/local/bin/m'
-    alias mvim='/Applications/MacVim.app/Contents/bin/mvim'
-    alias ls='gls -N --color -h --group-directories-first'
-    alias ll='gls -N -lh -G --color -h --group-directories-first'
-    alias ctr='ctags -R --languages=c,c++'
-    # }}}
+        # {{{ Minicom wrapper
+        abbr mminicom 'env LC_ALL=ru_RU.CP1251 sudo minicom -C ~/temp/minicom_log/(date +%Y.%m.%d-%H:%M:%S).log -8 -m --device'
+        # }}}
 
-    # {{{ Fork
-    function fork
-        if count $argv > /dev/null
-            open $argv -a /Applications/Fork.app
-        else
-            open . -a /Applications/Fork.app
+        # {{{ SSH to extra VM
+        function s2
+            command ssh -Xt $_USER@$VM_DEBIAN_2 "cd $PWD; echo 'Connected to $VM_DEBIAN_2'; fish"
         end
-    end
-    # }}}
+        function s3
+            command ssh -Xt $_USER@$VM_DEBIAN_3 "cd $PWD; echo 'Connected to $VM_DEBIAN_3'; fish"
+        end
+        function s4
+            command ssh -Xt $_USER@$VM_DEBIAN_4 "cd $PWD; echo 'Connected to $VM_DEBIAN_4'; fish"
+        end
+        # }}}
 
-# }}}
+        # {{{ JS minify
+        function js_minify
+            set input_file $argv
+            set output_file $argv.min
+            set compiler '/opt/compiler-latest/closure-compiler-v20200517.jar'
+            set flags1 '--charset=UTF-8'
+            set flags2 '--strict_mode_input=false'
+            echo java -jar \
+                $compiler \
+                $flags1 \
+                --js $input_file \
+                --js_output_file $output_file \
+                $flags2
+            echo ">>"
+            java -jar \
+                $compiler \
+                $flags1 \
+                --js $input_file \
+                --js_output_file $output_file \
+                $flags2
+        end
+        # }}}
 
-# {{{ | Other
-case '*'
-    echo Unsupported system detected!
+        # {{{ ScrCPY 
+        # https://github.com/Genymobile/scrcpy
+        # adb tcpip 5555; 
+        function sscrcpy
+            if count $argv >/dev/null
+                set ip (ssh -G $argv | grep "^hostname " | awk '{printf "%s", $2}')
+                adb connect $ip:5555
+
+                scrcpy -s $ip:5555 --rotation 0 --turn-screen-off -b2M -m800 --max-fps 15
+            else
+                scrcpy --rotation 0 --turn-screen-off -b2M -m800 --max-fps 15
+            end
+        end
+        # }}}
+
+        # {{{ Other
+        alias cdi='cd ~/Library/Mobile\ Documents/com~apple~CloudDocs'
+        alias m='/Applications/MacVim.app/Contents/bin/mvim'
+        alias m_cli='/usr/local/bin/m'
+        alias mvim='/Applications/MacVim.app/Contents/bin/mvim'
+        alias ls='gls -N --color -h --group-directories-first'
+        alias ll='gls -N -lh -G --color -h --group-directories-first'
+        alias ctr='ctags -R --languages=c,c++'
+        # }}}
+
+        # {{{ Fork
+        function fork
+            if count $argv >/dev/null
+                open $argv -a /Applications/Fork.app
+            else
+                open . -a /Applications/Fork.app
+            end
+        end
+        # }}}
+
+        # }}}
+
+        # {{{ | Other
+    case '*'
+        echo Unsupported system detected!
 end
 # }}}
 
 # }}}
 
 # {{{ dev/tty1
-string match -r -q -- '/dev/tty[0-9]' (tty); and set -x PROMPT 0; and exit;
+string match -r -q -- '/dev/tty[0-9]' (tty); and set -x PROMPT 0; and exit
+
 # }}}
 
 # {{{ UI customization
@@ -467,49 +482,48 @@ string match -r -q -- '/dev/tty[0-9]' (tty); and set -x PROMPT 0; and exit;
 
 # TODO: load from system 
 switch (echo "$PROMPT")
-case 0
-    # export TERM="dumb" # hmm... that's not working (functions/fish_prompt.fish:1048)
-    function fish_prompt -d 'simple fish_prompt'
-        echo "▶ "
-    end
-case toolchain
-    function prompt_hostname
-        echo (hostname) ["$TOOLCHAIN"]
-    end
-case 1
-    set -g theme_powerline_fonts no
-case 2
-    set -g theme_powerline_fonts yes
-case '*'
-    set -g theme_nerd_fonts yes
+    case 0
+        # export TERM="dumb" # hmm... that's not working (functions/fish_prompt.fish:1048)
+        function fish_prompt -d 'simple fish_prompt'
+            echo "▶ "
+        end
+    case toolchain
+        function prompt_hostname
+            echo (hostname) ["$TOOLCHAIN"]
+        end
+    case 1
+        set -g theme_powerline_fonts no
+    case 2
+        set -g theme_powerline_fonts yes
+    case '*'
+        set -g theme_nerd_fonts yes
 end
-
 
 # }}}
 
 # OS depending 
 switch (uname)
 
-# {{{ | Linux
-case Linux
-    set -g theme_display_git no
-    set -g path_color white
-    set -g theme_color_scheme base16
-# }}}
+    # {{{ | Linux
+    case Linux
+        set -g theme_display_git no
+        set -g path_color white
+        set -g theme_color_scheme base16
+        # }}}
 
-# {{{ | MacOS
-case Darwin
-    set -g theme_display_git yes
-    set -g theme_display_git_dirty yes
-    set -g theme_display_git_untracked no
-    set -g theme_display_git_ahead_verbose no
-    set -g theme_display_git_dirty_verbose no
-    set -g theme_display_git_stashed_verbose no
-    set -g theme_display_git_master_branch no
-    set -g theme_git_worktree_support no
-    set -g path_color black
-    set -g theme_color_scheme dark
-# }}}
+        # {{{ | MacOS
+    case Darwin
+        set -g theme_display_git yes
+        set -g theme_display_git_dirty yes
+        set -g theme_display_git_untracked no
+        set -g theme_display_git_ahead_verbose no
+        set -g theme_display_git_dirty_verbose no
+        set -g theme_display_git_stashed_verbose no
+        set -g theme_display_git_master_branch no
+        set -g theme_git_worktree_support no
+        set -g path_color black
+        set -g theme_color_scheme dark
+        # }}}
 end
 
 # {{{ Generic settings
@@ -522,15 +536,15 @@ set -g theme_display_jobs_verbose yes
 set -g theme_display_sudo_user no
 set -g theme_display_hostname ssh
 function bobthefish_colors -S -d 'Define a custom bobthefish color scheme'
-    set -x color_path                  $path_color
-    set -x color_path_basename         $path_color
-    set -x color_username              white
+    set -x color_path $path_color
+    set -x color_path_basename $path_color
+    set -x color_username white
 end
-function fish_greeting; end
+function fish_greeting
+end
 # }}}
 
 # }}}
-
 
 # {{{ FZF
 set -U FZF_LEGACY_KEYBINDINGS 0
@@ -586,9 +600,9 @@ function __fzf_complete_local
     commandline -f repaint
 end
 
-bind \t '__fzf_complete_local'
+bind \t __fzf_complete_local
 if bind -M insert >/dev/null 2>/dev/null
-    bind -M insert \t '__fzf_complete_local'
+    bind -M insert \t __fzf_complete_local
 end
 
 set -U FZF_FIND_FILE_COMMAND "ag -l --hidden --ignore .git \$dir 2> /dev/null"
@@ -599,15 +613,14 @@ set -U FZF_COMPLETE 1
 # set -U FZF_PREVIEW_FILE_CMD "highlight"
 set FZF_PREVIEW_FILE_CMD "bat --color=always --style='plain' --line-range :100"
 switch (uname)
-case Linux
-    set -U FZF_PREVIEW_DIR_CMD "ls -lh -G --color -h --group-directories-first"
-case Darwin
-    set -U FZF_PREVIEW_DIR_CMD "gls -lh -gG -N --color -h --group-directories-first"
+    case Linux
+        set -U FZF_PREVIEW_DIR_CMD "ls -lh -G --color -h --group-directories-first"
+    case Darwin
+        set -U FZF_PREVIEW_DIR_CMD "gls -lh -gG -N --color -h --group-directories-first"
 end
 # }}}
 
 # {{{ Iterm iterm2_shell_integration.fish
-test -e {$HOME}/.iterm2_shell_integration.fish ; or curl -L https://iterm2.com/shell_integration/fish -o ~/.iterm2_shell_integration.fish
+test -e {$HOME}/.iterm2_shell_integration.fish; or curl -L https://iterm2.com/shell_integration/fish -o ~/.iterm2_shell_integration.fish
 source {$HOME}/.iterm2_shell_integration.fish
 # }}}
-

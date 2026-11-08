@@ -574,8 +574,10 @@ function renderConnectionCard(array $infoUser, ?string $infoQrDataUri, string $s
 
 function renderClientNode(array $user, int $totalMonthlyTraffic, int $totalTraffic, bool $isChild): void
 {
+    global $webProxyByUser;
     $isChecked = $user['active'] === 'active' || $user['enabled'] === 'enabled';
     $progress = getClientProgress($user, $totalMonthlyTraffic, $totalTraffic);
+    $webProxyProfile = $webProxyByUser[(string) $user['user']] ?? null;
     $displayName = (string) $user['user'];
     if ($isChild && strpos($displayName, '-') !== false) {
         $displayName = substr($displayName, strpos($displayName, '-') + 1);
@@ -591,6 +593,19 @@ function renderClientNode(array $user, int $totalMonthlyTraffic, int $totalTraff
                             <rect x="9" y="9" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.9"/>
                         </svg>
                     </button>
+                <?php endif; ?>
+                <?php if (is_array($webProxyProfile) && ($webProxyProfile['link'] ?? '') !== ''): ?>
+                    <button class="icon-button" type="button" title="Скопировать WebProxy" data-copy="<?php echo htmlspecialchars((string) $webProxyProfile['link'], ENT_QUOTES, 'UTF-8'); ?>">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M5 8.5A4.5 4.5 0 0 1 9.5 4h5A4.5 4.5 0 0 1 19 8.5v7a4.5 4.5 0 0 1-4.5 4.5h-5A4.5 4.5 0 0 1 5 15.5v-7Z" stroke="currentColor" stroke-width="1.9"/>
+                            <path d="M8 12h8M12 8l4 4-4 4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
+                    <a class="icon-button" href="<?php echo htmlspecialchars((string) $webProxyProfile['link'], ENT_QUOTES, 'UTF-8'); ?>" title="Открыть WebProxy в Telegram">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path d="M21 3 3.8 9.6c-1.17.47-1.16 1.12-.21 1.41l4.42 1.38 1.71 5.25c.21.58.11.81.72.81.47 0 .68-.21.94-.47l2.13-2.07 4.43 3.27c.82.45 1.41.22 1.61-.76L22.46 4.7C22.76 3.5 22 2.95 21 3Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
                 <?php endif; ?>
                 <form method="post" data-info-form>
                     <input type="hidden" name="action" value="edit_load">
@@ -991,57 +1006,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($current === null) {
                 $flash = ['type' => 'error', 'text' => 'Клиент для редактирования не найден.'];
             } else {
-                $oldService = 'mtg-' . $originalUser;
-                $newService = 'mtg-' . $newUserName;
-                $secret = $current['secret'];
-                if ($hostname !== '') {
-                    $generatedSecret = trim(shell_exec('/usr/local/bin/mtg generate-secret --hex ' . escapeshellarg($hostname)) ?? '');
-                    if ($generatedSecret !== '') {
-                        $secret = $generatedSecret;
-                    }
-                }
-
-                $newConfigPath = '/etc/mtg-' . $newUserName . '.toml';
-                $newServicePath = '/etc/systemd/system/' . $newService . '.service';
-
-                file_put_contents(
-                    $newConfigPath,
-                    "secret = \"{$secret}\"\n" .
-                    "bind-to = \"0.0.0.0:{$port}\"\n" .
-                    "prefer-ip = \"prefer-ipv4\"\n"
+                $details = runShell(
+                    '/usr/local/bin/mtproto-edit-user '
+                    . escapeshellarg($originalUser) . ' '
+                    . escapeshellarg($newUserName) . ' '
+                    . escapeshellarg($port) . ' --hostname=' . escapeshellarg($hostname)
                 );
-
-                file_put_contents(
-                    $newServicePath,
-                    "[Unit]\n" .
-                    "Description=mtg - MTProto proxy server ({$newUserName})\n" .
-                    "Documentation=https://github.com/9seconds/mtg\n" .
-                    "After=network.target\n" .
-                    "Wants=network.target\n\n" .
-                    "[Service]\n" .
-                    "ExecStart=/usr/local/bin/mtg run {$newConfigPath}\n" .
-                    "Restart=always\n" .
-                    "RestartSec=3\n" .
-                    "DynamicUser=true\n" .
-                    "AmbientCapabilities=CAP_NET_BIND_SERVICE\n" .
-                    "LimitNOFILE=65536\n\n" .
-                    "[Install]\n" .
-                    "WantedBy=multi-user.target\n"
-                );
-
-                $commands = [];
-                $commands[] = 'systemctl stop ' . escapeshellarg($oldService) . ' >/dev/null 2>&1 || true';
-                $commands[] = 'systemctl disable ' . escapeshellarg($oldService) . ' >/dev/null 2>&1 || true';
-                if ($originalUser !== $newUserName) {
-                    $commands[] = 'rm -f ' . escapeshellarg('/etc/mtg-' . $originalUser . '.toml');
-                    $commands[] = 'rm -f ' . escapeshellarg('/etc/systemd/system/' . $oldService . '.service');
-                }
-                $commands[] = 'systemctl daemon-reload';
-                $commands[] = 'systemctl enable --now ' . escapeshellarg($newService);
-                $commands[] = 'if [ -x /usr/local/bin/mtproto-traffic ]; then /usr/local/bin/mtproto-traffic sync >/dev/null 2>&1 || true; /usr/local/bin/mtproto-traffic collect >/dev/null 2>&1 || true; fi';
-                $commands[] = '/usr/local/bin/mtg access ' . escapeshellarg($newConfigPath);
-
-                $details = runShell(implode(' && ', $commands));
                 $flash = [
                     'type' => $details['exit_code'] === 0 ? 'success' : 'error',
                     'text' => $details['exit_code'] === 0 ? 'Клиент обновлен.' : 'Не удалось обновить клиента.',
@@ -1063,6 +1033,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $users = listUsers($serverHost);
 $clientTree = buildClientTree($users);
+$webProxyProfiles = [];
+$webProxyByUser = [];
+$webProxyInfoPath = '/etc/tproxy-server/client-info.json';
+if (is_readable($webProxyInfoPath)) {
+    $decodedWebProxyInfo = json_decode((string) file_get_contents($webProxyInfoPath), true);
+    if (is_array($decodedWebProxyInfo['profiles'] ?? null)) {
+        $webProxyProfiles = array_values(array_filter(
+            $decodedWebProxyInfo['profiles'],
+            static fn(mixed $profile): bool => is_array($profile)
+                && ($profile['user'] ?? '') !== ''
+                && ($profile['link'] ?? '') !== ''
+        ));
+    } elseif (is_array($decodedWebProxyInfo) && ($decodedWebProxyInfo['user'] ?? '') !== '') {
+        $webProxyProfiles = [$decodedWebProxyInfo];
+    }
+}
+foreach ($webProxyProfiles as $webProxyProfile) {
+    $profileUser = (string) ($webProxyProfile['user'] ?? '');
+    if ($profileUser !== '') {
+        $webProxyByUser[$profileUser] = $webProxyProfile;
+    }
+}
 $infoUser = null;
 if ($infoUserName !== null) {
     foreach ($users as $user) {

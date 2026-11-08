@@ -1,0 +1,43 @@
+{
+  "name": "${localWorkspaceFolderBasename} - Qwen",
+  "image": "local/devcontainer-qwen:clean",
+  "runArgs": [
+    "--name",
+    "dc-${localWorkspaceFolderBasename}-qwen",
+    "--label",
+    "devcontainer.local_folder=${localWorkspaceFolder}",
+    "--security-opt=no-new-privileges",
+    "--cap-drop=ALL",
+    "--network=qwen-isolated"
+  ],
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Continue.continue",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "ms-vscode.cpptools",
+        "ms-vscode.cpp-devtools"
+      ],
+      "settings": {
+        "terminal.integrated.profiles.linux": {
+          "fish": {
+            "path": "/usr/bin/fish"
+          }
+        },
+        "terminal.integrated.defaultProfile.linux": "fish",
+        "continue.telemetryEnabled": false
+      }
+    }
+  },
+  "mounts": [
+    "source=vscode-extensions-qwen,target=/home/vscode/.vscode-server/extensions,type=volume",
+    "source=vscode-extensions-cache-qwen,target=/home/vscode/.vscode-server/extensionsCache,type=volume",
+    "source=${localEnv:HOME}/.config/vscode/devcontainer/qwen/continue/config.yaml,target=/home/vscode/.continue/config.yaml,type=bind,readonly"
+  ],
+  "containerEnv": {
+    "TZ": "Europe/Moscow"
+  }
+}
