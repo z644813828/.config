@@ -1,0 +1,23 @@
+{
+  "name": "host-terminal",
+  "displayName": "Host Terminal",
+  "description": "Open a local host shell from the terminal profile dropdown.",
+  "version": "0.1.0",
+  "publisher": "local-tools",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Other"],
+  "extensionKind": ["ui"],
+  "main": "./extension.js",
+  "activationEvents": ["onTerminalProfile:hostTerminal.local"],
+  "contributes": {
+    "terminal": {
+      "profiles": [
+        {
+          "id": "hostTerminal.local",
+          "title": "Терминал хоста",
+          "icon": "device-desktop"
+        }
+      ]
+    }
+  }
+}
