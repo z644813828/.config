@@ -132,7 +132,7 @@ Export installed extensions from the client with `code --list-extensions`.
 
 #### [Ukelele](https://ukelele.en.softonic.com/mac) - Unicode Keyboard Layout Editor
   >  Change keyboard layout, I use it only for symbols and `ё`, cause Option + same letters on different layouts give several symbols.
-  Config is [here](Russian.keylayout). Symbols here are the same as in `ABC-extended`.
+  Config is [here](keyboard-layout/RussianCustom.bundle/Contents/Resources/РУ.keylayout). Symbols here are the same as in `ABC-extended`.
 
 ## CLI tools
 

@@ -160,16 +160,16 @@ Status:children_add(function(self)
     }
 end, 400, Status.RIGHT)
 
--- Creation time is unavailable on some remote filesystems, so omit it there.
+-- Modification time, for local and SFTP files alike (SFTP has no creation time).
 Status:children_add(function()
     local h = cx.active.current.hovered
-    local btime = h and h.cha and tonumber(tostring(h.cha.btime))
-    if not btime or btime <= 0 then
+    local mtime = h and h.cha and tonumber(tostring(h.cha.mtime))
+    if not mtime or mtime <= 0 then
         return ""
     end
 
     return ui.Line {
-        ui.Span(os.date("%Y-%m-%d %H:%M", math.floor(btime))):fg("#D8DEE9"),
+        ui.Span(os.date("%Y-%m-%d %H:%M", math.floor(mtime))):fg("#D8DEE9"),
         "  ",
     }
 end, 500, Status.RIGHT)

@@ -37,3 +37,8 @@ is read-only and is never modified.
 - Archive support is provided by the installed `ratarmount` backends. TAR and
   compressed TAR are its strongest formats; other archive types depend on its
   optional Python/native backends.
+- Remote archives (`sftp://` tabs from `gs`) are first downloaded into Yazi's
+  local copy of the file (progress under `w`), and that copy is mounted;
+  `ratarmount` itself never sees an `sftp://` address. `h`/Left at the archive
+  root returns to the remote directory. The copy is removed with the other
+  remote copies when the SFTP connection closes.

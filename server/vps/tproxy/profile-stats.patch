@@ -1,0 +1,101 @@
+--- a/internal/session/manager.go
++++ b/internal/session/manager.go
+@@ -362,6 +362,18 @@
+ 	}
+ }
+ 
++// ProfileSessions reports authenticated live relay sessions, including idle profiles.
++// It returns a snapshot, never tokens, secrets or client addresses.
++func (m *Manager) ProfileSessions() map[string]int {
++	m.mu.Lock()
++	defer m.mu.Unlock()
++	result := make(map[string]int, len(m.config.Profiles))
++	for _, profile := range m.config.Profiles {
++		result[profile.Name] = m.sessionsPerProfile[profile.Name]
++	}
++	return result
++}
++
+ func (m *Manager) Shutdown() {
+ 	m.mu.Lock()
+ 	if m.closed {
+--- a/internal/session/session_test.go
++++ b/internal/session/session_test.go
+@@ -1099,3 +1099,31 @@
+ 		t.Fatal("late DATA for an evicted lane closed the session")
+ 	}
+ }
++
++func TestProfileSessionsSnapshot(t *testing.T) {
++	configuration := testConfig("127.0.0.1:1")
++	manager := NewManager(configuration, [32]byte{1})
++	defer manager.Shutdown()
++	profile := &configuration.Profiles[0]
++	if got, ok := manager.ProfileSessions()[profile.Name]; !ok || got != 0 {
++		t.Fatal("idle profile missing or not zero")
++	}
++	token, err := manager.IssueBootstrap(profile, "198.51.100.11")
++	if err != nil {
++		t.Fatal(err)
++	}
++	value, err := manager.Create(token, "198.51.100.11", frame.Encode(frame.Hello, 0, []byte{1}))
++	if err != nil {
++		t.Fatal(err)
++	}
++	snapshot := manager.ProfileSessions()
++	if snapshot[profile.Name] != 1 {
++		t.Fatal("live session not counted")
++	}
++	snapshot[profile.Name] = 999
++	if manager.ProfileSessions()[profile.Name] != 1 {
++		t.Fatal("snapshot aliases state")
++	}
++	value.Session.Close()
++	waitFor(t, func() bool { return manager.ProfileSessions()[profile.Name] == 0 })
++}
+--- a/internal/server/server.go
++++ b/internal/server/server.go
+@@ -3,6 +3,7 @@
+ import (
+ 	"context"
+ 	"encoding/base64"
++	"encoding/json"
+ 	"errors"
+ 	"fmt"
+ 	"io"
+@@ -122,6 +123,15 @@
+ 	})
+ 	mux.HandleFunc("/readyz", s.serveReady)
+ 	mux.HandleFunc("/metrics", s.serveMetrics)
++	mux.HandleFunc("/profile-stats", func(w http.ResponseWriter, r *http.Request) {
++		if r.Method != http.MethodGet {
++			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
++			return
++		}
++		w.Header().Set("Content-Type", "application/json")
++		w.Header().Set("Cache-Control", "no-store")
++		_ = json.NewEncoder(w).Encode(s.manager.ProfileSessions())
++	})
+ 	if s.config.EnablePprof {
+ 		mux.HandleFunc("/debug/pprof/", pprof.Index)
+ 		mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+--- a/internal/server/server_test.go
++++ b/internal/server/server_test.go
+@@ -938,3 +938,17 @@
+ 	}
+ 	return body
+ }
++
++func TestProfileStatsAdminOnly(t *testing.T) {
++	application, _ := newTestServer(t, "127.0.0.1:1")
++	admin := httptest.NewRecorder()
++	application.AdminHandler().ServeHTTP(admin, httptest.NewRequest(http.MethodGet, "http://localhost/profile-stats", nil))
++	if admin.Code != http.StatusOK || !strings.Contains(admin.Header().Get("Content-Type"), "application/json") {
++		t.Fatal("admin statistics unavailable")
++	}
++	public := httptest.NewRecorder()
++	application.Handler().ServeHTTP(public, httptest.NewRequest(http.MethodGet, "https://"+testHost+"/profile-stats", nil))
++	if public.Body.String() == admin.Body.String() {
++		t.Fatal("profile statistics exposed publicly")
++	}
++}

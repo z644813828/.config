@@ -1,0 +1,81 @@
+{
+  "name": "qwen-inline-actions",
+  "displayName": "Qwen Inline Actions",
+  "publisher": "local",
+  "version": "0.3.0",
+  "description": "Edit C/C++ AI instructions through Continue inline diff with an explicit range.",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "extensionKind": [
+    "workspace"
+  ],
+  "categories": [
+    "Programming Languages",
+    "Machine Learning"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:c",
+    "onLanguage:cpp"
+  ],
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": false
+    },
+    "virtualWorkspaces": false
+  },
+  "scripts": {
+    "compile": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsc -p .",
+    "lint": "eslint src",
+    "test": "npm run compile && node --test test/*.test.cjs",
+    "package": "npm run compile && node scripts/package.cjs",
+    "install:local": "code --install-extension qwen-inline-actions-0.3.0.vsix --force"
+  },
+  "devDependencies": {
+    "typescript": "5.7.3",
+    "@types/node": "22.10.5",
+    "@types/vscode": "1.90.0",
+    "eslint": "9.17.0",
+    "typescript-eslint": "8.19.1"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "qwenInlineActions.implement",
+        "title": "Edit AI Instruction with Continue",
+        "category": "Qwen Inline Actions"
+      },
+      {
+        "command": "qwenInlineActions.review",
+        "title": "Review Result and Apply to Source",
+        "category": "Qwen Inline Actions"
+      },
+      {
+        "command": "qwenInlineActions.discard",
+        "title": "Discard Draft",
+        "category": "Qwen Inline Actions"
+      }
+    ],
+    "configuration": {
+      "title": "Qwen Inline Actions",
+      "properties": {
+        "qwenInlineActions.enabled": {
+          "type": "boolean",
+          "default": true
+        },
+        "qwenInlineActions.keepInstructionComment": {
+          "type": "boolean",
+          "default": false
+        },
+        "qwenInlineActions.maxContextLines": {
+          "type": "integer",
+          "default": 200,
+          "minimum": 10,
+          "maximum": 2000
+        }
+      }
+    }
+  }
+}

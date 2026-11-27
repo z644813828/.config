@@ -39,8 +39,6 @@ def atomic_write(path, data, metadata):
 def prepare(root, old, new, port, hostname=""):
     if not NAME.fullmatch(old) or not NAME.fullmatch(new):
         raise ValueError("Invalid client name")
-    if not 8443 <= port <= 9000:
-        raise ValueError("Port must be between 8443 and 9000")
     config = root / ("etc/mtg-" + old + ".toml")
     unit = root / ("etc/systemd/system/mtg-" + old + ".service")
     new_config = config.with_name("mtg-" + new + ".toml")
@@ -49,17 +47,22 @@ def prepare(root, old, new, port, hostname=""):
         raise ValueError("Client name already exists")
     text = config.read_text()
     unit_text = unit.read_text()
-    bind = re.search(r'^bind-to\s*=\s*"0\.0\.0\.0:(\d+)"', text, re.M)
+    bind = re.search(r'^bind-to\s*=\s*"([0-9.]+):(\d+)"', text, re.M)
     if not bind:
         raise ValueError("Unsupported MTG bind configuration")
+    bind_host, old_port = bind[1], int(bind[2])
+    if port != old_port and not 8443 <= port <= 9000:
+        raise ValueError("New port must be between 8443 and 9000")
     for other in config.parent.glob("mtg-*.toml"):
-        if other != config and re.search(r'bind-to\s*=\s*"[^"]*:' + str(port) + '"', other.read_text()):
-            raise ValueError("Port already belongs to another client")
-    if int(bind[1]) != port:
+        other_bind = re.search(r'bind-to\s*=\s*"([0-9.]+):(\d+)"', other.read_text())
+        if (other != config and other_bind and int(other_bind[2]) == port
+                and (other_bind[1] == bind_host or "0.0.0.0" in (other_bind[1], bind_host))):
+            raise ValueError("Port already belongs to another client on this address")
+    if old_port != port:
         listeners = run("ss", "-H", "-ltn", "sport", "=", ":" + str(port)).stdout
         if listeners.strip():
             raise ValueError("Port is already listening")
-    text = text[:bind.start()] + 'bind-to = "0.0.0.0:' + str(port) + '"' + text[bind.end():]
+    text = text[:bind.start()] + 'bind-to = "' + bind_host + ':' + str(port) + '"' + text[bind.end():]
     if hostname:
         if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.-]{0,252}", hostname):
             raise ValueError("Invalid hostname")

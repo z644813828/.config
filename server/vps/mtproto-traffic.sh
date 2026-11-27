@@ -47,14 +47,15 @@ ensure_state_dir() {
 }
 
 list_users() {
-  local config user port
+  local config user port address
   for config in /etc/mtg-*.toml; do
     [[ -e "$config" ]] || continue
     user="${config#/etc/mtg-}"
     user="${user%.toml}"
-    port="$(sed -n 's/^bind-to = "0\.0\.0\.0:\([0-9]\+\)".*$/\1/p' "$config" | head -n 1)"
+    port="$(sed -n 's/^bind-to = "[0-9.]*:\([0-9]\+\)".*$/\1/p' "$config" | head -n 1)"
     [[ -n "$port" ]] || continue
-    printf '%s\t%s\n' "$user" "$port"
+    address="$(sed -n 's/^bind-to = "\([0-9.]\+\):[0-9]\+".*$/\1/p' "$config" | head -n 1)"
+    printf '%s\t%s\t%s\n' "$user" "$port" "$address"
   done | sort
 }
 
@@ -124,7 +125,7 @@ save_totals_snapshot() {
     seen["$user"]=1
   done < "$ACTIVITY_FILE"
 
-  while IFS=$'\t' read -r user port; do
+  while IFS=$'\t' read -r user port address; do
     [[ -n "$user" && -n "$port" ]] || continue
     user_ports["$user"]="$port"
     seen["$user"]=1
@@ -255,10 +256,15 @@ cmd_sync() {
   iptables -F "$CHAIN_OUT"
 
   local user port
-  while IFS=$'\t' read -r user port; do
+  while IFS=$'\t' read -r user port address; do
     [[ -n "$user" && -n "$port" ]] || continue
-    iptables -A "$CHAIN_IN" -p tcp --dport "$port" -m comment --comment "mtproto:${user}:in" -j RETURN
-    iptables -A "$CHAIN_OUT" -p tcp --sport "$port" -m comment --comment "mtproto:${user}:out" -j RETURN
+    local -a in_addr=() out_addr=()
+    if [[ "$address" != "0.0.0.0" ]]; then
+      in_addr=(-d "$address")
+      out_addr=(-s "$address")
+    fi
+    iptables -A "$CHAIN_IN" "${in_addr[@]}" -p tcp --dport "$port" -m comment --comment "mtproto:${user}:in" -j RETURN
+    iptables -A "$CHAIN_OUT" "${out_addr[@]}" -p tcp --sport "$port" -m comment --comment "mtproto:${user}:out" -j RETURN
   done < <(list_users)
 
   : > "$LAST_FILE"
@@ -281,7 +287,7 @@ cmd_report_tsv() {
     totals_out["$user"]="${out_bytes:-0}"
   done < "$source_file"
 
-  while IFS=$'\t' read -r user port; do
+  while IFS=$'\t' read -r user port address; do
     [[ -n "$user" ]] || continue
     if [[ -n "$filter_user" && "$user" != "$filter_user" ]]; then
       continue

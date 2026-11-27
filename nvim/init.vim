@@ -115,6 +115,10 @@ Plug 'junegunn/fzf.vim'
 
 call plug#end()
 
+if uname == 'Darwin'
+    let g:gutentags_ctags_executable = '/opt/homebrew/bin/ctags'
+endif
+
 " }}}
 
 " {{{ General

@@ -41,12 +41,9 @@ prepend_rules = [
 # Avoid optional external preview dependencies; these files still open normally via `l`.
 [plugin]
 prepend_previewers = [
+  # Remote files without a local copy: download small ones on hover (gs/SFTP).
+  { mime = "vfs/{absent,stale}", run = "remote-preview" },
   { mime = "image/{png,jpeg,webp,bmp,tiff}", run = "image-fit" },
   { mime = "application/pdf", run = "noop" },
   { mime = "video/*", run = "noop" },
-]
-# SSHFS mounts (remote-connect): guess MIME from the name instead of reading
-# every file over the network with `file`.
-prepend_fetchers = [
-  { url = "**/yazi/sshfs-v1/session.*/mount/**", run = "sshfs-mime", prio = "high", group = "mime" },
 ]
