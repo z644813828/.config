@@ -1,2 +1,33 @@
 # Merge this section into your private ~/.config/yazi/vfs.toml.
 # Keep any existing SFTP profiles. Restart Yazi after changing VFS authorities.
+#
+# gs (remote-connect) appends this block automatically on first use and
+# asks for one restart. The slots point at a private loopback sshd that bridges
+# to the server chosen in gs; they hold no passwords. `user` must be your local
+# macOS login, because a non-root sshd only accepts its own user.
+
+# >>> remote-connect gS slots (generated) >>>
+[sftp.rc1]
+host = "127.0.0.1"
+port = 22101
+user = "USER"
+key_file = "~/.cache/yazi/sftp-v1/client"
+
+[sftp.rc2]
+host = "127.0.0.1"
+port = 22102
+user = "USER"
+key_file = "~/.cache/yazi/sftp-v1/client"
+
+[sftp.rc3]
+host = "127.0.0.1"
+port = 22103
+user = "USER"
+key_file = "~/.cache/yazi/sftp-v1/client"
+
+[sftp.rc4]
+host = "127.0.0.1"
+port = 22104
+user = "USER"
+key_file = "~/.cache/yazi/sftp-v1/client"
+# <<< remote-connect gS slots <<<

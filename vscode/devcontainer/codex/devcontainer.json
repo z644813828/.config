@@ -15,6 +15,7 @@
       // These are ensured for this devcontainer.
       "extensions": [
         "openai.chatgpt",
+        "anthropic.claude-code",
         "llvm-vs-code-extensions.vscode-clangd",
         "ms-vscode.cpptools",
         "ms-vscode.cpp-devtools"
@@ -30,11 +31,15 @@
     }
   },
   "mounts": [
+    "source=/Users/dmitriy/.config/vscode/devcontainer/codex/.env,target=/etc/devcontainer-env,type=bind,readonly",
     // Project-local Codex history/state.
     // Note: volume name is based on the workspace folder name.
     "source=codex-home-${localWorkspaceFolderBasename},target=/home/vscode/.codex,type=volume",
     // Shared Codex authorization across all containers.
     "source=codex-auth,target=/home/vscode/.codex-shared,type=volume",
+    // Shared Claude login/settings; project transcripts stay workspace-local.
+    "source=claude-config,target=/home/vscode/.claude,type=volume",
+    "source=claude-projects-${localWorkspaceFolderBasename},target=/home/vscode/.claude/projects,type=volume",
     // Shared VS Code extensions and download cache for all containers.
     "source=vscode-extensions,target=/home/vscode/.vscode-server/extensions,type=volume",
     "source=vscode-extensions-cache,target=/home/vscode/.vscode-server/extensionsCache,type=volume",
@@ -42,10 +47,14 @@
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
   "containerEnv": {
-    "TZ": "Europe/Moscow"
+    "TZ": "Europe/Moscow",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
   },
   // Prepare project-local Codex home, shared auth, and shared VS Code extension dirs.
   // If auth.json already exists in the project volume, move it into the shared volume.
   "postCreateCommand": "sudo mkdir -p /home/vscode/.codex /home/vscode/.codex-shared /home/vscode/.vscode-server/extensions /home/vscode/.vscode-server/extensionsCache ",
-  "postStartCommand": "sudo mkdir -p /home/vscode/.codex /home/vscode/.codex-shared /home/vscode/.vscode-server/extensions /home/vscode/.vscode-server/extensionsCache && rm -f /home/vscode/.codex/auth.json && cp /home/vscode/.codex-shared/auth.json /home/vscode/.codex/auth.json"
+  "postStartCommand": {
+    "codex": "sudo mkdir -p /home/vscode/.codex /home/vscode/.codex-shared /home/vscode/.vscode-server/extensions /home/vscode/.vscode-server/extensionsCache && rm -f /home/vscode/.codex/auth.json && cp /home/vscode/.codex-shared/auth.json /home/vscode/.codex/auth.json",
+    "claude": "sudo mkdir -p /home/vscode/.claude/projects && sudo chown vscode:vscode /home/vscode/.claude /home/vscode/.claude/projects && chmod 700 /home/vscode/.claude /home/vscode/.claude/projects"
+  }
 }

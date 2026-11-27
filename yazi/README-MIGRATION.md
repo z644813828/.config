@@ -23,10 +23,12 @@ Notes:
 - `[` and `]` use `plugins/parent-switch.yazi` for ranger-style `move_parent`: when
   `/base/2` is current with `f` hovered, they enter `/base/1` and `/base/3` respectively.
 - Ctrl-N creates a tab in the current directory; Tab/Shift-Tab switch tabs.
-- `gs` asks for host, login, password, port and path in top-of-window inputs,
-  mounts it through SSHFS in a new tab, and unmounts it when that tab is closed.
-  The remote path accepts `/absolute/path`, `~`, and `~/path`; the latter two are
-  relative to the selected user's remote home directory.
+- `gs` asks for host, login, password, port and path in top-of-window inputs
+  and opens the server in a new tab over Yazi's built-in SFTP, through a local
+  OpenSSH bridge, without mounting anything into macOS; the connection is
+  dropped when that tab is closed. The remote path accepts `/absolute/path`,
+  `~`, and `~/path`; the latter two are relative to the selected user's remote
+  home directory. See [remote-connect](plugins/remote-connect.yazi/README.md).
   Yazi has no MC-style `sh://`/FISH filesystem.
 - Option/Alt bindings require the terminal to send Option as Meta/Alt.
 - `q` closes the active tab and exits Yazi only when it was the last tab; `Q`
@@ -35,12 +37,12 @@ Notes:
   while files open the selection, or the hovered file when nothing is selected.
 - All openers use Yazi's `%s` file-path placeholder (not shell `$@`), so `l` passes the
   selected paths (or the hovered filename) to `$EDITOR`; `S` opens local fish, or an SSH
-  terminal in the matching remote directory when the current tab is an SSHFS mount.
+  terminal in the matching remote directory when the current tab is an SFTP tab.
 - `r` prompts for an application command before `%s`; F4 retains the configured opener menu.
 - Qt translation files (`.ts`) open in Qt Linguist.
 - `zh`, Ctrl-H, and Backspace toggle hidden files.
 - The full current-directory path and right-aligned tabs share one header row.
-- Creation time and the search match counter appear in the status bar. Search highlighting is disabled.
+- Modification time and the search match counter appear in the status bar. Search highlighting is disabled.
 - `theme.toml` uses the Nord palette from the Neovim and iTerm profiles, with square tabs and indicators.
 - PDF preview is disabled with the built-in `noop` previewer, so Poppler/`pdftoppm` is not required;
   PDFs still open through the normal macOS opener. Video preview is disabled too, so FFmpeg/`ffprobe`
@@ -56,5 +58,5 @@ Notes:
   unmounts it and returns to the archive. Requires macFUSE and `ratarmount`.
   The mount is a normal local directory, so previews, `r`, F4 and E use the
   usual Yazi openers directly. `w` shows the initial mount task.
-- `Q`/F10 clean every SSHFS and archive FUSE session under Yazi's cache before
-  exiting, including mounts opened in other tabs.
+- `Q`/F10 drop every SFTP connection and clean every archive FUSE session under
+  Yazi's cache before exiting, including those opened in other tabs.

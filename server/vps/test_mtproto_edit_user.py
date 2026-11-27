@@ -64,6 +64,15 @@ class RenameTest(unittest.TestCase):
             self.assertEqual(path.read_bytes(), data)
         self.assertFalse((self.root / "etc/mtg-renamed.toml").exists())
 
+    def test_bound_address_and_existing_high_port(self):
+        self.config.write_text('secret = "unchanged"\nbind-to = "192.0.2.1:29443"\n')
+        (self.root / "etc/mtg-other.toml").write_text('bind-to = "192.0.2.2:29443"\n')
+        changes, _, _ = mod.prepare(self.root, "AlexeyP-1", "renamed", 29443)
+        self.assertIn(b'192.0.2.1:29443', changes[self.root / "etc/mtg-renamed.toml"][0])
+        (self.root / "etc/mtg-other.toml").write_text('bind-to = "0.0.0.0:29443"\n')
+        with self.assertRaises(ValueError):
+            mod.prepare(self.root, "AlexeyP-1", "renamed", 29443)
+
     def test_without_webproxy_and_unchanged_name(self):
         self.profiles.unlink()
         self.info.unlink()

@@ -105,10 +105,10 @@ user root as an exact writable bind at `/external/USERNAME` to both app and cron
 expose the existing Software/OS and Software/_Software sources at /external/OS
 and /external/_Software. Set reviewed read/write/search ACLs for UID 33 and
 inheritable ACLs preserving access for each original owner. Never recursively
-chown the existing data. andrey/ludmila need these steps too; their Linux
+chown the existing data. Other personal users need these steps too; their Linux
 accounts alone do not create Nextcloud users or Docker mounts.
 
-`grant-personal-access.py andrey ludmila` is a separate explicit ACL preparation
+`grant-personal-access.py USER_ONE USER_TWO` is a separate explicit ACL preparation
 step, run as root on OMV. It validates the mounted UserData root and directory
 owners, backs up numeric ACLs under a private /root directory, skips symlinks,
 and never changes ownership. Before widening ACL masks for UID 33, it clamps

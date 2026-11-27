@@ -16,6 +16,24 @@
    .feature-inner {
     position: relative;
    }
+   .feature.is-disabled:hover,
+   .feature.is-disabled .scale2:hover {
+    transform: none;
+   }
+   .feature.is-disabled .feature-tile-icon {
+    filter: grayscale(1);
+    opacity: 0.4;
+   }
+   .feature.is-disabled .feature-title,
+   .feature.is-disabled p {
+    color: #858b94;
+   }
+   .feature-disabled-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: not-allowed;
+   }
    .feature-icon {
     min-height: 240px;
     padding-top: 20px;
@@ -392,6 +410,32 @@ function loadServiceStatusGeneratedAt(string $path): string
     return (string) $decoded['generated_at'];
 }
 
+function tileUnavailable(bool $isLocal, string $key, string $url, array $status): bool
+{
+    if (($status['status'] ?? '') === 'down') {
+        return true;
+    }
+    if ($isLocal) {
+        return false;
+    }
+    // The OMV redirect and private management URLs require LAN or VPN access.
+    if ($key === 'openmediavault') {
+        return true;
+    }
+    if ($url === '' || $url === '#') {
+        return $key !== '3x-ui';
+    }
+    $host = parse_url($url, PHP_URL_HOST);
+    if (!is_string($host)) {
+        return false;
+    }
+    $host = trim($host, '[]');
+    return strtolower($host) === 'localhost'
+        || (filter_var($host, FILTER_VALIDATE_IP) !== false
+            && filter_var($host, FILTER_VALIDATE_IP,
+                FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false);
+}
+
 function serviceStatus(array $statuses, string $key): array
 {
     if (!isset($statuses[$key]) || !is_array($statuses[$key])) {
@@ -530,7 +574,11 @@ $overallStatusText = statusPopupText($overallStatus);
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>OpenMediaVault home page</title>
+	<title>OpenMediaVault</title>
+    <meta name="application-name" content="OpenMediaVault">
+    <meta name="apple-mobile-web-app-title" content="OpenMediaVault">
+    <link rel="icon" type="image/png" href="dist/images/OpenMediaVault.png?v=omv-1">
+    <link rel="apple-touch-icon" sizes="180x180" href="dist/images/apple-touch-icon.png?v=omv-2">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tangerine">
 	<link rel="stylesheet" href="dist/css/style.css">
 	<script src="dist/js/anime.min.js"></script>
@@ -604,7 +652,7 @@ $overallStatusText = statusPopupText($overallStatus);
                         "openmediavault.php",
                         "openmediavault.php",
                         "OpenMediaVault.png",
-                        "OpenMediaVault.",
+                        "OpenMediaVault",
                         "Openmediavault is the next generation network attached storage (NAS) solution based on Debian Linux.
 						It contains services like SSH, (S)FTP, SMB/CIFS, DAAP media server, RSync, BitTorrent client and many more.",
                         "openmediavault"
@@ -644,7 +692,7 @@ $overallStatusText = statusPopupText($overallStatus);
                     [
                         "$ddnsName:8880",
                         "$localIp:8880",
-                        "Nextcloud.svg",
+                        "Nextcloud.svg?v=white-2",
                         "Nextcloud Files",
                         "Personal files, shared folders and public download links.",
                         "nextcloud"
@@ -664,6 +712,14 @@ $overallStatusText = statusPopupText($overallStatus);
                         "Monit",
                         "With all features needed for system monitoring and error recovery. It's like having a watchdog with a toolbox on your server",
                         "monit"
+                    ],
+                    [
+                        "ts3server://" . $publicHost . "/?port=9987",
+                        "ts3server://" . $publicHost . "/?port=9987",
+                        "TeamSpeak.png",
+                        "TeamSpeak",
+                        "Use crystal clear sound to communicate with your team mates cross-platform with military-grade security, lag-free performance & unparalleled reliability and uptime.",
+                        "teamspeak"
                     ],
                     [
                         $asusRouterRemoteUrl,
@@ -688,14 +744,6 @@ $overallStatusText = statusPopupText($overallStatus);
                         "Transmission",
                         "Transmission is an open source, volunteer-based project. Unlike some BitTorrent clients, Transmission doesn't play games with its users to make money",
                         "transmission"
-                    ],
-                    [
-                        "ts3server://" . $publicHost . "/?port=9987",
-                        "ts3server://" . $publicHost . "/?port=9987",
-                        "TeamSpeak.png",
-                        "TeamSpeak",
-                        "Use crystal clear sound to communicate with your team mates cross-platform with military-grade security, lag-free performance & unparalleled reliability and uptime.",
-                        "teamspeak"
                     ],
                     [
                         "apcupsd.php",
@@ -739,15 +787,21 @@ $overallStatusText = statusPopupText($overallStatus);
 								 <?php foreach ($data as $elem): ?>
 	                                    <?php $currentStatus = serviceStatus($serviceStatuses, $elem[IDX_STATUS_KEY]); ?>
                                         <?php $currentStatusText = statusPopupText($currentStatus); ?>
-									<div class="feature text-center is-revealing scale">
+                                        <?php $tileUrl = $isLocal ? $elem[IDX_LOCAL_PATH] : $elem[IDX_PATH]; ?>
+                                        <?php $tileDisabled = tileUnavailable($isLocal, $elem[IDX_STATUS_KEY], $tileUrl, $currentStatus); ?>
+									<div class="feature text-center is-revealing scale<?php echo $tileDisabled ? ' is-disabled' : ''; ?>">
 									<div class="feature-inner">
 										<div class="feature-icon">
-                                            <?php if ($elem[IDX_NAME] === "3x-ui"): ?>
+                                            <?php if ($tileDisabled): ?>
+                                                <span class="feature-disabled-icon" role="link" aria-disabled="true" aria-label="<?php echo htmlspecialchars($elem[IDX_NAME], ENT_QUOTES, 'UTF-8'); ?>">
+                                                    <img class="feature-tile-icon" src="dist/images/<?php echo $elem[IDX_IMG]?>" alt="<?php echo htmlspecialchars($elem[IDX_NAME], ENT_QUOTES, 'UTF-8'); ?>">
+                                                </span>
+                                            <?php elseif ($elem[IDX_NAME] === "3x-ui"): ?>
                                                 <button class="panel-toggle" type="button" data-panel-toggle="main-3x-ui" aria-expanded="false">
                                                     <img class="scale2 feature-tile-icon" src="dist/images/<?php echo $elem[IDX_IMG]?>" alt="3x-ui">
                                                 </button>
                                             <?php else: ?>
-                                                <a href="<?php echo htmlspecialchars($isLocal ? $elem[IDX_LOCAL_PATH] : $elem[IDX_PATH], ENT_QUOTES, 'UTF-8'); ?>">
+                                                <a href="<?php echo htmlspecialchars($tileUrl, ENT_QUOTES, 'UTF-8'); ?>">
                                                     <img class="scale2 feature-tile-icon" src="dist/images/<?php echo $elem[IDX_IMG]?>" alt="<?php echo htmlspecialchars($elem[IDX_NAME], ENT_QUOTES, 'UTF-8'); ?>">
                                                 </a>
                                             <?php endif; ?>
@@ -763,7 +817,7 @@ $overallStatusText = statusPopupText($overallStatus);
 	                                                ></span>
                                             </h4>
 										<p class="text-sm mb-0"><?php echo $elem[IDX_DESCRIPTION]?></p>
-                                        <?php if ($elem[IDX_NAME] === "3x-ui"): ?>
+                                        <?php if ($elem[IDX_NAME] === "3x-ui" && !$tileDisabled): ?>
                                             <div class="panel-menu" id="main-3x-ui">
                                                 <?php foreach ($panels as $panel): ?>
                                                     <div class="panel-entry">

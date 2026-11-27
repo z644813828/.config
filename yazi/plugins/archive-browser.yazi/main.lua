@@ -17,6 +17,24 @@ local function check(value, err)
 	return value
 end
 
+-- Run a short system command with a deadline. A stalled FUSE volume (for
+-- example a disconnected SSHFS mount) can block mount/umount/diskutil in the
+-- kernel; the plugin must regain control even if the child cannot be killed.
+local function run(command, seconds)
+	local child, err = command:stdin(Command.NULL):stdout(Command.PIPED):stderr(Command.PIPED):spawn()
+	if not child then return nil, tostring(err or "Cannot start command") end
+	local deadline = ya.time() + seconds
+	while true do
+		local status, wait_err = child:try_wait()
+		if status then return child:wait_with_output() end
+		if wait_err or ya.time() >= deadline then
+			child:start_kill()
+			return nil, wait_err and tostring(wait_err) or ("timed out after " .. seconds .. "s")
+		end
+		ya.sleep(0.05)
+	end
+end
+
 local function cache_root()
 	local home = os.getenv("HOME")
 	if not home or home == "" then fail("Cannot determine the home directory") end
@@ -77,9 +95,10 @@ local function session_for(url, exact)
 	}
 end
 
+-- Returns true/false when known, or nil when `mount` failed or stalled.
 local function is_mounted(root)
-	local out = Command("mount"):output()
-	if not out or not out.status.success then return false end
+	local out = run(Command("mount"), 5)
+	if not out or not out.status.success then return nil end
 	return out.stdout:find(" on " .. escape_pattern(root) .. " %(") ~= nil
 end
 
@@ -104,34 +123,36 @@ local function remove_session(session)
 		sessions[session.root] = nil
 	end
 	-- Yazi may retain a preview file descriptor briefly after changing CWD.
-	-- macFUSE reports that as EBUSY, so retry for two seconds before giving up.
-	for _ = 1, 20 do
-		local out = check(Command("umount"):arg(session.root):output())
-		if out.status.success then
+	-- macFUSE reports that as EBUSY, so retry for a few seconds before giving up.
+	-- Each command is bounded so a stalled volume cannot hold close/quit forever.
+	local deadline = ya.time() + 5
+	repeat
+		local out, err = run(Command("umount"):arg(session.root), 5)
+		if out and out.status.success then
 			finish()
 			return
 		end
-		last = out.stderr ~= "" and out.stderr or session.root
-		if not last:find("Resource busy", 1, true) then break end
+		last = out and (out.stderr ~= "" and out.stderr or session.root) or err
+		if out and not last:find("Resource busy", 1, true) then break end
 		-- macFUSE on older macOS releases can reject `umount` even after the
 		-- caller left the directory. Its own diagnostic recommends diskutil.
-		local disk = Command("diskutil"):arg({ "unmount", session.root }):output()
+		local disk, disk_err = run(Command("diskutil"):arg({ "unmount", session.root }), 5)
 		if disk and disk.status.success then
 			finish()
 			return
 		end
-		if disk and disk.stderr ~= "" then last = disk.stderr end
+		if disk and disk.stderr ~= "" then last = disk.stderr elseif not disk then last = disk_err end
 		ya.sleep(0.1)
-	end
+	until ya.time() >= deadline
 	-- This is a generated, private, read-only mountpoint; forcing it cannot
 	-- change the archive. It only releases macFUSE handles Yazi has retained.
-	local forced = Command("diskutil"):arg({ "unmount", "force", session.root }):output()
+	local forced, forced_err = run(Command("diskutil"):arg({ "unmount", "force", session.root }), 10)
 	if forced and forced.status.success then
 		finish()
 		return
 	end
-	if forced and forced.stderr ~= "" then last = forced.stderr end
-	fail("Cannot unmount archive: " .. last)
+	if forced and forced.stderr ~= "" then last = forced.stderr elseif not forced then last = forced_err end
+	fail("Cannot unmount archive: " .. tostring(last))
 end
 
 local function cleanup_all()
@@ -148,7 +169,8 @@ local function cleanup_all()
 	local first_error
 	for _, session in ipairs(ordered) do
 		local ok, err = pcall(function()
-			if is_mounted(session.root) then
+			-- Unknown (nil) is treated as mounted: never dir_all an attached volume.
+			if is_mounted(session.root) ~= false then
 				remove_session(session)
 			else
 				fs.remove("dir_all", Url(session.dir))
@@ -166,7 +188,40 @@ local function session_count()
 	return count
 end
 
-local function mount(source)
+-- A remote archive (e.g. on a gs SFTP tab) has no local path for ratarmount,
+-- which would read "sftp://..." as an fsspec URI. Yazi itself keeps remote
+-- files as local copies in its cache: download that copy if it is missing or
+-- outdated (vfs/absent, vfs/stale) and mount the copy instead.
+local function local_copy(url, path, mime)
+	local copy = Url(path)
+	local before = fs.cha(copy)
+	if before and mime ~= "vfs/absent" and mime ~= "vfs/stale" then return copy end
+
+	local before_mtime = before and before.mtime
+	ya.emit("download", { url })
+	ya.notify {
+		title = "Archive",
+		content = "Downloading " .. tostring(url.name or url) .. " before browsing it (progress: w)",
+		timeout = 5,
+	}
+	-- Yazi renames a finished download into place, so the copy appearing (or
+	-- its mtime changing, for a stale one) means it is complete.
+	local deadline = ya.time() + 1800
+	repeat
+		ya.sleep(0.5)
+		local now = fs.cha(copy)
+		if now and (not before or now.mtime ~= before_mtime) then return copy end
+	until ya.time() >= deadline
+	fail("Download of " .. tostring(url) .. " did not finish")
+end
+
+local function mount(source, path, mime)
+	-- `origin` is where h/Left returns to: the remote directory for a remote
+	-- archive. `archive` is what ratarmount reads: always a local file.
+	local archive = source
+	if path and path ~= tostring(source.path) then
+		archive = local_copy(source, path, mime)
+	end
 	local binary = ratarmount()
 	local root = cache_root()
 	check(fs.create("dir_all", root))
@@ -187,12 +242,12 @@ local function mount(source)
 		:name("Mount " .. tostring(source.name or source)):spawn()
 	if not task:acquire() then return end
 	task:progress { total = 1, workload = 1, processed = 0 }
-	task:log("ratarmount " .. tostring(source) .. " -> " .. tostring(point))
+	task:log("ratarmount " .. tostring(archive) .. " -> " .. tostring(point))
 
 	-- Do not pass --foreground: ratarmount daemonizes only after the FUSE mount
 	-- is usable. Its SQLite indexes stay inside this disposable session.
 	local out = Command(binary):arg({
-		"--index-folders", tostring(indexes), tostring(source), tostring(point),
+		"--index-folders", tostring(indexes), tostring(archive), tostring(point),
 	}):output()
 	if not out.status.success then
 		fs.remove("dir_all", dir)
@@ -219,6 +274,11 @@ function M:entry(job)
 	local cwd = Url(tostring(cx.active.current.cwd))
 	local current = cx.active.current.hovered
 	local hovered = current and Url(tostring(current.url))
+	-- Local file behind the hovered entry (Yazi's cached copy for a remote
+	-- file) and its MIME type, which says whether that copy is missing/stale.
+	local hovered_path = current and tostring(current.path)
+	local ok_mime, hovered_mime = pcall(function() return current and current:mime() end)
+	hovered_mime = ok_mime and hovered_mime or nil
 	local action = job.args[1]
 	local other_cwds = {}
 	for i = 1, #cx.tabs do
@@ -270,7 +330,7 @@ function M:entry(job)
 		elseif action == "choose" then
 			return ya.emit("open", { interactive = true })
 		elseif hovered then
-			local ok, err = pcall(mount, hovered)
+			local ok, err = pcall(mount, hovered, hovered_path, hovered_mime)
 			if not ok then error(err, 0) end
 		end
 	end)

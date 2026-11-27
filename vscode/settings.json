@@ -22,7 +22,11 @@
         "<C-f>": false,
         "<C-d>": true,
     },
-    // "vim.langmap": "ёйцукенгшщзхъ;`qwertyuiop[],фывапролджэ;asdfghjkl\\;',ячсмитьбю;zxcvbnm\\,.,ЁЙЦУКЕНГШЩЗХЪ;~QWERTYUIOP{},ФЫВАПРОЛДЖЭ;ASDFGHJKL:\",ЯЧСМИТЬБЮ;ZXCVBNM<>",
+    // Use command mappings instead of langmap: it corrupts literal r/f arguments.
+    // https://github.com/VSCodeVim/Vim/issues/9432
+    "vim.langmap": "",
+    "vim.vimrc.enable": true,
+    "vim.vimrc.path": "~/.config/vscode/russian.vimrc",
     "vim.autoSwitchInputMethod.enable": false,
     "vim.normalModeKeyBindingsNonRecursive": [
         {

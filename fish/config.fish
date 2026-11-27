@@ -27,6 +27,8 @@ switch (uname)
         set -x TOOLCHAINS_PATH "/Users/$_USER/Documents/Libs/_Toolchain"
 end
 
+set -U grc_plugin_ignore_execs minicom env sudo
+
 # }}} 
 
 # {{{ Extensions path
@@ -186,7 +188,7 @@ function toolchain
         end
         return
     end
-    if test -e $TOOLCHAINS_PATH/$argv && count $argv >/dev/null
+    if test (count $argv) -eq 1; and test -n "$TOOLCHAINS_PATH"; and test -d "$TOOLCHAINS_PATH/$argv[1]"
         export TOOLCHAIN=$argv
         set -g L_PATH "$TOOLCHAINS_PATH/$argv/lib"
         set -g H_PATH "$TOOLCHAINS_PATH/$argv/include/"
@@ -194,8 +196,11 @@ function toolchain
         export TOOLCHAIN=""
         set -g L_PATH ""
         set -g H_PATH ""
-        printf "\033[0;31m Error!\033[0m Toolchain not found: \n"
+        set -eg CPATH C_FLAGS LIBRARY_PATH LD_LIBRARY_PATH
+        __toolchain_apply_profile ""
+        printf "\033[0;31m Error!\033[0m Toolchain not found: %s\n" "$argv"
         __fish_complete_toolchain
+        return 1
     end
     export CPATH=$H_PATH:$H_PATH/third_party
     export C_FLAGS=$H_PATH:$H_PATH/third_party
@@ -204,8 +209,8 @@ function toolchain
 
     __toolchain_apply_profile $TOOLCHAIN
 
-    printf "\033[0;32m Include path (CPATH, C_FLAGS):   \033[0m $CPATH \n"
-    printf "\033[0;32m Library path: ([LD_]LIBRARY_PATH)\033[0m $LIBRARY_PATH \n"
+    printf "\033[0;32m Include path (CPATH, C_FLAGS):    \033[0m $CPATH \n"
+    printf "\033[0;32m Library path: ([LD_]LIBRARY_PATH):\033[0m $LIBRARY_PATH \n"
 end
 
 function __fish_complete_toolchain
@@ -254,7 +259,7 @@ switch (uname)
 
         # }}} 
 
-        # {{{ | MacOS
+    # {{{ | MacOS
     case Darwin
 
         if test "$TERM_PROGRAM" = vscode
@@ -454,13 +459,13 @@ switch (uname)
         end
         # }}}
 
-        # }}}
+    # }}}
 
-        # {{{ | Other
+    # {{{ | Other
     case '*'
         echo Unsupported system detected!
+    # }}}
 end
-# }}}
 
 # }}}
 
@@ -509,9 +514,9 @@ switch (uname)
         set -g theme_display_git no
         set -g path_color white
         set -g theme_color_scheme base16
-        # }}}
+    # }}}
 
-        # {{{ | MacOS
+    # {{{ | MacOS
     case Darwin
         set -g theme_display_git yes
         set -g theme_display_git_dirty yes
@@ -523,7 +528,7 @@ switch (uname)
         set -g theme_git_worktree_support no
         set -g path_color black
         set -g theme_color_scheme dark
-        # }}}
+    # }}}
 end
 
 # {{{ Generic settings
@@ -558,6 +563,7 @@ function __fzf_complete_local
     # Load the plugin's option and preview helpers before using them.
     functions -q __fzf_complete; or return
 
+    set -l query (commandline -ct)
     set -l candidates (complete -C (commandline -cp))
     set -l result
     test (count $candidates) -gt 0; or return
@@ -565,7 +571,6 @@ function __fzf_complete_local
     if test (count $candidates) -eq 1
         set result (string split -m 1 -f 1 \t -- $candidates[1])
     else
-        set -l query (commandline -ct)
         set -l output (
             printf '%s\n' $candidates |
                 eval (__fzfcmd) (__fzf_complete_opts) \
@@ -587,10 +592,24 @@ function __fzf_complete_local
         end
     end
 
+    # Preserve a variable prefix only when the user typed it unescaped.
+    set -l variable_prefix (string match -r '^\$[a-zA-Z_][a-zA-Z0-9_]*/' -- "$query")
     set -l escaped
     for candidate in $result
         # Preserve home expansion, while quoting spaces and shell metacharacters.
-        if string match -q '~/*' -- "$candidate"
+        if test -n "$variable_prefix"; and string match -q "$variable_prefix*" -- "$candidate"
+            set -l suffix_start (math (string length -- "$variable_prefix") + 1)
+            set -l suffix (string sub -s $suffix_start -- "$candidate")
+            set -l components
+            for component in (string split / -- "$suffix")
+                if test -n "$component"
+                    set -a components (string escape -- "$component")
+                else
+                    set -a components ''
+                end
+            end
+            set -a escaped "$variable_prefix"(string join / -- $components)
+        else if string match -q '~/*' -- "$candidate"
             set -a escaped \~/(string escape -- (string sub -s 3 -- "$candidate"))
         else
             set -a escaped (string escape -- "$candidate")

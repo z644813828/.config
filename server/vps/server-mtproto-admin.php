@@ -226,10 +226,10 @@ function formatLastActivity(int $timestamp): string
 function formatLastActivityTitle(int $timestamp): string
 {
     if ($timestamp <= 0) {
-        return 'Был(а) в сети: нет данных';
+        return 'Последний учтённый трафик MTProto: нет данных';
     }
 
-    return 'Был(а) в сети: ' . gmdate('d.m.Y, H:i:s', $timestamp) . ' UTC';
+    return 'Последний учтённый трафик MTProto: ' . gmdate('d.m.Y, H:i:s', $timestamp) . ' UTC';
 }
 
 function getQrDataUri(string $text): ?string
@@ -316,24 +316,47 @@ function getActivityStats(): array
     return $stats;
 }
 
-function getPortConnectionCounts(): array
+function parsePortConnectionCounts(string $raw): array
 {
     $counts = [];
-    $raw = shell_exec('ss -Htan state established 2>/dev/null') ?? '';
     foreach (preg_split('/\r\n|\r|\n/', trim($raw)) as $line) {
-        if ($line === '') {
-            continue;
-        }
         $parts = preg_split('/\s+/', trim($line));
-        if (count($parts) < 4) {
+        if (count($parts) < 5 || !preg_match('/users:\(\("mtg",/', $line)) {
+            // Exclude established sockets still in the kernel accept queue.
             continue;
         }
-        $endpoints = [$parts[count($parts) - 2], $parts[count($parts) - 1]];
-        foreach ($endpoints as $endpoint) {
-            if (preg_match('/:(\d+)$/', $endpoint, $match)) {
-                $port = $match[1];
-                $counts[$port] = ($counts[$port] ?? 0) + 1;
-            }
+        // ss -Htanp with a state filter: Recv-Q, Send-Q, LOCAL, PEER, process.
+        $local = $parts[2];
+        if (preg_match('/:(\d+)$/', $local, $match)) {
+            $counts[$match[1]] = ($counts[$match[1]] ?? 0) + 1;
+            $address = substr($local, 0, strrpos($local, ':'));
+            $address = preg_replace('/^\[::ffff:(.*)\]$/', '$1', $address);
+            $endpoint = $address . ':' . $match[1];
+            $counts[$endpoint] = ($counts[$endpoint] ?? 0) + 1;
+        }
+    }
+    return $counts;
+}
+
+function getPortConnectionCounts(): array
+{
+    return parsePortConnectionCounts(shell_exec('ss -Htanp state established 2>/dev/null') ?? '');
+}
+
+function getWebProxySessionCounts(): ?array
+{
+    $context = stream_context_create(['http' => ['timeout' => 1.0]]);
+    $raw = @file_get_contents('http://127.0.0.1:8081/profile-stats', false, $context);
+    if ($raw === false) {
+        return null;
+    }
+    $counts = json_decode($raw, true);
+    if (!is_array($counts)) {
+        return null;
+    }
+    foreach ($counts as $count) {
+        if (!is_int($count) || $count < 0) {
+            return null;
         }
     }
     return $counts;
@@ -347,12 +370,13 @@ function getUserConfig(string $userName): ?array
     }
 
     $content = (string) file_get_contents($configPath);
-    preg_match('/bind-to\s*=\s*"0\.0\.0\.0:(\d+)"/', $content, $portMatch);
+    preg_match('/bind-to\s*=\s*"([^"]+):(\d+)"/', $content, $portMatch);
     preg_match('/secret\s*=\s*"([^"]+)"/', $content, $secretMatch);
 
     return [
         'config_path' => $configPath,
-        'port' => $portMatch[1] ?? '',
+        'port' => $portMatch[2] ?? '',
+        'bind_host' => $portMatch[1] ?? '0.0.0.0',
         'secret' => $secretMatch[1] ?? '',
     ];
 }
@@ -380,7 +404,7 @@ function portValidationError(string $port, string $currentUser = ''): ?string
         $configUser = preg_replace('/^mtg-/', '', $configUser) ?? $configUser;
         $content = (string) file_get_contents($configPath);
 
-        if (preg_match('/bind-to\s*=\s*"0\.0\.0\.0:(\d+)"/', $content, $match) && $match[1] === $port && $configUser !== $currentUser) {
+        if (preg_match('/bind-to\s*=\s*"([^"]+):(\d+)"/', $content, $match) && $match[2] === $port && $configUser !== $currentUser) {
             return 'Порт ' . $port . ' уже используется клиентом ' . $configUser . '.';
         }
     }
@@ -509,7 +533,7 @@ function getGroupSummary(array $group): array
 
     return [
         'count' => count($users),
-        'online' => array_sum(array_map(static fn(array $user): int => (int) ($user['online_connections'] ?? 0), $users)),
+        'online' => count(array_filter($users, static fn(array $user): bool => ($user['online_connections'] ?? 0) > 0)),
         'traffic' => array_sum(array_map(static fn(array $user): int => (int) ($user['total_bytes'] ?? 0), $users)),
         'month_traffic' => array_sum(array_map(static fn(array $user): int => (int) ($user['month_total_bytes'] ?? 0), $users)),
         'in_bytes' => array_sum(array_map(static fn(array $user): int => (int) ($user['in_bytes'] ?? 0), $users)),
@@ -554,7 +578,7 @@ function renderConnectionCard(array $infoUser, ?string $infoQrDataUri, string $s
                     <span class="connection-value"><?php echo htmlspecialchars($infoUser['tg_url'], ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
                 <div class="connection-field">
-                    <span class="connection-label">Активность</span>
+                    <span class="connection-label">Последний учтённый трафик MTProto</span>
                     <span class="connection-value" data-last-seen="<?php echo (int) ($infoUser['last_activity_at'] ?? 0); ?>"><?php echo htmlspecialchars(formatLastActivity((int) ($infoUser['last_activity_at'] ?? 0)), ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
                 <div class="connection-actions">
@@ -562,7 +586,7 @@ function renderConnectionCard(array $infoUser, ?string $infoQrDataUri, string $s
                         <button class="button-secondary" type="button" data-copy="<?php echo htmlspecialchars($infoUser['tg_url'], ENT_QUOTES, 'UTF-8'); ?>">Скопировать tg://</button>
                         <a class="button-secondary" href="<?php echo htmlspecialchars($infoUser['tg_url'], ENT_QUOTES, 'UTF-8'); ?>">Открыть в Telegram</a>
                     <?php endif; ?>
-                    <button class="button-secondary" type="button" data-copy="<?php echo htmlspecialchars("server={$serverHost}\nport={$infoUser['port']}\nsecret={$infoUser['secret_base64']}", ENT_QUOTES, 'UTF-8'); ?>">Скопировать поля</button>
+                    <button class="button-secondary" type="button" data-copy="<?php echo htmlspecialchars("server={$infoUser['server_host']}\nport={$infoUser['port']}\nsecret={$infoUser['secret_base64']}", ENT_QUOTES, 'UTF-8'); ?>">Скопировать поля</button>
                 </div>
             </div>
         </div>
@@ -653,7 +677,7 @@ function renderClientNode(array $user, int $totalMonthlyTraffic, int $totalTraff
         </div>
         <div class="tree-cell online-cell">
             <span class="badge <?php echo ($user['online_connections'] ?? 0) > 0 ? 'online' : 'offline'; ?>" data-last-seen="<?php echo (int) ($user['last_activity_at'] ?? 0); ?>" title="<?php echo htmlspecialchars(formatLastActivityTitle((int) ($user['last_activity_at'] ?? 0)), ENT_QUOTES, 'UTF-8'); ?>">
-                <?php echo ($user['online_connections'] ?? 0) > 0 ? 'Онлайн' : 'Офлайн'; ?>
+                <?php echo ($user['online_connections'] ?? 0) > 0 ? 'Онлайн' : (($user['online_known'] ?? true) ? 'Офлайн' : 'Нет данных'); ?>
             </span>
         </div>
         <div class="tree-cell client-cell">
@@ -758,13 +782,18 @@ function listUsers(string $serverHost): array
     $monthlyTrafficStats = getMonthlyTrafficStats();
     $activityStats = getActivityStats();
     $connectionCounts = getPortConnectionCounts();
+    $webCounts = getWebProxySessionCounts();
+    $webInfo = json_decode((string) @file_get_contents('/etc/tproxy-server/client-info.json'), true);
+    $webUsers = array_column($webInfo['profiles'] ?? [], 'user');
     foreach (glob('/etc/mtg-*.toml') as $config) {
         $user = basename($config, '.toml');
         $user = preg_replace('/^mtg-/', '', $user) ?? $user;
         $content = @file_get_contents($config) ?: '';
-        preg_match('/bind-to\s*=\s*"0\.0\.0\.0:(\d+)"/', $content, $portMatch);
+        preg_match('/bind-to\s*=\s*"([^"]+):(\d+)"/', $content, $portMatch);
         preg_match('/secret\s*=\s*"([^"]+)"/', $content, $secretMatch);
-        $port = $portMatch[1] ?? '?';
+        $port = $portMatch[2] ?? '?';
+        $bindHost = $portMatch[1] ?? '0.0.0.0';
+        $clientHost = in_array($bindHost, ['0.0.0.0', '[::]', '::'], true) ? $serverHost : $bindHost;
         $secretHex = $secretMatch[1] ?? '';
         $secretBase64 = trim(shell_exec('/usr/local/bin/mtg access ' . escapeshellarg($config) . " | sed -n 's/.*\"base64\": \"\\([^\"]*\\)\".*/\\1/p'") ?? '');
         $service = 'mtg-' . $user;
@@ -772,7 +801,7 @@ function listUsers(string $serverHost): array
         $enabled = trim(shell_exec('systemctl is-enabled ' . escapeshellarg($service) . ' 2>/dev/null || true') ?? '');
         $tgUrl = '';
         if ($port !== '?' && $secretBase64 !== '') {
-            $tgUrl = 'tg://proxy?server=' . $serverHost . '&port=' . $port . '&secret=' . $secretBase64;
+            $tgUrl = 'tg://proxy?server=' . $clientHost . '&port=' . $port . '&secret=' . $secretBase64;
         }
         $traffic = $trafficStats[$user] ?? [
             'in_bytes' => 0,
@@ -784,8 +813,12 @@ function listUsers(string $serverHost): array
             'out_bytes' => 0,
             'total_bytes' => 0,
         ];
-        $onlineConnections = ($active === 'active' && $port !== '?' && isset($connectionCounts[$port])) ? (int) $connectionCounts[$port] : 0;
-        $lastActivityAt = $active === 'active' ? ($activityStats[$user] ?? 0) : 0;
+        $connectionKey = in_array($bindHost, ['0.0.0.0', '[::]', '::'], true) ? $port : $bindHost . ':' . $port;
+        $onlineConnections = ($active === 'active' && $port !== '?') ? (int) ($connectionCounts[$connectionKey] ?? 0) : 0;
+        $webSessions = $webCounts[$user] ?? 0;
+        $onlineKnown = !in_array($user, $webUsers, true) || ($webCounts !== null && array_key_exists($user, $webCounts));
+        $onlineConnections += $webSessions;
+        $lastActivityAt = $activityStats[$user] ?? 0;
         $rows[] = [
             'user' => $user,
             'port' => $port,
@@ -794,6 +827,7 @@ function listUsers(string $serverHost): array
             'secret_hex' => $secretHex,
             'secret_base64' => $secretBase64,
             'tg_url' => $tgUrl,
+            'server_host' => $clientHost,
             'in_bytes' => $traffic['in_bytes'],
             'out_bytes' => $traffic['out_bytes'],
             'total_bytes' => $traffic['total_bytes'],
@@ -801,6 +835,8 @@ function listUsers(string $serverHost): array
             'month_out_bytes' => $monthlyTraffic['out_bytes'],
             'month_total_bytes' => $monthlyTraffic['total_bytes'],
             'online_connections' => $onlineConnections,
+            'online_known' => $onlineKnown,
+            'webproxy_sessions' => $webSessions,
             'last_activity_at' => $lastActivityAt,
         ];
     }
@@ -1118,6 +1154,456 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>MTProto Admin</title>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const panelSettings = {};
+    function readPanelSetting(key) {
+        try { return window.localStorage.getItem(key); }
+        catch (error) { return panelSettings[key] || null; }
+    }
+    function writePanelSetting(key, value) {
+        panelSettings[key] = String(value);
+        try { window.localStorage.setItem(key, value); } catch (error) {}
+    }
+
+    function copyWithSelection(text) {
+        const previousFocus = document.activeElement;
+        const selection = window.getSelection();
+        const ranges = [];
+        if (selection) {
+            for (let index = 0; index < selection.rangeCount; index++) {
+                ranges.push(selection.getRangeAt(index).cloneRange());
+            }
+        }
+        const field = document.createElement('textarea');
+        field.value = text;
+        field.setAttribute('readonly', '');
+        field.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;opacity:0;font-size:16px;';
+        document.body.appendChild(field);
+        try {
+            field.focus({ preventScroll: true });
+            field.select();
+            field.setSelectionRange(0, field.value.length);
+            return typeof document.execCommand === 'function' && document.execCommand('copy');
+        } catch (error) {
+            return false;
+        } finally {
+            field.remove();
+            if (previousFocus && typeof previousFocus.focus === 'function') {
+                previousFocus.focus({ preventScroll: true });
+            }
+            if (selection) {
+                selection.removeAllRanges();
+                ranges.forEach(function(range) { selection.addRange(range); });
+            }
+        }
+    }
+
+    async function copyPanelText(text) {
+        // Run synchronously during the click: this preserves browser user activation.
+        if (copyWithSelection(text)) {
+            return true;
+        }
+        try {
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                await navigator.clipboard.writeText(text);
+                return true;
+            }
+        } catch (error) {
+            // Permissions or an insecure context may prevent automatic copying.
+        }
+        window.prompt('Браузер запретил автоматическое копирование. Скопируйте текст:', text);
+        return false;
+    }
+
+    function bindCopyButtons(root = document) {
+        root.querySelectorAll('[data-copy]').forEach(function(button) {
+            if (button.dataset.copyBound === '1') {
+                return;
+            }
+            button.dataset.copyBound = '1';
+            button.addEventListener('click', async function() {
+                const text = button.getAttribute('data-copy') || '';
+                if (!text) return;
+                if (await copyPanelText(text)) {
+                    const originalTitle = button.getAttribute('title') || '';
+                    button.setAttribute('title', 'Скопировано');
+                    showInlineFlash('success', 'Скопировано в буфер обмена.');
+                    setTimeout(function() {
+                        button.setAttribute('title', originalTitle);
+                    }, 1200);
+                }
+            });
+        });
+    }
+
+    bindCopyButtons();
+    function showInlineFlash(type, text) {
+        let flash = document.querySelector('[data-inline-flash]');
+        const panelBody = document.querySelector('.panel-body');
+        if (!flash && panelBody) {
+            flash = document.createElement('div');
+            flash.setAttribute('data-inline-flash', '1');
+            panelBody.prepend(flash);
+        }
+        if (!flash) {
+            return;
+        }
+        flash.className = 'flash ' + (type || 'success');
+        flash.textContent = text || '';
+    }
+    function bindInfoForms(root = document) {
+        root.querySelectorAll('[data-info-form]').forEach(function(form) {
+            if (form.dataset.infoBound === '1') {
+                return;
+            }
+            form.dataset.infoBound = '1';
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                const submitButton = form.querySelector('button[type="submit"]');
+                if (submitButton) {
+                    submitButton.disabled = true;
+                }
+                try {
+                    const response = await window.fetch(window.location.href, {
+                        method: 'POST',
+                        body: new FormData(form),
+                        credentials: 'same-origin',
+                        headers: {
+                            'X-Requested-With': 'fetch'
+                        }
+                    });
+                    const contentType = response.headers.get('content-type') || '';
+                    if (!contentType.includes('application/json')) {
+                        throw new Error('Non-JSON response');
+                    }
+                    const payload = await response.json();
+                    if (!response.ok) {
+                        throw new Error(payload && payload.flash ? payload.flash.text : 'Request failed');
+                    }
+                    const connectionTarget = document.querySelector('[data-connection-card]');
+                    const outputTarget = document.querySelector('[data-command-output]');
+                    if (connectionTarget) {
+                        connectionTarget.innerHTML = payload.connection_html || '';
+                        bindCopyButtons(connectionTarget);
+                        enhanceLastSeenTimestamps(connectionTarget);
+                    }
+                    if (outputTarget) {
+                        outputTarget.textContent = payload.output || '';
+                    }
+                    if (payload.flash) {
+                        showInlineFlash(payload.flash.type, payload.flash.text);
+                    }
+                    const commandCard = document.querySelector('.command-card');
+                    if (commandCard) {
+                        commandCard.scrollIntoView({behavior: 'smooth', block: 'start'});
+                    }
+                } catch (error) {
+                    console.warn('Info request failed', error);
+                    HTMLFormElement.prototype.submit.call(form);
+                    return;
+                } finally {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                    }
+                }
+            });
+        });
+    }
+    bindInfoForms();
+    function formatLocalLastSeen(timestamp) {
+        if (!timestamp || timestamp <= 0) {
+            return 'Последний учтённый трафик MTProto: нет данных';
+        }
+        const date = new Date(timestamp * 1000);
+        return 'Последний учтённый трафик MTProto: ' + date.toLocaleString(undefined, {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+    function enhanceLastSeenTimestamps(root = document) {
+        root.querySelectorAll('[data-last-seen]').forEach(function(element) {
+            const timestamp = Number(element.getAttribute('data-last-seen') || '0');
+            const localText = formatLocalLastSeen(timestamp);
+            element.setAttribute('title', localText);
+            element.setAttribute('aria-label', localText);
+            if (element.classList.contains('connection-value')) {
+                element.textContent = timestamp > 0 ? localText.replace('Последний учтённый трафик MTProto: ', '') : 'нет данных';
+            }
+        });
+    }
+    let lastSeenPopover = null;
+    function getLastSeenPopover() {
+        if (!lastSeenPopover) {
+            lastSeenPopover = document.createElement('div');
+            lastSeenPopover.className = 'last-seen-popover';
+            lastSeenPopover.setAttribute('role', 'tooltip');
+            document.body.appendChild(lastSeenPopover);
+        }
+        return lastSeenPopover;
+    }
+    function hideLastSeenPopover() {
+        if (lastSeenPopover) {
+            lastSeenPopover.classList.remove('is-open');
+        }
+    }
+    function showLastSeenPopover(trigger) {
+        const timestamp = Number(trigger.getAttribute('data-last-seen') || '0');
+        const popover = getLastSeenPopover();
+        popover.textContent = formatLocalLastSeen(timestamp);
+        popover.classList.add('is-open');
+
+        const rect = trigger.getBoundingClientRect();
+        const popoverRect = popover.getBoundingClientRect();
+        const margin = 12;
+        let left = rect.left + rect.width / 2 - popoverRect.width / 2;
+        let top = rect.bottom + 8;
+
+        left = Math.max(margin, Math.min(left, window.innerWidth - popoverRect.width - margin));
+        if (top + popoverRect.height + margin > window.innerHeight) {
+            top = Math.max(margin, rect.top - popoverRect.height - 8);
+        }
+
+        popover.style.left = left + 'px';
+        popover.style.top = top + 'px';
+    }
+    function bindLastSeenBadges(root = document) {
+        root.querySelectorAll('.badge[data-last-seen]').forEach(function(badge) {
+            if (badge.dataset.lastSeenBound === '1') {
+                return;
+            }
+            badge.dataset.lastSeenBound = '1';
+            badge.setAttribute('role', 'button');
+            badge.setAttribute('tabindex', '0');
+            badge.addEventListener('click', function(event) {
+                event.stopPropagation();
+                showLastSeenPopover(badge);
+            });
+            badge.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    showLastSeenPopover(badge);
+                }
+                if (event.key === 'Escape') {
+                    hideLastSeenPopover();
+                }
+            });
+        });
+    }
+    enhanceLastSeenTimestamps();
+    bindLastSeenBadges();
+    document.addEventListener('click', hideLastSeenPopover);
+    window.addEventListener('resize', hideLastSeenPopover);
+    window.addEventListener('scroll', hideLastSeenPopover, true);
+    function getCollapsedGroups() {
+        try {
+            const groups = JSON.parse(readPanelSetting('mtproto_collapsed_groups') || '[]');
+            return Array.isArray(groups) ? groups : [];
+        } catch (error) {
+            return [];
+        }
+    }
+    function saveCollapsedGroups(groups) {
+        writePanelSetting('mtproto_collapsed_groups', JSON.stringify(groups));
+    }
+    function applyTreeCollapsedState(root = document) {
+        const collapsedGroups = getCollapsedGroups();
+        root.querySelectorAll('[data-tree-group]').forEach(function(group) {
+            const name = group.getAttribute('data-tree-group') || '';
+            group.classList.toggle('is-collapsed', collapsedGroups.includes(name));
+        });
+    }
+    function bindTreeToggles(root = document) {
+        root.querySelectorAll('[data-tree-toggle]').forEach(function(toggle) {
+            if (toggle.dataset.treeToggleBound === '1') {
+                return;
+            }
+            toggle.dataset.treeToggleBound = '1';
+            toggle.addEventListener('click', function(event) {
+                if (event.target.closest('button, a, input, label, form')) {
+                    return;
+                }
+                const group = toggle.closest('[data-tree-group]');
+                if (!group) {
+                    return;
+                }
+                const name = group.getAttribute('data-tree-group') || '';
+                const collapsedGroups = getCollapsedGroups();
+                const nextCollapsed = !group.classList.contains('is-collapsed');
+                const nextGroups = nextCollapsed
+                    ? Array.from(new Set(collapsedGroups.concat(name)))
+                    : collapsedGroups.filter(function(item) { return item !== name; });
+                saveCollapsedGroups(nextGroups);
+                group.classList.toggle('is-collapsed', nextCollapsed);
+            });
+        });
+    }
+    bindTreeToggles();
+    applyTreeCollapsedState();
+    const modal = document.getElementById('editor-modal');
+    const openCreateButton = document.querySelector('[data-open-create]');
+    const closeButtons = document.querySelectorAll('[data-close-modal]');
+    if (openCreateButton && modal) {
+        openCreateButton.addEventListener('click', function() {
+            modal.classList.add('is-open');
+        });
+    }
+    closeButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            window.location.href = '/';
+        });
+    });
+    if (modal) {
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                window.location.href = '/';
+            }
+        });
+    }
+    const refreshControl = document.querySelector('[data-refresh-control]');
+    const refreshMenuButton = document.querySelector('[data-refresh-menu]');
+    const refreshNowButton = document.querySelector('[data-refresh-now]');
+    const autoRefreshToggle = document.querySelector('[data-auto-refresh-toggle]');
+    const refreshIntervalButtons = document.querySelectorAll('[data-refresh-interval]');
+    const refreshStorageKey = 'mtproto_auto_refresh';
+    const intervalStorageKey = 'mtproto_refresh_interval';
+    let refreshTimer = null;
+
+    function getRefreshInterval() {
+        const storedInterval = Number(readPanelSetting(intervalStorageKey) || '5');
+        return [5, 10, 30, 60].includes(storedInterval) ? storedInterval : 5;
+    }
+
+    function updateRefreshOptions() {
+        const activeInterval = String(getRefreshInterval());
+        refreshIntervalButtons.forEach(function(button) {
+            button.classList.toggle('is-active', button.getAttribute('data-refresh-interval') === activeInterval);
+        });
+    }
+
+    function stopAutoRefresh() {
+        if (refreshTimer !== null) {
+            window.clearInterval(refreshTimer);
+            refreshTimer = null;
+        }
+    }
+
+    async function refreshPageData() {
+        if (modal && modal.classList.contains('is-open')) {
+            return;
+        }
+        try {
+            const response = await window.fetch(window.location.href, {
+                cache: 'no-store',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'fetch'
+                }
+            });
+            if (!response.ok || response.redirected) {
+                throw new Error('Refresh failed');
+            }
+            const html = await response.text();
+            const nextDocument = new DOMParser().parseFromString(html, 'text/html');
+            const currentOverview = document.querySelector('.overview-strip');
+            const nextOverview = nextDocument.querySelector('.overview-strip');
+            const currentClientTree = document.querySelector('.client-tree');
+            const nextClientTree = nextDocument.querySelector('.client-tree');
+            const currentHealthTableBody = document.querySelector('.health-table tbody');
+            const nextHealthTableBody = nextDocument.querySelector('.health-table tbody');
+            const currentHealthSummary = document.querySelector('.health-summary');
+            const nextHealthSummary = nextDocument.querySelector('.health-summary');
+
+            if (currentOverview && nextOverview) {
+                currentOverview.innerHTML = nextOverview.innerHTML;
+                enhanceLastSeenTimestamps(currentOverview);
+                bindLastSeenBadges(currentOverview);
+            }
+            if (currentClientTree && nextClientTree) {
+                currentClientTree.innerHTML = nextClientTree.innerHTML;
+                bindCopyButtons(currentClientTree);
+                bindInfoForms(currentClientTree);
+                bindTreeToggles(currentClientTree);
+                applyTreeCollapsedState(currentClientTree);
+                enhanceLastSeenTimestamps(currentClientTree);
+                bindLastSeenBadges(currentClientTree);
+            }
+            if (currentHealthTableBody && nextHealthTableBody) {
+                currentHealthTableBody.innerHTML = nextHealthTableBody.innerHTML;
+            }
+            if (currentHealthSummary && nextHealthSummary) {
+                currentHealthSummary.className = nextHealthSummary.className;
+                currentHealthSummary.innerHTML = nextHealthSummary.innerHTML;
+            }
+        } catch (error) {
+            console.warn('Не удалось тихо обновить страницу', error);
+        }
+    }
+
+    function startAutoRefresh() {
+        stopAutoRefresh();
+        refreshTimer = window.setInterval(function() {
+            refreshPageData();
+        }, getRefreshInterval() * 1000);
+    }
+
+    function applyAutoRefreshState() {
+        const enabled = readPanelSetting(refreshStorageKey) === '1';
+        if (autoRefreshToggle) {
+            autoRefreshToggle.checked = enabled;
+        }
+        updateRefreshOptions();
+        if (enabled) {
+            startAutoRefresh();
+        } else {
+            stopAutoRefresh();
+        }
+    }
+
+    if (refreshNowButton) {
+        refreshNowButton.addEventListener('click', function() {
+            refreshPageData();
+        });
+    }
+    if (refreshControl && refreshMenuButton) {
+        refreshMenuButton.addEventListener('click', function(event) {
+            event.stopPropagation();
+            const isOpen = refreshControl.classList.toggle('is-open');
+            refreshMenuButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+        document.addEventListener('click', function(event) {
+            if (!refreshControl.contains(event.target)) {
+                refreshControl.classList.remove('is-open');
+                refreshMenuButton.setAttribute('aria-expanded', 'false');
+            }
+        });
+    }
+    if (autoRefreshToggle) {
+        autoRefreshToggle.addEventListener('change', function() {
+            writePanelSetting(refreshStorageKey, autoRefreshToggle.checked ? '1' : '0');
+            applyAutoRefreshState();
+        });
+    }
+    refreshIntervalButtons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            writePanelSetting(intervalStorageKey, button.getAttribute('data-refresh-interval') || '5');
+            updateRefreshOptions();
+            if (autoRefreshToggle && autoRefreshToggle.checked) {
+                startAutoRefresh();
+            }
+        });
+    });
+    applyAutoRefreshState();
+
+    const startupNotice = document.getElementById('panel-startup-notice');
+    if (startupNotice) startupNotice.remove();
+
+});
+    </script>
     <style>
         :root {
             --bg: #18191c;
@@ -2524,6 +3010,11 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
 </head>
 <body>
 <main class="page">
+    <div id="panel-startup-notice" role="status" style="padding:12px;background:#513f1c;color:#fff;border-radius:8px;margin-bottom:12px">
+        Интерактивные функции ещё не запущены. Если после загрузки это сообщение остаётся,
+        отключите блокировщик содержимого для этой панели и перезагрузите страницу.
+        <noscript><strong>В браузере отключён или заблокирован JavaScript.</strong></noscript>
+    </div>
     <section class="topbar">
         <div class="brand">
             <div class="brand-mark">
@@ -2871,390 +3362,6 @@ $isCreateModal = $modalMode === 'create' || ($modalMode === null && $editTarget 
         </div>
     </div>
 </div>
-<script>
-    function bindCopyButtons(root = document) {
-        root.querySelectorAll('[data-copy]').forEach(function(button) {
-            if (button.dataset.copyBound === '1') {
-                return;
-            }
-            button.dataset.copyBound = '1';
-            button.addEventListener('click', async function() {
-                const text = button.getAttribute('data-copy') || '';
-                if (!text) return;
-                try {
-                    await navigator.clipboard.writeText(text);
-                    const originalTitle = button.getAttribute('title') || '';
-                    button.setAttribute('title', 'Скопировано');
-                    setTimeout(function() {
-                        button.setAttribute('title', originalTitle);
-                    }, 1200);
-                } catch (error) {
-                    alert('Не удалось скопировать ссылку');
-                }
-            });
-        });
-    }
 
-    bindCopyButtons();
-    function showInlineFlash(type, text) {
-        let flash = document.querySelector('[data-inline-flash]');
-        const panelBody = document.querySelector('.panel-body');
-        if (!flash && panelBody) {
-            flash = document.createElement('div');
-            flash.setAttribute('data-inline-flash', '1');
-            panelBody.prepend(flash);
-        }
-        if (!flash) {
-            return;
-        }
-        flash.className = 'flash ' + (type || 'success');
-        flash.textContent = text || '';
-    }
-    function bindInfoForms(root = document) {
-        root.querySelectorAll('[data-info-form]').forEach(function(form) {
-            if (form.dataset.infoBound === '1') {
-                return;
-            }
-            form.dataset.infoBound = '1';
-            form.addEventListener('submit', async function(event) {
-                event.preventDefault();
-                const submitButton = form.querySelector('button[type="submit"]');
-                if (submitButton) {
-                    submitButton.disabled = true;
-                }
-                try {
-                    const response = await window.fetch(window.location.href, {
-                        method: 'POST',
-                        body: new FormData(form),
-                        credentials: 'same-origin',
-                        headers: {
-                            'X-Requested-With': 'fetch'
-                        }
-                    });
-                    const contentType = response.headers.get('content-type') || '';
-                    if (!contentType.includes('application/json')) {
-                        throw new Error('Non-JSON response');
-                    }
-                    const payload = await response.json();
-                    if (!response.ok) {
-                        throw new Error(payload && payload.flash ? payload.flash.text : 'Request failed');
-                    }
-                    const connectionTarget = document.querySelector('[data-connection-card]');
-                    const outputTarget = document.querySelector('[data-command-output]');
-                    if (connectionTarget) {
-                        connectionTarget.innerHTML = payload.connection_html || '';
-                        bindCopyButtons(connectionTarget);
-                        enhanceLastSeenTimestamps(connectionTarget);
-                    }
-                    if (outputTarget) {
-                        outputTarget.textContent = payload.output || '';
-                    }
-                    if (payload.flash) {
-                        showInlineFlash(payload.flash.type, payload.flash.text);
-                    }
-                    const commandCard = document.querySelector('.command-card');
-                    if (commandCard) {
-                        commandCard.scrollIntoView({behavior: 'smooth', block: 'start'});
-                    }
-                } catch (error) {
-                    console.warn('Info request failed', error);
-                    HTMLFormElement.prototype.submit.call(form);
-                    return;
-                } finally {
-                    if (submitButton) {
-                        submitButton.disabled = false;
-                    }
-                }
-            });
-        });
-    }
-    bindInfoForms();
-    function formatLocalLastSeen(timestamp) {
-        if (!timestamp || timestamp <= 0) {
-            return 'Был(а) в сети: нет данных';
-        }
-        const date = new Date(timestamp * 1000);
-        return 'Был(а) в сети: ' + date.toLocaleString(undefined, {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit'
-        });
-    }
-    function enhanceLastSeenTimestamps(root = document) {
-        root.querySelectorAll('[data-last-seen]').forEach(function(element) {
-            const timestamp = Number(element.getAttribute('data-last-seen') || '0');
-            const localText = formatLocalLastSeen(timestamp);
-            element.setAttribute('title', localText);
-            element.setAttribute('aria-label', localText);
-            if (element.classList.contains('connection-value')) {
-                element.textContent = timestamp > 0 ? localText.replace('Был(а) в сети: ', '') : 'нет данных';
-            }
-        });
-    }
-    let lastSeenPopover = null;
-    function getLastSeenPopover() {
-        if (!lastSeenPopover) {
-            lastSeenPopover = document.createElement('div');
-            lastSeenPopover.className = 'last-seen-popover';
-            lastSeenPopover.setAttribute('role', 'tooltip');
-            document.body.appendChild(lastSeenPopover);
-        }
-        return lastSeenPopover;
-    }
-    function hideLastSeenPopover() {
-        if (lastSeenPopover) {
-            lastSeenPopover.classList.remove('is-open');
-        }
-    }
-    function showLastSeenPopover(trigger) {
-        const timestamp = Number(trigger.getAttribute('data-last-seen') || '0');
-        const popover = getLastSeenPopover();
-        popover.textContent = formatLocalLastSeen(timestamp);
-        popover.classList.add('is-open');
-
-        const rect = trigger.getBoundingClientRect();
-        const popoverRect = popover.getBoundingClientRect();
-        const margin = 12;
-        let left = rect.left + rect.width / 2 - popoverRect.width / 2;
-        let top = rect.bottom + 8;
-
-        left = Math.max(margin, Math.min(left, window.innerWidth - popoverRect.width - margin));
-        if (top + popoverRect.height + margin > window.innerHeight) {
-            top = Math.max(margin, rect.top - popoverRect.height - 8);
-        }
-
-        popover.style.left = left + 'px';
-        popover.style.top = top + 'px';
-    }
-    function bindLastSeenBadges(root = document) {
-        root.querySelectorAll('.badge[data-last-seen]').forEach(function(badge) {
-            if (badge.dataset.lastSeenBound === '1') {
-                return;
-            }
-            badge.dataset.lastSeenBound = '1';
-            badge.setAttribute('role', 'button');
-            badge.setAttribute('tabindex', '0');
-            badge.addEventListener('click', function(event) {
-                event.stopPropagation();
-                showLastSeenPopover(badge);
-            });
-            badge.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter' || event.key === ' ') {
-                    event.preventDefault();
-                    showLastSeenPopover(badge);
-                }
-                if (event.key === 'Escape') {
-                    hideLastSeenPopover();
-                }
-            });
-        });
-    }
-    enhanceLastSeenTimestamps();
-    bindLastSeenBadges();
-    document.addEventListener('click', hideLastSeenPopover);
-    window.addEventListener('resize', hideLastSeenPopover);
-    window.addEventListener('scroll', hideLastSeenPopover, true);
-    function getCollapsedGroups() {
-        try {
-            return JSON.parse(window.localStorage.getItem('mtproto_collapsed_groups') || '[]');
-        } catch (error) {
-            return [];
-        }
-    }
-    function saveCollapsedGroups(groups) {
-        window.localStorage.setItem('mtproto_collapsed_groups', JSON.stringify(groups));
-    }
-    function applyTreeCollapsedState(root = document) {
-        const collapsedGroups = getCollapsedGroups();
-        root.querySelectorAll('[data-tree-group]').forEach(function(group) {
-            const name = group.getAttribute('data-tree-group') || '';
-            group.classList.toggle('is-collapsed', collapsedGroups.includes(name));
-        });
-    }
-    function bindTreeToggles(root = document) {
-        root.querySelectorAll('[data-tree-toggle]').forEach(function(toggle) {
-            if (toggle.dataset.treeToggleBound === '1') {
-                return;
-            }
-            toggle.dataset.treeToggleBound = '1';
-            toggle.addEventListener('click', function(event) {
-                if (event.target.closest('button, a, input, label, form')) {
-                    return;
-                }
-                const group = toggle.closest('[data-tree-group]');
-                if (!group) {
-                    return;
-                }
-                const name = group.getAttribute('data-tree-group') || '';
-                const collapsedGroups = getCollapsedGroups();
-                const nextCollapsed = !group.classList.contains('is-collapsed');
-                const nextGroups = nextCollapsed
-                    ? Array.from(new Set(collapsedGroups.concat(name)))
-                    : collapsedGroups.filter(function(item) { return item !== name; });
-                saveCollapsedGroups(nextGroups);
-                group.classList.toggle('is-collapsed', nextCollapsed);
-            });
-        });
-    }
-    bindTreeToggles();
-    applyTreeCollapsedState();
-    const modal = document.getElementById('editor-modal');
-    const openCreateButton = document.querySelector('[data-open-create]');
-    const closeButtons = document.querySelectorAll('[data-close-modal]');
-    if (openCreateButton && modal) {
-        openCreateButton.addEventListener('click', function() {
-            modal.classList.add('is-open');
-        });
-    }
-    closeButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            window.location.href = '/';
-        });
-    });
-    if (modal) {
-        modal.addEventListener('click', function(event) {
-            if (event.target === modal) {
-                window.location.href = '/';
-            }
-        });
-    }
-    const refreshControl = document.querySelector('[data-refresh-control]');
-    const refreshMenuButton = document.querySelector('[data-refresh-menu]');
-    const refreshNowButton = document.querySelector('[data-refresh-now]');
-    const autoRefreshToggle = document.querySelector('[data-auto-refresh-toggle]');
-    const refreshIntervalButtons = document.querySelectorAll('[data-refresh-interval]');
-    const refreshStorageKey = 'mtproto_auto_refresh';
-    const intervalStorageKey = 'mtproto_refresh_interval';
-    let refreshTimer = null;
-
-    function getRefreshInterval() {
-        const storedInterval = Number(window.localStorage.getItem(intervalStorageKey) || '5');
-        return [5, 10, 30, 60].includes(storedInterval) ? storedInterval : 5;
-    }
-
-    function updateRefreshOptions() {
-        const activeInterval = String(getRefreshInterval());
-        refreshIntervalButtons.forEach(function(button) {
-            button.classList.toggle('is-active', button.getAttribute('data-refresh-interval') === activeInterval);
-        });
-    }
-
-    function stopAutoRefresh() {
-        if (refreshTimer !== null) {
-            window.clearInterval(refreshTimer);
-            refreshTimer = null;
-        }
-    }
-
-    async function refreshPageData() {
-        if (modal && modal.classList.contains('is-open')) {
-            return;
-        }
-        try {
-            const response = await window.fetch(window.location.href, {
-                cache: 'no-store',
-                credentials: 'same-origin',
-                headers: {
-                    'X-Requested-With': 'fetch'
-                }
-            });
-            if (!response.ok || response.redirected) {
-                throw new Error('Refresh failed');
-            }
-            const html = await response.text();
-            const nextDocument = new DOMParser().parseFromString(html, 'text/html');
-            const currentOverview = document.querySelector('.overview-strip');
-            const nextOverview = nextDocument.querySelector('.overview-strip');
-            const currentClientTree = document.querySelector('.client-tree');
-            const nextClientTree = nextDocument.querySelector('.client-tree');
-            const currentHealthTableBody = document.querySelector('.health-table tbody');
-            const nextHealthTableBody = nextDocument.querySelector('.health-table tbody');
-            const currentHealthSummary = document.querySelector('.health-summary');
-            const nextHealthSummary = nextDocument.querySelector('.health-summary');
-
-            if (currentOverview && nextOverview) {
-                currentOverview.innerHTML = nextOverview.innerHTML;
-                enhanceLastSeenTimestamps(currentOverview);
-                bindLastSeenBadges(currentOverview);
-            }
-            if (currentClientTree && nextClientTree) {
-                currentClientTree.innerHTML = nextClientTree.innerHTML;
-                bindCopyButtons(currentClientTree);
-                bindInfoForms(currentClientTree);
-                bindTreeToggles(currentClientTree);
-                applyTreeCollapsedState(currentClientTree);
-                enhanceLastSeenTimestamps(currentClientTree);
-                bindLastSeenBadges(currentClientTree);
-            }
-            if (currentHealthTableBody && nextHealthTableBody) {
-                currentHealthTableBody.innerHTML = nextHealthTableBody.innerHTML;
-            }
-            if (currentHealthSummary && nextHealthSummary) {
-                currentHealthSummary.className = nextHealthSummary.className;
-                currentHealthSummary.innerHTML = nextHealthSummary.innerHTML;
-            }
-        } catch (error) {
-            console.warn('Не удалось тихо обновить страницу', error);
-        }
-    }
-
-    function startAutoRefresh() {
-        stopAutoRefresh();
-        refreshTimer = window.setInterval(function() {
-            refreshPageData();
-        }, getRefreshInterval() * 1000);
-    }
-
-    function applyAutoRefreshState() {
-        const enabled = window.localStorage.getItem(refreshStorageKey) === '1';
-        if (autoRefreshToggle) {
-            autoRefreshToggle.checked = enabled;
-        }
-        updateRefreshOptions();
-        if (enabled) {
-            startAutoRefresh();
-        } else {
-            stopAutoRefresh();
-        }
-    }
-
-    if (refreshNowButton) {
-        refreshNowButton.addEventListener('click', function() {
-            refreshPageData();
-        });
-    }
-    if (refreshControl && refreshMenuButton) {
-        refreshMenuButton.addEventListener('click', function(event) {
-            event.stopPropagation();
-            const isOpen = refreshControl.classList.toggle('is-open');
-            refreshMenuButton.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        });
-        document.addEventListener('click', function(event) {
-            if (!refreshControl.contains(event.target)) {
-                refreshControl.classList.remove('is-open');
-                refreshMenuButton.setAttribute('aria-expanded', 'false');
-            }
-        });
-    }
-    if (autoRefreshToggle) {
-        autoRefreshToggle.addEventListener('change', function() {
-            window.localStorage.setItem(refreshStorageKey, autoRefreshToggle.checked ? '1' : '0');
-            applyAutoRefreshState();
-        });
-    }
-    refreshIntervalButtons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            window.localStorage.setItem(intervalStorageKey, button.getAttribute('data-refresh-interval') || '5');
-            updateRefreshOptions();
-            if (autoRefreshToggle && autoRefreshToggle.checked) {
-                startAutoRefresh();
-            }
-        });
-    });
-    applyAutoRefreshState();
-</script>
 </body>
 </html>
